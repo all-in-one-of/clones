@@ -21,13 +21,8 @@ namespace NewtonVR {
 
       //Player.gameObject.AddComponent<SteamVR_PlayArea>();
 
-      for (int index = 0; index < Player.Hands.Length; index++) {
-        GameObject hand = Player.Hands[index].gameObject;
-
-        // TODO: Hack. Only add tracking component if not a fake hand.
-        if (hand.GetComponent<FakeInputDevice>() == null) {
-          hand.AddComponent<SteamVR_TrackedObject>();
-        }
+      foreach (NVRHand hand in Player.Hands) {
+          hand.gameObject.AddComponent<SteamVR_TrackedObject>();
       }
 
 

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using Optional;
 using UnityEngine;
 
 #if NVR_Oculus
@@ -369,7 +369,7 @@ namespace NewtonVR
             throw new NotImplementedException();
         }
 
-        public override GameObject SetupDefaultRenderModel()
+        public override Option<GameObject> SetupDefaultRenderModel()
         {
             throw new NotImplementedException();
         }

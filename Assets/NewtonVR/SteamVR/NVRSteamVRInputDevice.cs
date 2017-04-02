@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using Optional;
 using UnityEngine;
 
 #if NVR_SteamVR
@@ -168,17 +168,17 @@ namespace NewtonVR
             }
         }
 
-        public override GameObject SetupDefaultRenderModel()
+        public override Option<GameObject> SetupDefaultRenderModel()
         {
-            GameObject renderModel = new GameObject("Render Model for " + Hand.gameObject.name);
-            renderModel.transform.parent = Hand.transform;
-            renderModel.transform.localPosition = Vector3.zero;
-            renderModel.transform.localRotation = Quaternion.identity;
-            renderModel.transform.localScale = Vector3.one;
-            renderModel.AddComponent<SteamVR_RenderModel>();
-            renderModel.GetComponent<SteamVR_RenderModel>().shader = Shader.Find("Standard");
+            GameObject render_model = new GameObject("Render Model for " + Hand.gameObject.name);
+            render_model.transform.parent = Hand.transform;
+            render_model.transform.localPosition = Vector3.zero;
+            render_model.transform.localRotation = Quaternion.identity;
+            render_model.transform.localScale = Vector3.one;
+            render_model.AddComponent<SteamVR_RenderModel>();
+            render_model.GetComponent<SteamVR_RenderModel>().shader = Shader.Find("Standard");
 
-            return renderModel;
+            return render_model.Some();
         }
 
         public override bool ReadyToInitialize()

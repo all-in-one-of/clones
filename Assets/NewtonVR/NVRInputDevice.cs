@@ -2,44 +2,46 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using Optional;
 using UnityEngine;
 
-namespace NewtonVR
-{
-    public abstract class NVRInputDevice : MonoBehaviour
-    {
-        protected NVRHand Hand;
+namespace NewtonVR {
+  public abstract class NVRInputDevice : MonoBehaviour {
 
-        public virtual void Initialize(NVRHand hand)
-        {
-            Hand = hand;
-        }
+    // TODO: See if we can remove this link
+    protected NVRHand Hand;
 
-        public abstract bool IsCurrentlyTracked { get; }
-
-        public abstract Collider[] SetupDefaultPhysicalColliders(Transform ModelParent);
-
-        public abstract GameObject SetupDefaultRenderModel();
-
-        public abstract bool ReadyToInitialize();
-
-        public abstract Collider[] SetupDefaultColliders();
-
-        public abstract string GetDeviceName();
-
-        public abstract void TriggerHapticPulse(ushort durationMicroSec = 500, NVRButtons button = NVRButtons.Touchpad);
-
-        public abstract float GetAxis1D(NVRButtons button);
-        public abstract Vector2 GetAxis2D(NVRButtons button);
-        public abstract bool GetPressDown(NVRButtons button);
-        public abstract bool GetPressUp(NVRButtons button);
-        public abstract bool GetPress(NVRButtons button);
-        public abstract bool GetTouchDown(NVRButtons button);
-        public abstract bool GetTouchUp(NVRButtons button);
-        public abstract bool GetTouch(NVRButtons button);
-        public abstract bool GetNearTouchDown(NVRButtons button);
-        public abstract bool GetNearTouchUp(NVRButtons button);
-        public abstract bool GetNearTouch(NVRButtons button);
+    public virtual void Initialize(NVRHand hand) {
+      Hand = hand;
     }
+
+    public abstract bool IsCurrentlyTracked { get; }
+
+    public abstract Collider[] SetupDefaultPhysicalColliders(Transform ModelParent);
+
+    /// <summary>
+    /// Return a render model that represents this device, if one exists.
+    /// </summary>
+    public abstract Option<GameObject> SetupDefaultRenderModel();
+
+    public abstract bool ReadyToInitialize();
+
+    public abstract Collider[] SetupDefaultColliders();
+
+    public abstract string GetDeviceName();
+
+    public abstract void TriggerHapticPulse(ushort durationMicroSec = 500, NVRButtons button = NVRButtons.Touchpad);
+
+    public abstract float GetAxis1D(NVRButtons button);
+    public abstract Vector2 GetAxis2D(NVRButtons button);
+    public abstract bool GetPressDown(NVRButtons button);
+    public abstract bool GetPressUp(NVRButtons button);
+    public abstract bool GetPress(NVRButtons button);
+    public abstract bool GetTouchDown(NVRButtons button);
+    public abstract bool GetTouchUp(NVRButtons button);
+    public abstract bool GetTouch(NVRButtons button);
+    public abstract bool GetNearTouchDown(NVRButtons button);
+    public abstract bool GetNearTouchUp(NVRButtons button);
+    public abstract bool GetNearTouch(NVRButtons button);
+  }
 }

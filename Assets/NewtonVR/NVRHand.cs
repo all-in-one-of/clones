@@ -4,6 +4,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Optional;
+using Optional.Unsafe;
 
 namespace NewtonVR {
   public class NVRHand : MonoBehaviour {
@@ -68,7 +70,7 @@ namespace NewtonVR {
 
     private NVRInputDevice InputDevice;
 
-    private GameObject RenderModel;
+    public GameObject RenderModel;
 
     public bool IsHovering
     {
@@ -125,6 +127,13 @@ namespace NewtonVR {
       }
     }
 
+    /// <summary>
+    /// Adds the input device components to this hand to enable tracking for the given integration type.
+    /// </summary>
+    public void SetupInputDevice(NVRInputDevice input_device) {
+      InputDevice = input_device;
+      InitializeRenderModel();
+    }
 
     public virtual void PreInitialize(NVRPlayer player) {
       Player = player;
@@ -144,20 +153,16 @@ namespace NewtonVR {
       VisibilityLocked = false;
 
       Inputs = new Dictionary<NVRButtons, NVRButtonInputs>(new NVRButtonsComparer());
-      for (int buttonIndex = 0; buttonIndex < NVRButtonsHelper.Array.Length; buttonIndex++) {
-        if (Inputs.ContainsKey(NVRButtonsHelper.Array[buttonIndex]) == false) {
-          Inputs.Add(NVRButtonsHelper.Array[buttonIndex], new NVRButtonInputs());
+      foreach (NVRButtons buttons in NVRButtonsHelper.Array) {
+        if (Inputs.ContainsKey(buttons) == false) {
+          Inputs.Add(buttons, new NVRButtonInputs());
         }
       }
 
 
       // If we already have an input device attached to this object, use that.
-      if (GetComponents<NVRInputDevice>().Length > 0) {
-        InputDevice = gameObject.GetComponents<NVRInputDevice>()[0];
-      } else if (Player.CurrentIntegrationType == NVRSDKIntegrations.Oculus) {
-        InputDevice = this.gameObject.AddComponent<NVROculusInputDevice>();
-
-        if (Player.OverrideOculus == true) {
+      if (Player.CurrentIntegrationType == NVRSDKIntegrations.Oculus) {
+        if (Player.OverrideOculus) {
           if (IsLeft) {
             CustomModel = Player.OverrideOculusLeftHand;
             CustomPhysicalColliders = Player.OverrideOculusLeftHandPhysicalColliders;
@@ -169,9 +174,7 @@ namespace NewtonVR {
           }
         }
       } else if (Player.CurrentIntegrationType == NVRSDKIntegrations.SteamVR) {
-        InputDevice = this.gameObject.AddComponent<NVRSteamVRInputDevice>();
-
-        if (Player.OverrideSteamVR == true) {
+        if (Player.OverrideSteamVR) {
           if (IsLeft) {
             CustomModel = Player.OverrideSteamVRLeftHand;
             CustomPhysicalColliders = Player.OverrideSteamVRLeftHandPhysicalColliders;
@@ -202,8 +205,6 @@ namespace NewtonVR {
       }
 
 
-      InputDevice.Initialize(this);
-      InitializeRenderModel();
     }
 
     protected virtual void Update() {
@@ -264,7 +265,7 @@ namespace NewtonVR {
             PickupClosest();
             if (IsInteracting) {
               CurrentHandState = HandState.GripToggleOnInteracting;
-            } else if (Player.PhysicalHands == true) {
+            } else if (Player.PhysicalHands) {
               CurrentHandState = HandState.GripToggleOnNotInteracting;
             }
           } else if (CurrentHandState == HandState.GripToggleOnInteracting) {
@@ -280,7 +281,7 @@ namespace NewtonVR {
         //this is handled by user customized scripts.
       }
 
-      if (IsInteracting == true) {
+      if (IsInteracting) {
         CurrentlyInteracting.InteractingUpdate(this);
       }
     }
@@ -604,9 +605,9 @@ namespace NewtonVR {
 
     protected void InitializeRenderModel() {
       if (CustomModel == null) {
-        RenderModel = InputDevice.SetupDefaultRenderModel();
+        RenderModel = InputDevice.SetupDefaultRenderModel().ValueOr((GameObject) null);
       } else {
-        RenderModel = GameObject.Instantiate(CustomModel);
+        GameObject RenderModel = Instantiate(CustomModel);
 
         RenderModel.transform.parent = this.transform;
         RenderModel.transform.localScale = RenderModel.transform.localScale;
@@ -628,7 +629,11 @@ namespace NewtonVR {
       if (CustomModel == null) {
         colliders = InputDevice.SetupDefaultColliders();
       } else {
-        colliders = RenderModel.GetComponentsInChildren<Collider>(); //note: these should be trigger colliders
+        //note: these should be trigger colliders
+        colliders = new Collider[] {};
+        if (RenderModel != null) {
+          colliders = RenderModel.GetComponentsInChildren<Collider>();
+        }
       }
 
       Player.RegisterHand(this);

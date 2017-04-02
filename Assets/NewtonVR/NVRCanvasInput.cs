@@ -53,7 +53,8 @@ namespace NewtonVR
                 ControllerCamera.cullingMask = 0; // 1 << LayerMask.NameToLayer("UI"); 
                 ControllerCamera.stereoTargetEye = StereoTargetEyeMask.None;
 
-                Cursors = new RectTransform[Player.Hands.Length];
+                // TODO: This is broken. The number of total hands is now variable as clones are added.
+                Cursors = new RectTransform[Player.Hands.Count];
                 Lasers = new LineRenderer[Cursors.Length];
 
                 for (int index = 0; index < Cursors.Length; index++)

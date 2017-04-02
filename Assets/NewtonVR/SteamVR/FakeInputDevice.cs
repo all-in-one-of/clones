@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
+using Optional;
 
 namespace NewtonVR {
   public class FakeInputDevice : NVRInputDevice {
@@ -110,8 +111,8 @@ namespace NewtonVR {
       get { return true; }
     }
 
-    public override GameObject SetupDefaultRenderModel() {
-      return transform.GetChild(0).gameObject;
+    public override Option<GameObject> SetupDefaultRenderModel() {
+      return Option.None<GameObject>();
     }
 
     public override bool ReadyToInitialize() {
