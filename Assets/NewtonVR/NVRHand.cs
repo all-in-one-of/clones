@@ -132,7 +132,15 @@ namespace NewtonVR {
     /// </summary>
     public void SetupInputDevice(NVRInputDevice input_device) {
       InputDevice = input_device;
-      InitializeRenderModel();
+      InitializeRenderModel(); // Initializes the render model for this hand from the Input Device.
+
+      Inputs = new Dictionary<NVRButtons, NVRButtonInputs>(new NVRButtonsComparer());
+      foreach (NVRButtons button in NVRButtonsHelper.Array) {
+        if (Inputs.ContainsKey(button)) {
+          throw new ApplicationException("Button already exists in Input dictionary. Duplicate button in helper array.");
+        }
+        Inputs.Add(button, new NVRButtonInputs(InputDevice, button));
+      }
     }
 
     public virtual void PreInitialize(NVRPlayer player) {
@@ -151,14 +159,6 @@ namespace NewtonVR {
       EstimationSampleIndex = 0;
 
       VisibilityLocked = false;
-
-      Inputs = new Dictionary<NVRButtons, NVRButtonInputs>(new NVRButtonsComparer());
-      foreach (NVRButtons buttons in NVRButtonsHelper.Array) {
-        if (Inputs.ContainsKey(buttons) == false) {
-          Inputs.Add(buttons, new NVRButtonInputs());
-        }
-      }
-
 
       // If we already have an input device attached to this object, use that.
       if (Player.CurrentIntegrationType == NVRSDKIntegrations.Oculus) {
@@ -239,10 +239,8 @@ namespace NewtonVR {
     }
 
     protected void UpdateButtonStates() {
-      for (int index = 0; index < NVRButtonsHelper.Array.Length; index++) {
-        NVRButtons nvrbutton = NVRButtonsHelper.Array[index];
-        NVRButtonInputs button = Inputs[nvrbutton];
-        button.FrameReset(InputDevice, nvrbutton);
+      foreach (NVRButtons nvrbutton in NVRButtonsHelper.Array) {
+        Inputs[nvrbutton].FrameReset();
       }
     }
 

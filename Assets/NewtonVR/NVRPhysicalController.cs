@@ -38,13 +38,12 @@ namespace NewtonVR
 
             Component[] components = PhysicalController.GetComponentsInChildren<Component>(true);
 
-            for (int componentIndex = 0; componentIndex < components.Length; componentIndex++)
-            {
-                Type componentType = components[componentIndex].GetType();
-                if (KeepTypes.Any(keepType => keepType == componentType || componentType.IsSubclassOf(keepType)) == false)
-                {
-                    DestroyImmediate(components[componentIndex]);
-                }
+            foreach (Component component in components) {
+              Type component_type = component.GetType();
+              if (KeepTypes.Any(keepType => keepType == component_type || component_type.IsSubclassOf(keepType)) == false)
+              {
+                DestroyImmediate(component);
+              }
             }
 
             PhysicalController.transform.parent = Hand.transform.parent;

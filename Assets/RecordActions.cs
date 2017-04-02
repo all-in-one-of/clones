@@ -23,9 +23,13 @@ public class RecordActions : MonoBehaviour {
 
   public void Update() {
     NVRHand hand = GetComponent<NVRHand>();
-    if (hand.UseButtonDown) {
+    if (hand.CurrentHandState == HandState.Uninitialized) { return; }
+
+    if (Input.GetKeyUp(KeyCode.Space) || hand.UseButtonUp) {
+      CreateFake(hand, new List<Snapshot>(snapshots));
       snapshots.Clear();
     }
+
     if (hand.UseButtonPressed) {
       Snapshot snap = new Snapshot() {
         position = transform.position,
@@ -43,37 +47,41 @@ public class RecordActions : MonoBehaviour {
       line_renderer.numPositions = snapshots.Count;
       line_renderer.SetPositions(snapshots.Select(s => s.position).ToArray());
     }
-
-    if (Input.GetKeyDown(KeyCode.Space)) {
-      CreateFake(hand);
-    }
   }
 
-  private void CreateFake(NVRHand real_hand) {
-    GameObject fake_hand_obj = Instantiate(real_hand.gameObject);
+  private void CreateFake(NVRHand real_hand, List<Snapshot> recording) {
+    // Disable the hand before cloning anything:
+    GameObject fake_hand_obj = new GameObject();
+
+    fake_hand_obj.name = fake_hand_obj.name = real_hand.name + " [Puppet]";
     fake_hand_obj.transform.SetParent(real_hand.Player.transform);
-    var fake_hand = fake_hand_obj.GetComponent<NVRHand>();
 
-    // Remove tracking and recording
-
-    switch (real_hand.Player.CurrentIntegrationType) {
-      case NVRSDKIntegrations.SteamVR:
-        Destroy(fake_hand_obj.GetComponent<SteamVR_TrackedObject>());
-        Destroy(fake_hand_obj.GetComponent<NVRSteamVRInputDevice>());
-        break;
-      case NVRSDKIntegrations.None:
-      case NVRSDKIntegrations.FallbackNonVR:
-      case NVRSDKIntegrations.Oculus:
-      default:
-        Debug.LogError("TODO: No support for Occulus/NonSteam VR yet.");
-        throw new ArgumentOutOfRangeException();
-    }
-    Destroy(fake_hand_obj.GetComponent<RecordActions>());
-    fake_hand.PhysicalController = null;
-
+    var fake_hand = fake_hand_obj.AddComponent<NVRHand>();
     var device = fake_hand_obj.AddComponent<FakeInputDevice>();
+
     var playback = fake_hand_obj.AddComponent<PlaybackActions>();
-    playback.recording = real_hand.GetComponent<RecordActions>();
+    playback.recording = recording;
+
+    // Duplicate children (render models, associated objects).
+    foreach (Transform child in real_hand.transform) {
+      child.gameObject.SetActive(false);
+      var child_clone = Instantiate(child.gameObject, fake_hand_obj.transform, false);
+      child_clone.name = child_clone.name.Replace("(Clone)", "");
+      child.gameObject.SetActive(true);
+    }
+
+    // Remove bad components from children. (anything with a global reference, essentially)
+    Component[] components = fake_hand_obj.GetComponentsInChildren<Component>(true);
+    foreach (var component in components) {
+      if (component.GetType() == typeof(SteamVR_RenderModel)) {
+        DestroyImmediate(component);
+      }
+    }
+
+    // Enable children
+    foreach (Transform child in fake_hand_obj.transform) {
+      child.gameObject.SetActive(true);
+    }
 
     fake_hand.PreInitialize(real_hand.Player);
     fake_hand.SetupInputDevice(device);
