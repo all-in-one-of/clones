@@ -29,10 +29,11 @@ namespace NewtonVR
 
             NVRInteractableMapping[interactable] = colliders;
 
-            for (int index = 0; index < colliders.Length; index++)
-            {
-                ColliderMapping[colliders[index]] = interactable;
+            foreach (Collider collider in colliders) {
+              ColliderMapping[collider] = interactable;
             }
+
+            Debug.Log("Registered new collider. Total registered: " + ColliderMapping.Count);
         }
 
         public static void Deregister(NVRInteractable interactable)
