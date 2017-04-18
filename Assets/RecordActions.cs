@@ -73,6 +73,7 @@ public class RecordActions : MonoBehaviour {
     }
   }
 
+
   private GameObject CreateFake(NVRHand real_hand, List<Snapshot> recording) {
     // Disable the hand before cloning anything:
     real_hand.gameObject.SetActive(false);
@@ -102,7 +103,7 @@ public class RecordActions : MonoBehaviour {
 
     var device = fake_hand_obj.AddComponent<FakeInputDevice>();
     var playback = fake_hand_obj.AddComponent<PlaybackActions>();
-    playback.recording = recording;
+    playback.Recording = recording;
 
     real_hand.gameObject.SetActive(true);
     fake_hand_obj.SetActive(true);

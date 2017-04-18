@@ -14,7 +14,19 @@ public class HandControls : MonoBehaviour {
 
   private abstract class Tool {
     public Color color;
+    /// Called every update while this tool is the active tool.
+    /// Note: Called on the frame in which we swap to the tool, and not on the frame in which we swap away.
     public abstract void Update(NVRHand hand);
+
+    /// <summary>
+    /// Called whenever we swap away from this tool.
+    /// </summary>
+    public virtual void ChangeAwayFrom(NVRHand hand) { }
+
+    /// <summary>
+    /// Called whenever we swap to this tool.
+    /// </summary>
+    public virtual void ChangeTo(NVRHand hand) { }
   }
 
   private class Transport : Tool {
@@ -38,8 +50,11 @@ public class HandControls : MonoBehaviour {
         // Find bounds of all colliders and subcolliders on object.
         var colliders = hand.CurrentlyInteracting.gameObject.GetComponentsInChildren<Collider>();
         var bounds = colliders.Select(c => c.bounds).Aggregate((b1, b2) => {
-          var b = new Bounds();
-          b.Encapsulate(b1);
+          var b = new Bounds {
+            center = b1.center,
+            extents = b1.extents
+          };
+
           b.Encapsulate(b2);
           return b;
         });
@@ -51,9 +66,67 @@ public class HandControls : MonoBehaviour {
     }
   }
 
+  private class MoveRecordings : Tool {
+    private readonly Color hover_color = new Color(.5f,0,0,1f);
+    private readonly Color nonhover_color = new Color(0,0,0,.2f);
+
+
+    private Vector3? last_position = null;
+    private PlaybackActions current_hover = null;
+    public MoveRecordings() {
+      color = Color.green;
+    }
+
+    public override void Update(NVRHand hand) {
+      // Highlight the recording we're closest to the start point of.
+      var all_playing_clones = FindObjectsOfType<PlaybackActions>();
+      if (all_playing_clones.Length != 0) {
+        var closest_clone = all_playing_clones.MinBy(x => Vector3.Distance(x.transform.position, hand.transform.position));
+        if (closest_clone != current_hover) {
+          if (current_hover != null) {
+            current_hover.line_renderer.material.color = nonhover_color;
+          }
+          closest_clone.line_renderer.material.color = hover_color;
+          current_hover = closest_clone;
+        }
+      }
+
+      // Move the recording when we grip the trigger
+      if (hand.UseButtonPressed) {
+        if (last_position.HasValue) {
+          if (current_hover != null) {
+            var shift = hand.CurrentPosition - last_position.Value;
+            Debug.Log(shift);
+
+            // shift all recorded positions, by the delta
+            var shifted_recording = current_hover.Recording.Select(snapshot => {
+              snapshot.position = snapshot.position + shift;
+              return snapshot;
+            }).ToList();
+            current_hover.Recording = shifted_recording;
+          }
+        }
+
+        last_position = hand.CurrentPosition;
+      }
+
+      if (hand.UseButtonUp) {
+        last_position = null;
+      }
+    }
+
+    public override void ChangeAwayFrom(NVRHand hand) {
+      if (current_hover != null) {
+        current_hover.line_renderer.material.color = nonhover_color;
+      }
+      current_hover = null;
+    }
+  }
+
   private Tool[] tools = {
     new Transport(),
     new Duplicate(),
+    new MoveRecordings(), 
   };
 
 
@@ -77,7 +150,9 @@ public class HandControls : MonoBehaviour {
 
     // Change tool, DPAD_LEFT
     if (GetDPadPress(hand) == NVRButtons.DPad_Left || Input.GetKeyDown(KeyCode.LeftArrow)) {
+      tools[tool].ChangeAwayFrom(hand);
       tool = (tool + 1) % tools.Length;
+      tools[tool].ChangeTo(hand);
       Tool current_tool = tools[tool];
       GetComponentsInChildren<Renderer>().ForEach(x => { x.material.color = current_tool.color; });
     }
