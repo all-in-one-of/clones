@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Events;
-using System.Linq;
 
 namespace NewtonVR {
   public class NVRInteractableItem : NVRInteractable {
@@ -31,7 +29,7 @@ namespace NewtonVR {
 
     protected Vector3?[] VelocityHistory;
     protected Vector3?[] AngularVelocityHistory;
-    protected int CurrentVelocityHistoryStep = 0;
+    protected int CurrentVelocityHistoryStep;
 
     protected float StartingDrag = -1;
     protected float StartingAngularDrag = -1;
@@ -41,7 +39,7 @@ namespace NewtonVR {
     protected override void Awake() {
       base.Awake();
 
-      this.Rigidbody.maxAngularVelocity = 100f;
+      Rigidbody.maxAngularVelocity = 100f;
     }
 
     protected virtual void FixedUpdate() {
@@ -71,8 +69,8 @@ namespace NewtonVR {
         rotationDelta = AttachedHand.transform.rotation * Quaternion.Inverse(InteractionPoint.rotation);
         positionDelta = (AttachedHand.transform.position - InteractionPoint.position);
       } else {
-        rotationDelta = PickupTransform.rotation * Quaternion.Inverse(this.transform.rotation);
-        positionDelta = (PickupTransform.position - this.transform.position);
+        rotationDelta = PickupTransform.rotation * Quaternion.Inverse(transform.rotation);
+        positionDelta = (PickupTransform.position - transform.position);
       }
 
       rotationDelta.ToAngleAxis(out angle, out axis);
@@ -84,13 +82,13 @@ namespace NewtonVR {
         Vector3 angularTarget = angle * axis;
         if (float.IsNaN(angularTarget.x) == false) {
           angularTarget = (angularTarget * angularVelocityMagic) * Time.deltaTime;
-          this.Rigidbody.angularVelocity = Vector3.MoveTowards(this.Rigidbody.angularVelocity, angularTarget, MaxAngularVelocityChange);
+          Rigidbody.angularVelocity = Vector3.MoveTowards(Rigidbody.angularVelocity, angularTarget, MaxAngularVelocityChange);
         }
       }
 
       Vector3 velocityTarget = (positionDelta * velocityMagic) * Time.deltaTime;
       if (float.IsNaN(velocityTarget.x) == false) {
-        this.Rigidbody.velocity = Vector3.MoveTowards(this.Rigidbody.velocity, velocityTarget, MaxVelocityChange);
+        Rigidbody.velocity = Vector3.MoveTowards(Rigidbody.velocity, velocityTarget, MaxVelocityChange);
       }
 
 
@@ -100,19 +98,19 @@ namespace NewtonVR {
           CurrentVelocityHistoryStep = 0;
         }
 
-        VelocityHistory[CurrentVelocityHistoryStep] = this.Rigidbody.velocity;
-        AngularVelocityHistory[CurrentVelocityHistoryStep] = this.Rigidbody.angularVelocity;
+        VelocityHistory[CurrentVelocityHistoryStep] = Rigidbody.velocity;
+        AngularVelocityHistory[CurrentVelocityHistoryStep] = Rigidbody.angularVelocity;
       }
     }
 
     protected virtual void AddExternalVelocities() {
       if (ExternalVelocity != Vector3.zero) {
-        this.Rigidbody.velocity = Vector3.Lerp(this.Rigidbody.velocity, ExternalVelocity, 0.5f);
+        Rigidbody.velocity = Vector3.Lerp(Rigidbody.velocity, ExternalVelocity, 0.5f);
         ExternalVelocity = Vector3.zero;
       }
 
       if (ExternalAngularVelocity != Vector3.zero) {
-        this.Rigidbody.angularVelocity = Vector3.Lerp(this.Rigidbody.angularVelocity, ExternalAngularVelocity, 0.5f);
+        Rigidbody.angularVelocity = Vector3.Lerp(Rigidbody.angularVelocity, ExternalAngularVelocity, 0.5f);
         ExternalAngularVelocity = Vector3.zero;
       }
     }
@@ -141,14 +139,14 @@ namespace NewtonVR {
       Rigidbody.drag = 0;
       Rigidbody.angularDrag = 0.05f;
 
-      if (DisablePhysicalMaterialsOnAttach == true) {
+      if (DisablePhysicalMaterialsOnAttach) {
         DisablePhysicalMaterials();
       }
 
-      PickupTransform = new GameObject(string.Format("[{0}] NVRPickupTransform", this.gameObject.name)).transform;
+      PickupTransform = new GameObject(string.Format("[{0}] NVRPickupTransform", gameObject.name)).transform;
       PickupTransform.parent = hand.transform;
-      PickupTransform.position = this.transform.position;
-      PickupTransform.rotation = this.transform.rotation;
+      PickupTransform.position = transform.position;
+      PickupTransform.rotation = transform.rotation;
 
       ResetVelocityHistory();
 
@@ -167,7 +165,7 @@ namespace NewtonVR {
         Destroy(PickupTransform.gameObject);
       }
 
-      if (DisablePhysicalMaterialsOnAttach == true) {
+      if (DisablePhysicalMaterialsOnAttach) {
         EnablePhysicalMaterials();
       }
 
@@ -188,8 +186,9 @@ namespace NewtonVR {
     }
 
     public override void ResetInteractable() {
-      EndInteraction();
       base.ResetInteractable();
+
+      EndInteraction();
     }
 
     public override void UseButtonDown() {
@@ -212,12 +211,12 @@ namespace NewtonVR {
       if (VelocityHistory != null) {
         Vector3? meanVelocity = GetMeanVector(VelocityHistory);
         if (meanVelocity != null) {
-          this.Rigidbody.velocity = meanVelocity.Value;
+          Rigidbody.velocity = meanVelocity.Value;
         }
 
         Vector3? meanAngularVelocity = GetMeanVector(AngularVelocityHistory);
         if (meanAngularVelocity != null) {
-          this.Rigidbody.angularVelocity = meanAngularVelocity.Value;
+          Rigidbody.angularVelocity = meanAngularVelocity.Value;
         }
       }
     }
@@ -266,13 +265,11 @@ namespace NewtonVR {
     }
 
     protected void EnablePhysicalMaterials() {
-      for (int colliderIndex = 0; colliderIndex < Colliders.Length; colliderIndex++) {
-        if (Colliders[colliderIndex] == null) {
-          continue;
-        }
+      foreach (Collider c in Colliders) {
+        if (c == null) { continue; }
 
-        if (MaterialCache.ContainsKey(Colliders[colliderIndex]) == true) {
-          Colliders[colliderIndex].sharedMaterial = MaterialCache[Colliders[colliderIndex]];
+        if (MaterialCache.ContainsKey(c)) {
+          c.sharedMaterial = MaterialCache[c];
         }
       }
     }
@@ -280,12 +277,12 @@ namespace NewtonVR {
     public override void UpdateColliders() {
       base.UpdateColliders();
 
-      if (DisablePhysicalMaterialsOnAttach == true) {
+      if (DisablePhysicalMaterialsOnAttach) {
         for (int colliderIndex = 0; colliderIndex < Colliders.Length; colliderIndex++) {
           if (MaterialCache.ContainsKey(Colliders[colliderIndex]) == false) {
             MaterialCache.Add(Colliders[colliderIndex], Colliders[colliderIndex].sharedMaterial);
 
-            if (IsAttached == true) {
+            if (IsAttached) {
               Colliders[colliderIndex].sharedMaterial = null;
             }
           }

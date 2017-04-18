@@ -6,7 +6,7 @@ using Utilities;
 
 public class PlaybackActions : MonoBehaviour {
   public List<RecordActions.Snapshot> recording;
-	public RecordActions.Snapshot playback_cursor;
+	public RecordActions.Snapshot? playback_cursor;
 
 	// Update is called once per frame
 	public void Update () {
@@ -32,8 +32,8 @@ public class PlaybackActions : MonoBehaviour {
       }
 
 			// update to match recording
-	    transform.position = playback_cursor.position;
-	    transform.rotation = playback_cursor.rotation;
+	    transform.position = playback_cursor.Value.position;
+	    transform.rotation = playback_cursor.Value.rotation;
 	  }
  	}
 }

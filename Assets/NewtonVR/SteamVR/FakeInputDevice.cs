@@ -1,53 +1,73 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
 using Optional;
+using UnityEngine.Assertions;
 
 namespace NewtonVR {
   public class FakeInputDevice : NVRInputDevice {
+    private Option<RecordActions.Snapshot> current_frame_snapshot;
+
+    // TODO: this should be the previous snapshot in the playback buffer, not just the last one we've inspected.
+    private Option<RecordActions.Snapshot> last_frame_snapshot;
+
+    private long current_frame = 0;
+
+    private void Update() {
+      Assert.IsTrue(Time.frameCount >= current_frame);
+      if (Time.frameCount != current_frame) {
+        last_frame_snapshot = current_frame_snapshot;
+        current_frame_snapshot = GetComponent<PlaybackActions>().playback_cursor.ToOption();
+        current_frame = Time.frameCount;
+      }
+    }
 
     public override void TriggerHapticPulse(ushort durationMicroSec = 500, NVRButtons button = NVRButtons.Touchpad) {
     }
 
     public override float GetAxis1D(NVRButtons button) {
-      return 0;
+      return current_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.axis[button].x, 0f);
     }
 
     public override Vector2 GetAxis2D(NVRButtons button) {
-      return Vector2.zero;
+      return current_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.axis[button], Vector2.zero);
     }
 
     public override bool GetPressDown(NVRButtons button) {
-      if (button == NVRButtons.Grip) {
-		    return GetComponent<PlaybackActions>().playback_cursor.hold_down || Input.GetKeyDown(KeyCode.Space);
-      }
-      return false;
+      var last_press = last_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.press_down[button], false);
+      var current_press = current_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.press_down[button], false);
+
+      return current_press && !last_press; // Only fire if this input wasn't true last frame
     }
 
     public override bool GetPressUp(NVRButtons button) {
-      if (button == NVRButtons.Grip) {
-				return GetComponent<PlaybackActions>().playback_cursor.hold_up || Input.GetKeyUp(KeyCode.Space);
-      }
-      return false;
+      var last_press = last_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.press_up[button], false);
+      var current_press = current_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.press_up[button], false);
+
+      return current_press && !last_press; // Only fire if this input wasn't true last frame
     }
 
     public override bool GetPress(NVRButtons button) {
-      if (button == NVRButtons.Grip) {
-				return GetComponent<PlaybackActions>().playback_cursor.hold_pressed || Input.GetKey(KeyCode.Space);
-      }
-      return false;
+      return current_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.pressed[button], false);
     }
 
     public override bool GetTouchDown(NVRButtons button) {
-      return false;
+      var last_touch = last_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.touch_down[button], false);
+      var current_touch = current_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.touch_down[button], false);
+
+      return current_touch && !last_touch; // Only fire if this input wasn't true last frame
     }
 
     public override bool GetTouchUp(NVRButtons button) {
-      return false;
+      var last_touch = last_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.touch_up[button], false);
+      var current_touch = current_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.touch_up[button], false);
+
+      return current_touch && !last_touch; // Only fire if this input wasn't true last frame
     }
 
     public override bool GetTouch(NVRButtons button) {
-      return false;
+      return current_frame_snapshot.UnwrapOrDefault(snapshot => snapshot.touched[button], false);
     }
 
     public override bool GetNearTouchDown(NVRButtons button) {
@@ -79,9 +99,8 @@ namespace NewtonVR {
     }
 
     public override Collider[] SetupDefaultPhysicalColliders(Transform ModelParent) {
-      Collider[] colliders = null;
-
       Transform dk2TrackhatColliders = ModelParent.transform.FindChild("ViveColliders");
+
       if (dk2TrackhatColliders == null) {
         dk2TrackhatColliders =
           GameObject.Instantiate(Resources.Load<GameObject>("ViveControllers/ViveColliders"))
@@ -92,15 +111,11 @@ namespace NewtonVR {
         dk2TrackhatColliders.localScale = Vector3.one;
       }
 
-      colliders = dk2TrackhatColliders.GetComponentsInChildren<Collider>();
-
-      return colliders;
+      return dk2TrackhatColliders.GetComponentsInChildren<Collider>();
     }
 
     public override Collider[] SetupDefaultColliders() {
-      Collider[] colliders = null;
-      colliders = new Collider[] {};
-      return colliders;
+      return new Collider[] {};
     }
   }
 }

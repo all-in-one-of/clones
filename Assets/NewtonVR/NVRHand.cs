@@ -684,7 +684,14 @@ namespace NewtonVR {
       SetVisibility(VisibilityLevel.Ghost);
       PhysicalController.Off();
     }
+
+    public void OnDestroy() {
+      if (PhysicalController != null) {
+        Destroy(PhysicalController.gameObject);
+      }
+    }
   }
+
 
   public enum VisibilityLevel {
     Invisible = 0,
