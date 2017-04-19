@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -7,6 +8,13 @@ using Utilities;
 using Debug = System.Diagnostics.Debug;
 
 public class PlaybackActions : MonoBehaviour {
+  public static double sequence_period = 5.0;
+
+  /// <summary>
+  /// The method to use to get the global sequence timer.
+  /// </summary>
+  public static Func<double> sequence_time = () => Time.realtimeSinceStartup;
+
   public List<RecordActions.Snapshot> Recording
   {
     get { return recording; }
@@ -50,15 +58,15 @@ public class PlaybackActions : MonoBehaviour {
   public void Update() {
     if (recording.Count > 0) {
       // start time is the end of the last loop
-      double sequence_period = 5.0;
-      double sequence_time = Time.realtimeSinceStartup;
-      double total_recording_length =
-        NumUtils.NextHighestMultiple(recording.Last().timestamp - recording.First().timestamp, sequence_period);
+
+      //double total_recording_length =
+      //  NumUtils.NextHighestMultiple(recording.Last().timestamp - recording.First().timestamp, sequence_period);
+      double total_recording_length = sequence_period; // Testing fixed period
 
       double recording_start_time_original = recording.First().timestamp;
       double playback_start_time = recording.First().timestamp;
 
-      double playback_timer = (sequence_time - playback_start_time) % total_recording_length;
+      double playback_timer = (sequence_time() - playback_start_time) % total_recording_length;
       double playback_time_original = playback_timer + recording_start_time_original;
 
       playback_cursor = recording[0];

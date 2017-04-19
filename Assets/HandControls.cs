@@ -67,8 +67,8 @@ public class HandControls : MonoBehaviour {
   }
 
   private class MoveRecordings : Tool {
-    private readonly Color hover_color = new Color(.5f,0,0,1f);
-    private readonly Color nonhover_color = new Color(0,0,0,.2f);
+    private readonly Color hover_color = new Color(.5f, 0, 0, 1f);
+    private readonly Color nonhover_color = new Color(0, 0, 0, .2f);
 
 
     private Vector3? last_position = null;
@@ -78,10 +78,14 @@ public class HandControls : MonoBehaviour {
     }
 
     public override void Update(NVRHand hand) {
-      // Highlight the recording we're closest to the start point of.
       var all_playing_clones = FindObjectsOfType<PlaybackActions>();
       if (all_playing_clones.Length != 0) {
-        var closest_clone = all_playing_clones.MinBy(x => Vector3.Distance(x.transform.position, hand.transform.position));
+        // Find the clone of the closest recording to the current hand position.
+        var closest_clone = all_playing_clones.MinBy(clone => {
+          return clone.Recording.Min(snapshot => Vector3.Distance(snapshot.position, hand.transform.position));
+        });
+
+        // Highlight the recording we're closest to the start point of.
         if (closest_clone != current_hover) {
           if (current_hover != null) {
             current_hover.line_renderer.material.color = nonhover_color;
@@ -96,14 +100,9 @@ public class HandControls : MonoBehaviour {
         if (last_position.HasValue) {
           if (current_hover != null) {
             var shift = hand.CurrentPosition - last_position.Value;
-            Debug.Log(shift);
 
             // shift all recorded positions, by the delta
-            var shifted_recording = current_hover.Recording.Select(snapshot => {
-              snapshot.position = snapshot.position + shift;
-              return snapshot;
-            }).ToList();
-            current_hover.Recording = shifted_recording;
+            shiftRecording(current_hover, shift);
           }
         }
 
@@ -113,6 +112,32 @@ public class HandControls : MonoBehaviour {
       if (hand.UseButtonUp) {
         last_position = null;
       }
+
+
+      // Clone the nearest recording
+      if (GetDPadPress(hand) == NVRButtons.DPad_Right || Input.GetKeyDown(KeyCode.D)) {
+        current_hover.gameObject.SetActive(false);
+        var duplicate_obj = Instantiate(current_hover.gameObject);
+        duplicate_obj.GetComponent<PlaybackActions>().Recording = new List<RecordActions.Snapshot>(current_hover.Recording);
+
+        // The hand component doesn't duplicate cleanly, so add it again
+        DestroyImmediate(duplicate_obj.GetComponent<NVRHand>());
+        NVRHand duplicate_hand = duplicate_obj.AddComponent<NVRHand>();
+
+        // The physical component doesn't duplicate cleanly, so add it again
+        DestroyImmediate(duplicate_obj.GetComponent<NVRPhysicalController>());
+        duplicate_obj.AddComponent<NVRPhysicalController>();
+
+        current_hover.gameObject.SetActive(true);
+        duplicate_obj.SetActive(true);
+
+        duplicate_hand.PreInitialize(hand.Player);
+        duplicate_hand.SetupInputDevice(duplicate_obj.GetComponent<FakeInputDevice>());
+        hand.Player.Hands.Add(duplicate_hand);
+
+        shiftRecording(duplicate_obj.GetComponent<PlaybackActions>(), new Vector3(0, .1f, 0));
+      }
+
     }
 
     public override void ChangeAwayFrom(NVRHand hand) {
@@ -126,11 +151,11 @@ public class HandControls : MonoBehaviour {
   private Tool[] tools = {
     new Transport(),
     new Duplicate(),
-    new MoveRecordings(), 
+    new MoveRecordings(),
   };
 
 
-  public int tool = 0;
+  public int tool = 2;
 
   // Update is called once per frame
   public void Update() {
@@ -143,8 +168,8 @@ public class HandControls : MonoBehaviour {
     if (GetDPadPress(hand) == NVRButtons.DPad_Down) {
       var all_playing_clones = FindObjectsOfType<PlaybackActions>();
       if (all_playing_clones.Length != 0) {
-      var closest_clone = all_playing_clones.MinBy(x => Vector3.Distance(x.transform.position, transform.position));
-      Destroy(closest_clone.gameObject);
+        var closest_clone = all_playing_clones.MinBy(x => Vector3.Distance(x.transform.position, transform.position));
+        DestroyImmediate(closest_clone.gameObject);
       }
     }
 
@@ -192,5 +217,16 @@ public class HandControls : MonoBehaviour {
     }
 
     return null;
+  }
+
+  /// <summary>
+  /// Shifts the given playback by the positional shift.
+  /// </summary>
+  private static void shiftRecording(PlaybackActions playback, Vector3 shift) {
+    var shifted_recording = playback.Recording.Select(snapshot => {
+      snapshot.position = snapshot.position + shift;
+      return snapshot;
+    }).ToList();
+    playback.Recording = shifted_recording;
   }
 }

@@ -27,6 +27,7 @@ namespace NewtonVR
 
         public void Initialize(NVRHand trackingHand, bool initialState)
         {
+      
             Hand = trackingHand;
 
             Hand.gameObject.SetActive(false);

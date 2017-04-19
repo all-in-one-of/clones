@@ -460,9 +460,7 @@ namespace NewtonVR {
       }
 
       if (CurrentInteractionStyle == InterationStyle.Toggle) {
-        if (CurrentHandState != HandState.Idle) {
-          CurrentHandState = HandState.Idle;
-        }
+        CurrentHandState = HandState.Idle;
       }
     }
 
@@ -491,7 +489,7 @@ namespace NewtonVR {
 
     protected virtual void OnTriggerEnter(Collider collider) {
       NVRInteractable interactable = NVRInteractables.GetInteractable(collider);
-      if (interactable == null || interactable.enabled == false)
+      if (interactable == null || interactable.enabled == false || collider.tag.Equals("Ungrabbable"))
         return;
 
       if (CurrentlyHoveringOver.ContainsKey(interactable) == false)
@@ -503,7 +501,7 @@ namespace NewtonVR {
 
     protected virtual void OnTriggerStay(Collider collider) {
       NVRInteractable interactable = NVRInteractables.GetInteractable(collider);
-      if (interactable == null || interactable.enabled == false)
+      if (interactable == null || interactable.enabled == false || collider.tag.Equals("Ungrabbable"))
         return;
 
       if (CurrentlyHoveringOver.ContainsKey(interactable) == false)
@@ -515,7 +513,7 @@ namespace NewtonVR {
 
     protected virtual void OnTriggerExit(Collider collider) {
       NVRInteractable interactable = NVRInteractables.GetInteractable(collider);
-      if (interactable == null)
+      if (interactable == null || collider.tag.Equals("Ungrabbable"))
         return;
 
       if (CurrentlyHoveringOver.ContainsKey(interactable) == true) {
@@ -628,7 +626,7 @@ namespace NewtonVR {
         colliders = InputDevice.SetupDefaultColliders();
       } else {
         //note: these should be trigger colliders
-        colliders = new Collider[] {};
+        colliders = new Collider[] { };
         if (RenderModel != null) {
           colliders = RenderModel.GetComponentsInChildren<Collider>();
         }
