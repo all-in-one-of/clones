@@ -12,18 +12,13 @@ namespace NewtonVR {
     public const float NewtonVRExpectedDeltaTime = 0.0111f;
 
     public static List<NVRPlayer> Instances = new List<NVRPlayer>();
-    public static NVRPlayer Instance
-    {
-      get
-      {
-        return Instances.First(player => player != null && player.gameObject != null);
-      }
+
+    public static NVRPlayer Instance {
+      get { return Instances.First(player => player != null && player.gameObject != null); }
     }
 
-    [HideInInspector]
-    public bool SteamVREnabled = false;
-    [HideInInspector]
-    public bool OculusSDKEnabled = false;
+    [HideInInspector] public bool SteamVREnabled = false;
+    [HideInInspector] public bool OculusSDKEnabled = false;
 
     public InterationStyle InteractionStyle;
     public bool PhysicalHands = true;
@@ -34,17 +29,14 @@ namespace NewtonVR {
 
     public UnityEvent OnInitialized;
 
-    [Space]
-    public bool EnableEditorPlayerPreview = true;
+    [Space] public bool EnableEditorPlayerPreview = true;
     public Mesh EditorPlayerPreview;
     public Mesh EditorPlayspacePreview;
     public bool EditorPlayspaceOverride = false;
     public Vector2 EditorPlayspaceDefault = new Vector2(2, 1.5f);
 
-    public Vector3 PlayspaceSize
-    {
-      get
-      {
+    public Vector3 PlayspaceSize {
+      get {
 #if !UNITY_5_5_OR_NEWER
                 if (Application.isPlaying == false)
                 {
@@ -79,62 +71,39 @@ namespace NewtonVR {
       }
     }
 
-    [Space]
+    [Space] [HideInInspector] public bool OverrideAll;
+    [HideInInspector] public GameObject OverrideAllLeftHand;
+    [HideInInspector] public GameObject OverrideAllLeftHandPhysicalColliders;
+    [HideInInspector] public GameObject OverrideAllRightHand;
+    [HideInInspector] public GameObject OverrideAllRightHandPhysicalColliders;
 
-    [HideInInspector]
-    public bool OverrideAll;
-    [HideInInspector]
-    public GameObject OverrideAllLeftHand;
-    [HideInInspector]
-    public GameObject OverrideAllLeftHandPhysicalColliders;
-    [HideInInspector]
-    public GameObject OverrideAllRightHand;
-    [HideInInspector]
-    public GameObject OverrideAllRightHandPhysicalColliders;
+    [HideInInspector] public bool OverrideSteamVR;
+    [HideInInspector] public GameObject OverrideSteamVRLeftHand;
+    [HideInInspector] public GameObject OverrideSteamVRLeftHandPhysicalColliders;
+    [HideInInspector] public GameObject OverrideSteamVRRightHand;
+    [HideInInspector] public GameObject OverrideSteamVRRightHandPhysicalColliders;
 
-    [HideInInspector]
-    public bool OverrideSteamVR;
-    [HideInInspector]
-    public GameObject OverrideSteamVRLeftHand;
-    [HideInInspector]
-    public GameObject OverrideSteamVRLeftHandPhysicalColliders;
-    [HideInInspector]
-    public GameObject OverrideSteamVRRightHand;
-    [HideInInspector]
-    public GameObject OverrideSteamVRRightHandPhysicalColliders;
+    [HideInInspector] public bool OverrideOculus;
+    [HideInInspector] public GameObject OverrideOculusLeftHand;
+    [HideInInspector] public GameObject OverrideOculusLeftHandPhysicalColliders;
+    [HideInInspector] public GameObject OverrideOculusRightHand;
+    [HideInInspector] public GameObject OverrideOculusRightHandPhysicalColliders;
 
-    [HideInInspector]
-    public bool OverrideOculus;
-    [HideInInspector]
-    public GameObject OverrideOculusLeftHand;
-    [HideInInspector]
-    public GameObject OverrideOculusLeftHandPhysicalColliders;
-    [HideInInspector]
-    public GameObject OverrideOculusRightHand;
-    [HideInInspector]
-    public GameObject OverrideOculusRightHandPhysicalColliders;
-
-    [Space]
-
-    public NVRHead Head;
+    [Space] public NVRHead Head;
     public NVRHand LeftHand;
     public NVRHand RightHand;
     public NVRHand FakeHand;
     public NVRHand FakeHand2;
 
-    [HideInInspector]
-    public List<NVRHand> Hands = new List<NVRHand>();
+    [HideInInspector] public List<NVRHand> Hands = new List<NVRHand>();
 
-    [HideInInspector]
-    public NVRSDKIntegrations CurrentIntegrationType = NVRSDKIntegrations.None;
+    [HideInInspector] public NVRSDKIntegrations CurrentIntegrationType = NVRSDKIntegrations.None;
 
     private NVRIntegration Integration;
 
     private Dictionary<Collider, NVRHand> ColliderToHandMapping;
 
-    [Space]
-
-    public bool DEBUGEnableFallback2D = false;
+    [Space] public bool DEBUGEnableFallback2D = false;
     public bool DEBUGDropFrames = false;
     public int DEBUGSleepPerFrame = 13;
 
@@ -164,7 +133,7 @@ namespace NewtonVR {
       SetupIntegration();
 
       if (Hands.Count == 0) {
-        Hands = new List<NVRHand> { LeftHand, RightHand };
+        Hands = new List<NVRHand> {LeftHand, RightHand};
 
         foreach (NVRHand hand in Hands) {
           hand.PreInitialize(this);
@@ -211,7 +180,8 @@ namespace NewtonVR {
         return;
       } else {
         if (logOutput == true) {
-          Debug.LogError("[NewtonVR] Critical Error: Oculus / SteamVR not setup properly or no headset found.");
+          Debug.LogError(
+            "[NewtonVR] Critical Error: Oculus / SteamVR not setup properly or no headset found.");
         }
         return;
       }
@@ -295,10 +265,10 @@ namespace NewtonVR {
       }
     }
 
-
 #if UNITY_EDITOR
     private static System.DateTime LastRequestedSize;
     private static Vector3 CachedPlayspaceScale;
+
     private void OnDrawGizmos() {
       if (EnableEditorPlayerPreview == false)
         return;
@@ -332,10 +302,12 @@ namespace NewtonVR {
       Color drawColor = Color.green;
       drawColor.a = 0.075f;
       Gizmos.color = drawColor;
-      Gizmos.DrawWireMesh(EditorPlayerPreview, this.transform.position, this.transform.rotation, this.transform.localScale);
+      Gizmos.DrawWireMesh(EditorPlayerPreview, this.transform.position, this.transform.rotation,
+        this.transform.localScale);
       drawColor.a = 0.5f;
       Gizmos.color = drawColor;
-      Gizmos.DrawWireMesh(EditorPlayspacePreview, this.transform.position, this.transform.rotation, playspaceScale * this.transform.localScale.x);
+      Gizmos.DrawWireMesh(EditorPlayspacePreview, this.transform.position, this.transform.rotation,
+        playspaceScale * this.transform.localScale.x);
     }
 #endif
   }

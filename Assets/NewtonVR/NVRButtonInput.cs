@@ -6,10 +6,8 @@ using System.Linq;
 namespace NewtonVR {
   public class NVRButtonInputs {
     /// <summary>Is true ONLY on the frame that the button is first pressed down</summary>
-    public bool PressDown
-    {
-      get
-      {
+    public bool PressDown {
+      get {
         if (PressDownExpired) {
           PressDownCached = input_device.GetPressDown(nvrbutton);
           PressDownExpired = false;
@@ -22,10 +20,8 @@ namespace NewtonVR {
     private bool PressDownExpired = true;
 
     /// <summary>Is true ONLY on the frame that the button is released after being pressed down</summary>
-    public bool PressUp
-    {
-      get
-      {
+    public bool PressUp {
+      get {
         if (PressUpExpired) {
           PressUpCached = input_device.GetPressUp(nvrbutton);
           PressUpExpired = false;
@@ -38,10 +34,8 @@ namespace NewtonVR {
     private bool PressUpExpired = true;
 
     /// <summary>Is true WHENEVER the button is pressed down</summary>
-    public bool IsPressed
-    {
-      get
-      {
+    public bool IsPressed {
+      get {
         if (IsPressedExpired) {
           IsPressedCached = input_device.GetPress(nvrbutton);
           IsPressedExpired = false;
@@ -54,10 +48,8 @@ namespace NewtonVR {
     private bool IsPressedExpired = true;
 
     /// <summary>Is true ONLY on the frame that the button is first touched</summary>
-    public bool TouchDown
-    {
-      get
-      {
+    public bool TouchDown {
+      get {
         if (TouchDownExpired) {
           TouchDownCached = input_device.GetTouchDown(nvrbutton);
           TouchDownExpired = false;
@@ -70,10 +62,8 @@ namespace NewtonVR {
     private bool TouchDownExpired = true;
 
     /// <summary>Is true ONLY on the frame that the button is released after being touched</summary>
-    public bool TouchUp
-    {
-      get
-      {
+    public bool TouchUp {
+      get {
         if (TouchUpExpired) {
           TouchUpCached = input_device.GetTouchUp(nvrbutton);
           TouchUpExpired = false;
@@ -86,10 +76,8 @@ namespace NewtonVR {
     private bool TouchUpExpired = true;
 
     /// <summary>Is true WHENEVER the button is being touched</summary>
-    public bool IsTouched
-    {
-      get
-      {
+    public bool IsTouched {
+      get {
         if (IsTouchedExpired) {
           IsTouchedCached = input_device.GetTouch(nvrbutton);
           IsTouchedExpired = false;
@@ -102,10 +90,8 @@ namespace NewtonVR {
     private bool IsTouchedExpired = true;
 
     /// <summary>Is true ONLY on the frame that the button is first near touched</summary>
-    public bool NearTouchDown
-    {
-      get
-      {
+    public bool NearTouchDown {
+      get {
         if (NearTouchDownExpired) {
           NearTouchDownCached = input_device.GetNearTouchDown(nvrbutton);
           NearTouchDownExpired = false;
@@ -118,10 +104,8 @@ namespace NewtonVR {
     private bool NearTouchDownExpired = true;
 
     /// <summary>Is true ONLY on the frame that the button is released after being near touched</summary>
-    public bool NearTouchUp
-    {
-      get
-      {
+    public bool NearTouchUp {
+      get {
         if (NearTouchUpExpired) {
           NearTouchUpCached = input_device.GetNearTouchUp(nvrbutton);
           NearTouchUpExpired = false;
@@ -134,10 +118,8 @@ namespace NewtonVR {
     private bool NearTouchUpExpired = true;
 
     /// <summary>Is true WHENEVER the button is near being touched</summary>
-    public bool IsNearTouched
-    {
-      get
-      {
+    public bool IsNearTouched {
+      get {
         if (IsNearTouchedExpired) {
           IsNearTouchedCached = input_device.GetNearTouch(nvrbutton);
           IsNearTouchedExpired = false;
@@ -150,10 +132,8 @@ namespace NewtonVR {
     private bool IsNearTouchedExpired = true;
 
     /// <summary>x,y axis generally for the touchpad. trigger uses x</summary>
-    public Vector2 Axis
-    {
-      get
-      {
+    public Vector2 Axis {
+      get {
         if (AxisExpired) {
           AxisCached = input_device.GetAxis2D(nvrbutton);
           AxisExpired = false;
@@ -166,10 +146,8 @@ namespace NewtonVR {
     private bool AxisExpired = true;
 
     /// <summary>x axis from Axis</summary>
-    public float SingleAxis
-    {
-      get
-      {
+    public float SingleAxis {
+      get {
         if (SingleAxisExpired) {
           SingleAxisCached = input_device.GetAxis1D(nvrbutton);
           SingleAxisExpired = false;

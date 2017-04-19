@@ -7,187 +7,146 @@
 using UnityEngine;
 using System.Collections;
 
-namespace Valve.VR.InteractionSystem
-{
-	//-------------------------------------------------------------------------
-	public class ControllerHoverHighlight : MonoBehaviour
-	{
-		public Material highLightMaterial;
-		public bool fireHapticsOnHightlight = true;
+namespace Valve.VR.InteractionSystem {
+  //-------------------------------------------------------------------------
+  public class ControllerHoverHighlight : MonoBehaviour {
+    public Material highLightMaterial;
+    public bool fireHapticsOnHightlight = true;
 
-		private Hand hand;
+    private Hand hand;
 
-		private MeshRenderer bodyMeshRenderer;
-		private MeshRenderer trackingHatMeshRenderer;
-		private SteamVR_RenderModel renderModel;
-		private bool renderModelLoaded = false;
+    private MeshRenderer bodyMeshRenderer;
+    private MeshRenderer trackingHatMeshRenderer;
+    private SteamVR_RenderModel renderModel;
+    private bool renderModelLoaded = false;
 
-		SteamVR_Events.Action renderModelLoadedAction;
+    SteamVR_Events.Action renderModelLoadedAction;
 
-		//-------------------------------------------------
-		void Start()
-		{
-			hand = GetComponentInParent<Hand>();
-		}
+    //-------------------------------------------------
+    void Start() {
+      hand = GetComponentInParent<Hand>();
+    }
 
+    //-------------------------------------------------
+    void Awake() {
+      renderModelLoadedAction = SteamVR_Events.RenderModelLoadedAction(OnRenderModelLoaded);
+    }
 
-		//-------------------------------------------------
-		void Awake()
-		{
-			renderModelLoadedAction = SteamVR_Events.RenderModelLoadedAction( OnRenderModelLoaded );
-		}
+    //-------------------------------------------------
+    void OnEnable() {
+      renderModelLoadedAction.enabled = true;
+    }
 
+    //-------------------------------------------------
+    void OnDisable() {
+      renderModelLoadedAction.enabled = false;
+    }
 
-		//-------------------------------------------------
-		void OnEnable()
-		{
-			renderModelLoadedAction.enabled = true;
-		}
+    //-------------------------------------------------
+    private void OnHandInitialized(int deviceIndex) {
+      renderModel = gameObject.AddComponent<SteamVR_RenderModel>();
+      renderModel.SetDeviceIndex(deviceIndex);
+      renderModel.updateDynamically = false;
+    }
 
+    //-------------------------------------------------
+    private void OnRenderModelLoaded(SteamVR_RenderModel renderModel, bool success) {
+      if (renderModel != this.renderModel) {
+        return;
+      }
 
-		//-------------------------------------------------
-		void OnDisable()
-		{
-			renderModelLoadedAction.enabled = false;
-		}
+      Transform bodyTransform = transform.Find("body");
+      if (bodyTransform != null) {
+        bodyMeshRenderer = bodyTransform.GetComponent<MeshRenderer>();
+        bodyMeshRenderer.material = highLightMaterial;
+        bodyMeshRenderer.enabled = false;
+      }
 
+      Transform trackingHatTransform = transform.Find("trackhat");
+      if (trackingHatTransform != null) {
+        trackingHatMeshRenderer = trackingHatTransform.GetComponent<MeshRenderer>();
+        trackingHatMeshRenderer.material = highLightMaterial;
+        trackingHatMeshRenderer.enabled = false;
+      }
 
-		//-------------------------------------------------
-		private void OnHandInitialized( int deviceIndex )
-		{
-			renderModel = gameObject.AddComponent<SteamVR_RenderModel>();
-			renderModel.SetDeviceIndex( deviceIndex );
-			renderModel.updateDynamically = false;
-		}
+      foreach (Transform child in transform) {
+        if ((child.name != "body") && (child.name != "trackhat")) {
+          Destroy(child.gameObject);
+        }
+      }
 
+      renderModelLoaded = true;
+    }
 
-		//-------------------------------------------------
-		private void OnRenderModelLoaded( SteamVR_RenderModel renderModel, bool success )
-		{
-			if ( renderModel != this.renderModel )
-			{
-				return;
-			}
+    //-------------------------------------------------
+    private void OnParentHandHoverBegin(Interactable other) {
+      if (!this.isActiveAndEnabled) {
+        return;
+      }
 
-			Transform bodyTransform = transform.Find( "body" );
-			if ( bodyTransform != null )
-			{
-				bodyMeshRenderer = bodyTransform.GetComponent<MeshRenderer>();
-				bodyMeshRenderer.material = highLightMaterial;
-				bodyMeshRenderer.enabled = false;
-			}
+      if (other.transform.parent != transform.parent) {
+        ShowHighlight();
+      }
+    }
 
-			Transform trackingHatTransform = transform.Find( "trackhat" );
-			if ( trackingHatTransform != null )
-			{
-				trackingHatMeshRenderer = trackingHatTransform.GetComponent<MeshRenderer>();
-				trackingHatMeshRenderer.material = highLightMaterial;
-				trackingHatMeshRenderer.enabled = false;
-			}
+    //-------------------------------------------------
+    private void OnParentHandHoverEnd(Interactable other) {
+      HideHighlight();
+    }
 
-			foreach ( Transform child in transform )
-			{
-				if ( ( child.name != "body" ) && ( child.name != "trackhat" ) )
-				{
-					Destroy( child.gameObject );
-				}
-			}
+    //-------------------------------------------------
+    private void OnParentHandInputFocusAcquired() {
+      if (!this.isActiveAndEnabled) {
+        return;
+      }
 
-			renderModelLoaded = true;
-		}
+      if (hand.hoveringInteractable &&
+          hand.hoveringInteractable.transform.parent != transform.parent) {
+        ShowHighlight();
+      }
+    }
 
+    //-------------------------------------------------
+    private void OnParentHandInputFocusLost() {
+      HideHighlight();
+    }
 
-		//-------------------------------------------------
-		private void OnParentHandHoverBegin( Interactable other )
-		{
-			if ( !this.isActiveAndEnabled )
-			{
-				return;
-			}
+    //-------------------------------------------------
+    public void ShowHighlight() {
+      if (renderModelLoaded == false) {
+        return;
+      }
 
-			if ( other.transform.parent != transform.parent )
-			{
-				ShowHighlight();
-			}
-		}
+      if (fireHapticsOnHightlight) {
+        hand.controller.TriggerHapticPulse(500);
+      }
 
+      if (bodyMeshRenderer != null) {
+        bodyMeshRenderer.enabled = true;
+      }
 
-		//-------------------------------------------------
-		private void OnParentHandHoverEnd( Interactable other )
-		{
-			HideHighlight();
-		}
+      if (trackingHatMeshRenderer != null) {
+        trackingHatMeshRenderer.enabled = true;
+      }
+    }
 
+    //-------------------------------------------------
+    public void HideHighlight() {
+      if (renderModelLoaded == false) {
+        return;
+      }
 
-		//-------------------------------------------------
-		private void OnParentHandInputFocusAcquired()
-		{
-			if ( !this.isActiveAndEnabled )
-			{
-				return;
-			}
+      if (fireHapticsOnHightlight) {
+        hand.controller.TriggerHapticPulse(300);
+      }
 
-			if ( hand.hoveringInteractable && hand.hoveringInteractable.transform.parent != transform.parent )
-			{
-				ShowHighlight();
-			}
-		}
+      if (bodyMeshRenderer != null) {
+        bodyMeshRenderer.enabled = false;
+      }
 
-
-		//-------------------------------------------------
-		private void OnParentHandInputFocusLost()
-		{
-			HideHighlight();
-		}
-
-
-		//-------------------------------------------------
-		public void ShowHighlight()
-		{
-			if ( renderModelLoaded == false )
-			{
-				return;
-			}
-
-			if ( fireHapticsOnHightlight )
-			{
-				hand.controller.TriggerHapticPulse( 500 );
-			}
-
-			if ( bodyMeshRenderer != null )
-			{
-				bodyMeshRenderer.enabled = true;
-			}
-
-			if ( trackingHatMeshRenderer != null )
-			{
-				trackingHatMeshRenderer.enabled = true;
-			}
-		}
-
-
-		//-------------------------------------------------
-		public void HideHighlight()
-		{
-			if ( renderModelLoaded == false )
-			{
-				return;
-			}
-
-			if ( fireHapticsOnHightlight )
-			{
-				hand.controller.TriggerHapticPulse( 300 );
-			}
-
-			if ( bodyMeshRenderer != null )
-			{
-				bodyMeshRenderer.enabled = false;
-			}
-
-			if ( trackingHatMeshRenderer != null )
-			{
-				trackingHatMeshRenderer.enabled = false;
-			}
-		}
-	}
+      if (trackingHatMeshRenderer != null) {
+        trackingHatMeshRenderer.enabled = false;
+      }
+    }
+  }
 }

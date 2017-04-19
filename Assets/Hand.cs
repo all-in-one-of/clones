@@ -21,13 +21,15 @@ public class Hand : MonoBehaviour {
     bool trigger_up = device.GetPressUp(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
 
     float scale = 1.2f;
-    transform.GetChild(0).localScale = trigger_pressed ?
-        new Vector3(scale, scale, scale) : new Vector3(1, 1, 1);
+    transform.GetChild(0).localScale = trigger_pressed
+      ? new Vector3(scale, scale, scale)
+      : new Vector3(1, 1, 1);
 
     if (trigger_down) {
       Debug.Log("Trigger down");
       Collider[] overlapping_arr = Physics.OverlapSphere(transform.position, 1f);
-      var overlapping = overlapping_arr.Where((Collider c) => c.gameObject.GetComponent<Rigidbody>() != null);
+      var overlapping =
+        overlapping_arr.Where((Collider c) => c.gameObject.GetComponent<Rigidbody>() != null);
 
       if (overlapping.Any()) {
         Collider closest_collider =

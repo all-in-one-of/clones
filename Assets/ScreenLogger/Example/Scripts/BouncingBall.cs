@@ -3,51 +3,49 @@ using System.Collections;
 using AClockworkBerry;
 
 public class BouncingBall : MonoBehaviour {
-    public float Acceleration = -1;
-    public float HorizVelocity = 1;
-    public float Wall = 5;
-    public float Radius = 1;
-    public float RotationSpeed = 1;
+  public float Acceleration = -1;
+  public float HorizVelocity = 1;
+  public float Wall = 5;
+  public float Radius = 1;
+  public float RotationSpeed = 1;
 
-    private Vector3 Velocity;
-    private float MaxVelocity;
+  private Vector3 Velocity;
+  private float MaxVelocity;
 
-	void Start () {
-        Velocity = new Vector3(HorizVelocity, 0, 0);
+  void Start() {
+    Velocity = new Vector3(HorizVelocity, 0, 0);
 
-        MaxVelocity = Mathf.Sqrt(2 * -Acceleration * (transform.position.y - Radius));
-        transform.position = new Vector3(0, transform.position.y, 0);
+    MaxVelocity = Mathf.Sqrt(2 * -Acceleration * (transform.position.y - Radius));
+    transform.position = new Vector3(0, transform.position.y, 0);
 
-        Debug.LogWarning("Start...");
-	}
-	
-	void Update () {
-        if (Input.GetButtonDown("Fire1"))            
-            ScreenLogger.Instance.ShowLog = !ScreenLogger.Instance.ShowLog;
+    Debug.LogWarning("Start...");
+  }
 
-        Velocity.y += Acceleration * Time.deltaTime;
-        transform.position += Velocity * Time.deltaTime;
+  void Update() {
+    if (Input.GetButtonDown("Fire1"))
+      ScreenLogger.Instance.ShowLog = !ScreenLogger.Instance.ShowLog;
 
-        if (transform.position.y - Radius < 0)
-        {
-            transform.position = new Vector3(transform.position.x, Radius, 0);
-            Velocity.y = MaxVelocity;
+    Velocity.y += Acceleration * Time.deltaTime;
+    transform.position += Velocity * Time.deltaTime;
 
-            Debug.Log("Boing at " + transform.position.x + "...");
-        }
+    if (transform.position.y - Radius < 0) {
+      transform.position = new Vector3(transform.position.x, Radius, 0);
+      Velocity.y = MaxVelocity;
 
-        if (Mathf.Abs(transform.position.x) + Radius > Wall)
-        {
-            transform.position = new Vector3(
-                transform.position.x > 0 ? Wall - Radius : -Wall + Radius,
-                transform.position.y,
-                0);
+      Debug.Log("Boing at " + transform.position.x + "...");
+    }
 
-            Velocity.x *= -1;
-        }
+    if (Mathf.Abs(transform.position.x) + Radius > Wall) {
+      transform.position = new Vector3(
+        transform.position.x > 0 ? Wall - Radius : -Wall + Radius,
+        transform.position.y,
+        0);
 
-        transform.Rotate(new Vector3(0, RotationSpeed * Time.deltaTime, 0));
-	}
+      Velocity.x *= -1;
+    }
+
+    transform.Rotate(new Vector3(0, RotationSpeed * Time.deltaTime, 0));
+  }
 }
 
 /*

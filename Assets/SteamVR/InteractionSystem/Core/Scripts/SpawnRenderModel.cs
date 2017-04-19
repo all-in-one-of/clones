@@ -8,159 +8,126 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Valve.VR.InteractionSystem
-{
-	//-------------------------------------------------------------------------
-	public class SpawnRenderModel : MonoBehaviour
-	{
-		public Material[] materials;
+namespace Valve.VR.InteractionSystem {
+  //-------------------------------------------------------------------------
+  public class SpawnRenderModel : MonoBehaviour {
+    public Material[] materials;
 
-		private SteamVR_RenderModel[] renderModels;
-		private Hand hand;
-		private List<MeshRenderer> renderers = new List<MeshRenderer>();
+    private SteamVR_RenderModel[] renderModels;
+    private Hand hand;
+    private List<MeshRenderer> renderers = new List<MeshRenderer>();
 
-		private static List<SpawnRenderModel> spawnRenderModels = new List<SpawnRenderModel>();
-		private static int lastFrameUpdated;
-		private static int spawnRenderModelUpdateIndex;
+    private static List<SpawnRenderModel> spawnRenderModels = new List<SpawnRenderModel>();
+    private static int lastFrameUpdated;
+    private static int spawnRenderModelUpdateIndex;
 
-		SteamVR_Events.Action renderModelLoadedAction;
+    SteamVR_Events.Action renderModelLoadedAction;
 
+    //-------------------------------------------------
+    void Awake() {
+      renderModels = new SteamVR_RenderModel[materials.Length];
+      renderModelLoadedAction = SteamVR_Events.RenderModelLoadedAction(OnRenderModelLoaded);
+    }
 
-		//-------------------------------------------------
-		void Awake()
-		{
-			renderModels = new SteamVR_RenderModel[materials.Length];
-			renderModelLoadedAction = SteamVR_Events.RenderModelLoadedAction( OnRenderModelLoaded );
-		}
+    //-------------------------------------------------
+    void OnEnable() {
+      ShowController();
 
+      renderModelLoadedAction.enabled = true;
 
-		//-------------------------------------------------
-		void OnEnable()
-		{
-			ShowController();
+      spawnRenderModels.Add(this);
+    }
 
-			renderModelLoadedAction.enabled = true;
+    //-------------------------------------------------
+    void OnDisable() {
+      HideController();
 
-			spawnRenderModels.Add( this );
-		}
+      renderModelLoadedAction.enabled = false;
 
+      spawnRenderModels.Remove(this);
+    }
 
-		//-------------------------------------------------
-		void OnDisable()
-		{
-			HideController();
+    //-------------------------------------------------
+    private void OnAttachedToHand(Hand hand) {
+      this.hand = hand;
+      ShowController();
+    }
 
-			renderModelLoadedAction.enabled = false;
+    //-------------------------------------------------
+    private void OnDetachedFromHand(Hand hand) {
+      this.hand = null;
+      HideController();
+    }
 
-			spawnRenderModels.Remove( this );
-		}
+    //-------------------------------------------------
+    void Update() {
+      // Only update one per frame
+      if (lastFrameUpdated == Time.renderedFrameCount) {
+        return;
+      }
+      lastFrameUpdated = Time.renderedFrameCount;
 
+      // SpawnRenderModel overflow
+      if (spawnRenderModelUpdateIndex >= spawnRenderModels.Count) {
+        spawnRenderModelUpdateIndex = 0;
+      }
 
-		//-------------------------------------------------
-		private void OnAttachedToHand( Hand hand )
-		{
-			this.hand = hand;
-			ShowController();
-		}
+      // Perform update
+      if (spawnRenderModelUpdateIndex < spawnRenderModels.Count) {
+        SteamVR_RenderModel renderModel =
+          spawnRenderModels[spawnRenderModelUpdateIndex].renderModels[0];
+        if (renderModel != null) {
+          renderModel.UpdateComponents(OpenVR.RenderModels);
+        }
+      }
 
+      spawnRenderModelUpdateIndex++;
+    }
 
-		//-------------------------------------------------
-		private void OnDetachedFromHand( Hand hand )
-		{
-			this.hand = null;
-			HideController();
-		}
+    //-------------------------------------------------
+    private void ShowController() {
+      if (hand == null || hand.controller == null) {
+        return;
+      }
 
+      for (int i = 0; i < renderModels.Length; i++) {
+        if (renderModels[i] == null) {
+          renderModels[i] =
+            new GameObject("SteamVR_RenderModel").AddComponent<SteamVR_RenderModel>();
+          renderModels[i].updateDynamically = false; // Update one per frame (see Update() method)
+          renderModels[i].transform.parent = transform;
+          Util.ResetTransform(renderModels[i].transform);
+        }
 
-		//-------------------------------------------------
-		void Update()
-		{
-			// Only update one per frame
-			if ( lastFrameUpdated == Time.renderedFrameCount )
-			{
-				return;
-			}
-			lastFrameUpdated = Time.renderedFrameCount;
+        renderModels[i].gameObject.SetActive(true);
+        renderModels[i].SetDeviceIndex((int) hand.controller.index);
+      }
+    }
 
+    //-------------------------------------------------
+    private void HideController() {
+      for (int i = 0; i < renderModels.Length; i++) {
+        if (renderModels[i] != null) {
+          renderModels[i].gameObject.SetActive(false);
+        }
+      }
+    }
 
-			// SpawnRenderModel overflow
-			if ( spawnRenderModelUpdateIndex >= spawnRenderModels.Count )
-			{
-				spawnRenderModelUpdateIndex = 0;
-			}
-
-
-			// Perform update
-			if ( spawnRenderModelUpdateIndex < spawnRenderModels.Count )
-			{
-				SteamVR_RenderModel renderModel = spawnRenderModels[spawnRenderModelUpdateIndex].renderModels[0];
-				if ( renderModel != null )
-				{
-					renderModel.UpdateComponents( OpenVR.RenderModels );
-				}
-			}
-
-			spawnRenderModelUpdateIndex++;
-		}
-
-
-		//-------------------------------------------------
-		private void ShowController()
-		{
-			if ( hand == null || hand.controller == null )
-			{
-				return;
-			}
-
-			for ( int i = 0; i < renderModels.Length; i++ )
-			{
-				if ( renderModels[i] == null )
-				{
-					renderModels[i] = new GameObject( "SteamVR_RenderModel" ).AddComponent<SteamVR_RenderModel>();
-					renderModels[i].updateDynamically = false; // Update one per frame (see Update() method)
-					renderModels[i].transform.parent = transform;
-					Util.ResetTransform( renderModels[i].transform );
-				}
-
-				renderModels[i].gameObject.SetActive( true );
-				renderModels[i].SetDeviceIndex( (int)hand.controller.index );
-			}
-		}
-
-
-		//-------------------------------------------------
-		private void HideController()
-		{
-			for ( int i = 0; i < renderModels.Length; i++ )
-			{
-				if ( renderModels[i] != null )
-				{
-					renderModels[i].gameObject.SetActive( false );
-				}
-			}
-		}
-
-
-		//-------------------------------------------------
-		private void OnRenderModelLoaded( SteamVR_RenderModel renderModel, bool success )
-		{
-			for ( int i = 0; i < renderModels.Length; i++ )
-			{
-				if ( renderModel == renderModels[i] )
-				{
-					if ( materials[i] != null )
-					{
-						renderers.Clear();
-						renderModels[i].GetComponentsInChildren<MeshRenderer>( renderers );
-						for ( int j = 0; j < renderers.Count; j++ )
-						{
-							Texture mainTexture = renderers[j].material.mainTexture;
-							renderers[j].sharedMaterial = materials[i];
-							renderers[j].material.mainTexture = mainTexture;
-						}
-					}
-				}
-			}
-		}
-	}
+    //-------------------------------------------------
+    private void OnRenderModelLoaded(SteamVR_RenderModel renderModel, bool success) {
+      for (int i = 0; i < renderModels.Length; i++) {
+        if (renderModel == renderModels[i]) {
+          if (materials[i] != null) {
+            renderers.Clear();
+            renderModels[i].GetComponentsInChildren<MeshRenderer>(renderers);
+            for (int j = 0; j < renderers.Count; j++) {
+              Texture mainTexture = renderers[j].material.mainTexture;
+              renderers[j].sharedMaterial = materials[i];
+              renderers[j].material.mainTexture = mainTexture;
+            }
+          }
+        }
+      }
+    }
+  }
 }

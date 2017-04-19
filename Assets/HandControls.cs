@@ -11,9 +11,9 @@ using Utilities;
 using Valve.VR;
 
 public class HandControls : MonoBehaviour {
-
   private abstract class Tool {
     public Color color;
+
     /// Called every update while this tool is the active tool.
     /// Note: Called on the frame in which we swap to the tool, and not on the frame in which we swap away.
     public abstract void Update(NVRHand hand);
@@ -21,18 +21,21 @@ public class HandControls : MonoBehaviour {
     /// <summary>
     /// Called whenever we swap away from this tool.
     /// </summary>
-    public virtual void ChangeAwayFrom(NVRHand hand) { }
+    public virtual void ChangeAwayFrom(NVRHand hand) {
+    }
 
     /// <summary>
     /// Called whenever we swap to this tool.
     /// </summary>
-    public virtual void ChangeTo(NVRHand hand) { }
+    public virtual void ChangeTo(NVRHand hand) {
+    }
   }
 
   private class Transport : Tool {
     public Transport() {
       color = Color.white;
     }
+
     public override void Update(NVRHand hand) {
       // Nothing extra beyond gripping
     }
@@ -42,6 +45,7 @@ public class HandControls : MonoBehaviour {
     public Duplicate() {
       color = Color.blue;
     }
+
     public override void Update(NVRHand hand) {
       if (hand.UseButtonDown && hand.IsInteracting) {
         GameObject duplicate = Instantiate(hand.CurrentlyInteracting.gameObject);
@@ -70,9 +74,9 @@ public class HandControls : MonoBehaviour {
     private readonly Color hover_color = new Color(.5f, 0, 0, 1f);
     private readonly Color nonhover_color = new Color(0, 0, 0, .2f);
 
-
     private Vector3? last_position = null;
     private PlaybackActions current_hover = null;
+
     public MoveRecordings() {
       color = Color.green;
     }
@@ -81,9 +85,13 @@ public class HandControls : MonoBehaviour {
       var all_playing_clones = FindObjectsOfType<PlaybackActions>();
       if (all_playing_clones.Length != 0) {
         // Find the clone of the closest recording to the current hand position.
-        var closest_clone = all_playing_clones.MinBy(clone => {
-          return clone.Recording.Min(snapshot => Vector3.Distance(snapshot.position, hand.transform.position));
-        });
+        var closest_clone =
+          all_playing_clones.MinBy(
+            clone => {
+              return
+                clone.Recording.Min(
+                  snapshot => Vector3.Distance(snapshot.position, hand.transform.position));
+            });
 
         // Highlight the recording we're closest to the start point of.
         if (closest_clone != current_hover) {
@@ -113,12 +121,12 @@ public class HandControls : MonoBehaviour {
         last_position = null;
       }
 
-
       // Clone the nearest recording
       if (GetDPadPress(hand) == NVRButtons.DPad_Right || Input.GetKeyDown(KeyCode.D)) {
         current_hover.gameObject.SetActive(false);
         var duplicate_obj = Instantiate(current_hover.gameObject);
-        duplicate_obj.GetComponent<PlaybackActions>().Recording = new List<RecordActions.Snapshot>(current_hover.Recording);
+        duplicate_obj.GetComponent<PlaybackActions>().Recording =
+          new List<RecordActions.Snapshot>(current_hover.Recording);
 
         // The hand component doesn't duplicate cleanly, so add it again
         DestroyImmediate(duplicate_obj.GetComponent<NVRHand>());
@@ -137,7 +145,6 @@ public class HandControls : MonoBehaviour {
 
         shiftRecording(duplicate_obj.GetComponent<PlaybackActions>(), new Vector3(0, .1f, 0));
       }
-
     }
 
     public override void ChangeAwayFrom(NVRHand hand) {
@@ -154,7 +161,6 @@ public class HandControls : MonoBehaviour {
     new MoveRecordings(),
   };
 
-
   public int tool = 2;
 
   // Update is called once per frame
@@ -168,7 +174,8 @@ public class HandControls : MonoBehaviour {
     if (GetDPadPress(hand) == NVRButtons.DPad_Down) {
       var all_playing_clones = FindObjectsOfType<PlaybackActions>();
       if (all_playing_clones.Length != 0) {
-        var closest_clone = all_playing_clones.MinBy(x => Vector3.Distance(x.transform.position, transform.position));
+        var closest_clone =
+          all_playing_clones.MinBy(x => Vector3.Distance(x.transform.position, transform.position));
         DestroyImmediate(closest_clone.gameObject);
       }
     }
@@ -190,14 +197,13 @@ public class HandControls : MonoBehaviour {
     tools[tool].Update(hand);
   }
 
-
-
   /*
-   *  You might expect that pressing one of the edges of the SteamVR controller touchpad could
-   *  be detected with a call to device.GetPress( EVRButtonId.k_EButton_DPad_* ), but currently this always returns false.
-   *  Not sure whether this is SteamVR's design intent, not yet implemented, or a bug.
-   *  The expected behaviour can be achieved by detecting overall Touchpad press, with Touch-Axis comparison to an edge threshold.
-   */
+     *  You might expect that pressing one of the edges of the SteamVR controller touchpad could
+     *  be detected with a call to device.GetPress( EVRButtonId.k_EButton_DPad_* ), but currently this always returns false.
+     *  Not sure whether this is SteamVR's design intent, not yet implemented, or a bug.
+     *  The expected behaviour can be achieved by detecting overall Touchpad press, with Touch-Axis comparison to an edge threshold.
+     */
+
   public static NVRButtons? GetDPadPress(NVRHand hand) {
     if (hand.Inputs[NVRButtons.Touchpad].PressDown) {
       var touchpad_axis = hand.Inputs[NVRButtons.Touchpad].Axis;
@@ -212,7 +218,8 @@ public class HandControls : MonoBehaviour {
       } else if (NumUtils.DistanceInModulo(angle, 270, 360) < 45) {
         return NVRButtons.DPad_Down;
       } else {
-        Debug.LogError("Error: DPAD Press Math is wrong. Angle did not register with any specified direction.");
+        Debug.LogError(
+          "Error: DPAD Press Math is wrong. Angle did not register with any specified direction.");
       }
     }
 

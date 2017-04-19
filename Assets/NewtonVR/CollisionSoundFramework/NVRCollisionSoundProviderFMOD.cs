@@ -78,18 +78,16 @@ namespace NewtonVR
 }
 #else
 
-namespace NewtonVR
-{
-    public class NVRCollisionSoundProviderFMOD : NVRCollisionSoundProvider
-    {
-        public override void Awake()
-        {
-        }
-
-        public override void Play(NVRCollisionSoundMaterials material, Vector3 position, float impactVolume)
-        {
-            return;
-        }
+namespace NewtonVR {
+  public class NVRCollisionSoundProviderFMOD : NVRCollisionSoundProvider {
+    public override void Awake() {
     }
+
+    public override void Play(NVRCollisionSoundMaterials material, Vector3 position,
+                              float impactVolume) {
+      return;
+    }
+  }
 }
+
 #endif

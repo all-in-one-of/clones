@@ -107,23 +107,20 @@ namespace NewtonVR
     }
 }
 #else
-namespace NewtonVR
-{
-    public class NVROculusIntegration : NVRIntegration
-    {
-        public override void Initialize(NVRPlayer player)
-        {
-        }
 
-        public override Vector3 GetPlayspaceBounds()
-        {
-            return Vector3.zero;
-        }
-
-        public override bool IsHmdPresent()
-        {
-            return false;
-        }
+namespace NewtonVR {
+  public class NVROculusIntegration : NVRIntegration {
+    public override void Initialize(NVRPlayer player) {
     }
+
+    public override Vector3 GetPlayspaceBounds() {
+      return Vector3.zero;
+    }
+
+    public override bool IsHmdPresent() {
+      return false;
+    }
+  }
 }
+
 #endif

@@ -282,103 +282,82 @@ namespace NewtonVR
     }
 }
 #else
-namespace NewtonVR
-{
-    public class NVROculusInputDevice : NVRInputDevice
-    {
-        public override bool IsCurrentlyTracked
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
 
-        public override float GetAxis1D(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Vector2 GetAxis2D(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetDeviceName()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool GetNearTouch(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool GetNearTouchDown(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool GetNearTouchUp(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool GetPress(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool GetPressDown(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool GetPressUp(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool GetTouch(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool GetTouchDown(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool GetTouchUp(NVRButtons button)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool ReadyToInitialize()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Collider[] SetupDefaultColliders()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Collider[] SetupDefaultPhysicalColliders(Transform ModelParent)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Option<GameObject> SetupDefaultRenderModel()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void TriggerHapticPulse(ushort durationMicroSec = 500, NVRButtons button = NVRButtons.Touchpad)
-        {
-            throw new NotImplementedException();
-        }
+namespace NewtonVR {
+  public class NVROculusInputDevice : NVRInputDevice {
+    public override bool IsCurrentlyTracked {
+      get { throw new NotImplementedException(); }
     }
-}
-#endif
 
+    public override float GetAxis1D(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override Vector2 GetAxis2D(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override string GetDeviceName() {
+      throw new NotImplementedException();
+    }
+
+    public override bool GetNearTouch(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override bool GetNearTouchDown(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override bool GetNearTouchUp(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override bool GetPress(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override bool GetPressDown(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override bool GetPressUp(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override bool GetTouch(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override bool GetTouchDown(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override bool GetTouchUp(NVRButtons button) {
+      throw new NotImplementedException();
+    }
+
+    public override bool ReadyToInitialize() {
+      throw new NotImplementedException();
+    }
+
+    public override Collider[] SetupDefaultColliders() {
+      throw new NotImplementedException();
+    }
+
+    public override Collider[] SetupDefaultPhysicalColliders(Transform ModelParent) {
+      throw new NotImplementedException();
+    }
+
+    public override Option<GameObject> SetupDefaultRenderModel() {
+      throw new NotImplementedException();
+    }
+
+    public override void TriggerHapticPulse(ushort durationMicroSec = 500,
+                                            NVRButtons button = NVRButtons.Touchpad) {
+      throw new NotImplementedException();
+    }
+  }
+}
+
+#endif

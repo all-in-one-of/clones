@@ -16,11 +16,13 @@ public class BoxGoal : MonoBehaviour {
     var walls = gameObject.transform.parent.GetComponentsInChildren<BoxCollider>();
     for (int i = 0; i < 4; i++) {
       Color color = i < total ? Color.blue : Color.white;
-      if (total >= 4) { color = Color.green; }
+      if (total >= 4) {
+        color = Color.green;
+      }
 
       walls[i].gameObject.GetComponent<MeshRenderer>().material.color = color;
     }
-	}
+  }
 
   public void OnTriggerEnter(Collider other) {
     Debug.Log(other.gameObject.tag);
