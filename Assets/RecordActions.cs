@@ -28,7 +28,9 @@ public class RecordActions : MonoBehaviour {
   /// <summary>
   /// Extracts all button states for a single state (ispressed, isdown, etc) into a dictionary.
   /// </summary>
-  private Dictionary<NVRButtons, T> RecordButtonsForInputState<T>(Dictionary<NVRButtons, NVRButtonInputs> true_inputs, Dictionary<NVRButtons, T> outputs, Func<Dictionary<NVRButtons, NVRButtonInputs>, NVRButtons, T> extraction_func) {
+  private Dictionary<NVRButtons, T> RecordButtonsForInputState<T>(
+    Dictionary<NVRButtons, NVRButtonInputs> true_inputs, Dictionary<NVRButtons, T> outputs,
+    Func<Dictionary<NVRButtons, NVRButtonInputs>, NVRButtons, T> extraction_func) {
     foreach (NVRButtons button in NVRButtonsHelper.Array) {
       outputs[button] = extraction_func(true_inputs, button);
     }
@@ -37,7 +39,9 @@ public class RecordActions : MonoBehaviour {
 
   public void Update() {
     NVRHand hand = GetComponent<NVRHand>();
-    if (hand.CurrentHandState == HandState.Uninitialized) { return; }
+    if (hand.CurrentHandState == HandState.Uninitialized) {
+      return;
+    }
 
     if (Input.GetKeyUp(KeyCode.Space) || hand.Inputs[NVRButtons.ApplicationMenu].PressDown) {
       Debug.Log(record_toggle);
@@ -55,13 +59,27 @@ public class RecordActions : MonoBehaviour {
         position = transform.position,
         rotation = transform.rotation,
         timestamp = Time.realtimeSinceStartup,
-        pressed = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(), (inputs_dict, button) => inputs_dict[button].IsPressed),
-        press_down = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(), (inputs_dict, button) => inputs_dict[button].PressDown),
-        press_up = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(), (inputs_dict, button) => inputs_dict[button].PressUp),
-        touched = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(), (inputs_dict, button) => inputs_dict[button].IsTouched),
-        touch_down = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(), (inputs_dict, button) => inputs_dict[button].TouchDown),
-        touch_up = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(), (inputs_dict, button) => inputs_dict[button].TouchUp),
-        axis = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, Vector2>(), (inputs_dict, button) => inputs_dict[button].Axis)
+        pressed =
+          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+            (inputs_dict, button) => inputs_dict[button].IsPressed),
+        press_down =
+          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+            (inputs_dict, button) => inputs_dict[button].PressDown),
+        press_up =
+          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+            (inputs_dict, button) => inputs_dict[button].PressUp),
+        touched =
+          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+            (inputs_dict, button) => inputs_dict[button].IsTouched),
+        touch_down =
+          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+            (inputs_dict, button) => inputs_dict[button].TouchDown),
+        touch_up =
+          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+            (inputs_dict, button) => inputs_dict[button].TouchUp),
+        axis =
+          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, Vector2>(),
+            (inputs_dict, button) => inputs_dict[button].Axis)
       };
       snapshots.Add(snap);
     }
@@ -72,7 +90,6 @@ public class RecordActions : MonoBehaviour {
       line_renderer.SetPositions(snapshots.Select(s => s.position).ToArray());
     }
   }
-
 
   private GameObject CreateFake(NVRHand real_hand, List<Snapshot> recording) {
     // Disable the hand before cloning anything:
@@ -91,7 +108,8 @@ public class RecordActions : MonoBehaviour {
       typeof(SteamVR_TrackedObject),
       typeof(NVRSteamVRInputDevice),
       typeof(NVRPhysicalController),
-      typeof(RecordActions)};
+      typeof(RecordActions)
+    };
 
     // Remove bad components from children. (anything with a global reference, essentially)
     Component[] components = fake_hand_obj.GetComponentsInChildren<Component>(true);

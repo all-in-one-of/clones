@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEngine.UI;
 
 namespace AClockworkBerry {
-
   public class ScreenLogger : MonoBehaviour {
     public static bool IsPersistent = true;
 
@@ -32,14 +31,9 @@ namespace AClockworkBerry {
     public bool ShowLog = true;
     public bool ShowInEditor = true;
 
+    [Tooltip("Height of the log area as a percentage of the screen height")] [Range(0.3f, 1.0f)] public float Height = 0.5f;
 
-    [Tooltip("Height of the log area as a percentage of the screen height")]
-    [Range(0.3f, 1.0f)]
-    public float Height = 0.5f;
-
-    [Tooltip("Width of the log area as a percentage of the screen width")]
-    [Range(0.3f, 1.0f)]
-    public float Width = 0.5f;
+    [Tooltip("Width of the log area as a percentage of the screen width")] [Range(0.3f, 1.0f)] public float Width = 0.5f;
 
     public int Margin = 20;
 
@@ -51,8 +45,7 @@ namespace AClockworkBerry {
     public Canvas canvas = null;
     public Text sample_text = null;
 
-    [Range(0f, 01f)]
-    public float BackgroundOpacity = 0.5f;
+    [Range(0f, 01f)] public float BackgroundOpacity = 0.5f;
     public Color BackgroundColor = Color.black;
 
     public bool LogMessages = true;
@@ -75,10 +68,8 @@ namespace AClockworkBerry {
     private bool destroying = false;
     private List<Text> line_ui = new List<Text>();
 
-    public static ScreenLogger Instance
-    {
-      get
-      {
+    public static ScreenLogger Instance {
+      get {
         if (instantiated)
           return instance;
 
@@ -88,10 +79,13 @@ namespace AClockworkBerry {
         if (instance == null) {
           // Try to load the default prefab
           try {
-            instance = Instantiate(Resources.Load("ScreenLoggerPrefab", typeof(ScreenLogger))) as ScreenLogger;
+            instance =
+              Instantiate(Resources.Load("ScreenLoggerPrefab", typeof(ScreenLogger))) as
+                ScreenLogger;
           } catch (Exception e) {
             Debug.Log("Failed to load default Screen Logger prefab...");
-            instance = new GameObject("ScreenLogger", typeof(ScreenLogger)).GetComponent<ScreenLogger>();
+            instance =
+              new GameObject("ScreenLogger", typeof(ScreenLogger)).GetComponent<ScreenLogger>();
           }
 
           // Problem during the creation, this should not happen
@@ -242,7 +236,7 @@ namespace AClockworkBerry {
       if (type == LogType.Warning && !LogWarnings)
         return;
 
-      string[] lines = message.Split(new char[] { '\n' });
+      string[] lines = message.Split(new char[] {'\n'});
 
       foreach (string l in lines)
         queue.Enqueue(new LogMessage(l, type));
@@ -258,7 +252,7 @@ namespace AClockworkBerry {
       if (type == LogType.Warning && !StackTraceWarnings)
         return;
 
-      string[] trace = stackTrace.Split(new char[] { '\n' });
+      string[] trace = stackTrace.Split(new char[] {'\n'});
 
       foreach (string t in trace)
         if (t.Length != 0)

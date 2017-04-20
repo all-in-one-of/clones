@@ -11,8 +11,9 @@ namespace NewtonVR {
 
     public bool DisablePhysicalMaterialsOnAttach = true;
 
-    [Tooltip("If you have a specific point you'd like the object held at, create a transform there and set it to this variable")]
-    public Transform InteractionPoint;
+    [Tooltip(
+      "If you have a specific point you'd like the object held at, create a transform there and set it to this variable"
+    )] public Transform InteractionPoint;
 
     public UnityEvent OnUseButtonDown;
     public UnityEvent OnUseButtonUp;
@@ -34,7 +35,8 @@ namespace NewtonVR {
     protected float StartingDrag = -1;
     protected float StartingAngularDrag = -1;
 
-    protected Dictionary<Collider, PhysicMaterial> MaterialCache = new Dictionary<Collider, PhysicMaterial>();
+    protected Dictionary<Collider, PhysicMaterial> MaterialCache =
+      new Dictionary<Collider, PhysicMaterial>();
 
     protected override void Awake() {
       base.Awake();
@@ -56,7 +58,8 @@ namespace NewtonVR {
 
     protected virtual void UpdateVelocities() {
       float velocityMagic = VelocityMagic / (Time.deltaTime / NVRPlayer.NewtonVRExpectedDeltaTime);
-      float angularVelocityMagic = AngularVelocityMagic / (Time.deltaTime / NVRPlayer.NewtonVRExpectedDeltaTime);
+      float angularVelocityMagic = AngularVelocityMagic /
+                                   (Time.deltaTime / NVRPlayer.NewtonVRExpectedDeltaTime);
 
       Quaternion rotationDelta;
       Vector3 positionDelta;
@@ -66,7 +69,8 @@ namespace NewtonVR {
 
       if (InteractionPoint != null || PickupTransform == null) //PickupTransform should only be null
       {
-        rotationDelta = AttachedHand.transform.rotation * Quaternion.Inverse(InteractionPoint.rotation);
+        rotationDelta = AttachedHand.transform.rotation *
+                        Quaternion.Inverse(InteractionPoint.rotation);
         positionDelta = (AttachedHand.transform.position - InteractionPoint.position);
       } else {
         rotationDelta = PickupTransform.rotation * Quaternion.Inverse(transform.rotation);
@@ -82,13 +86,15 @@ namespace NewtonVR {
         Vector3 angularTarget = angle * axis;
         if (float.IsNaN(angularTarget.x) == false) {
           angularTarget = (angularTarget * angularVelocityMagic) * Time.deltaTime;
-          Rigidbody.angularVelocity = Vector3.MoveTowards(Rigidbody.angularVelocity, angularTarget, MaxAngularVelocityChange);
+          Rigidbody.angularVelocity = Vector3.MoveTowards(Rigidbody.angularVelocity, angularTarget,
+            MaxAngularVelocityChange);
         }
       }
 
       Vector3 velocityTarget = (positionDelta * velocityMagic) * Time.deltaTime;
       if (float.IsNaN(velocityTarget.x) == false) {
-        Rigidbody.velocity = Vector3.MoveTowards(Rigidbody.velocity, velocityTarget, MaxVelocityChange);
+        Rigidbody.velocity = Vector3.MoveTowards(Rigidbody.velocity, velocityTarget,
+          MaxVelocityChange);
       }
 
 
@@ -110,7 +116,8 @@ namespace NewtonVR {
       }
 
       if (ExternalAngularVelocity != Vector3.zero) {
-        Rigidbody.angularVelocity = Vector3.Lerp(Rigidbody.angularVelocity, ExternalAngularVelocity, 0.5f);
+        Rigidbody.angularVelocity = Vector3.Lerp(Rigidbody.angularVelocity, ExternalAngularVelocity,
+          0.5f);
         ExternalAngularVelocity = Vector3.zero;
       }
     }
@@ -143,7 +150,8 @@ namespace NewtonVR {
         DisablePhysicalMaterials();
       }
 
-      PickupTransform = new GameObject(string.Format("[{0}] NVRPickupTransform", gameObject.name)).transform;
+      PickupTransform =
+        new GameObject(string.Format("[{0}] NVRPickupTransform", gameObject.name)).transform;
       PickupTransform.parent = hand.transform;
       PickupTransform.position = transform.position;
       PickupTransform.rotation = transform.rotation;
@@ -266,7 +274,9 @@ namespace NewtonVR {
 
     protected void EnablePhysicalMaterials() {
       foreach (Collider c in Colliders) {
-        if (c == null) { continue; }
+        if (c == null) {
+          continue;
+        }
 
         if (MaterialCache.ContainsKey(c)) {
           c.sharedMaterial = MaterialCache[c];

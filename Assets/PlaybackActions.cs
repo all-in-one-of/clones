@@ -15,11 +15,9 @@ public class PlaybackActions : MonoBehaviour {
   /// </summary>
   public static Func<double> sequence_time = () => Time.realtimeSinceStartup;
 
-  public List<RecordActions.Snapshot> Recording
-  {
+  public List<RecordActions.Snapshot> Recording {
     get { return recording; }
-    set
-    {
+    set {
       recording = value;
       UpdateLineRenderer();
     }
