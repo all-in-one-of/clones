@@ -1,6 +1,6 @@
-﻿using System.Reflection;
-using UnityEngine;
-using UnityEngine.Rendering;
+﻿using UnityEngine;
+using System.Collections;
+using System.Reflection;
 
 namespace NewtonVR {
   public class NVRHelpers {
@@ -16,14 +16,13 @@ namespace NewtonVR {
     }
 
     public static void SetTransparent(Material material, Color? newcolor = null) {
-      if (material.shader != StandardShader) {
+      if (material.shader != StandardShader)
         Debug.LogWarning(
           "Trying to set transparent mode on non-standard shader. Please use the Standard Shader instead or modify this method.");
-      }
 
       material.SetOverrideTag("RenderType", "Transparent");
-      material.SetInt("_SrcBlend", (int) BlendMode.SrcAlpha);
-      material.SetInt("_DstBlend", (int) BlendMode.OneMinusSrcAlpha);
+      material.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.SrcAlpha);
+      material.SetInt("_DstBlend", (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
       material.SetInt("_ZWrite", 0);
       material.DisableKeyword("_ALPHATEST_ON");
       material.DisableKeyword("_ALPHABLEND_ON");
@@ -39,14 +38,13 @@ namespace NewtonVR {
     }
 
     public static void SetOpaque(Material material) {
-      if (material.shader != StandardShader) {
+      if (material.shader != StandardShader)
         Debug.LogWarning(
           "Trying to set opaque mode on non-standard shader. Please use the Standard Shader instead or modify this method.");
-      }
 
       material.SetOverrideTag("RenderType", "");
-      material.SetInt("_SrcBlend", (int) BlendMode.One);
-      material.SetInt("_DstBlend", (int) BlendMode.Zero);
+      material.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.One);
+      material.SetInt("_DstBlend", (int) UnityEngine.Rendering.BlendMode.Zero);
       material.SetInt("_ZWrite", 1);
       material.DisableKeyword("_ALPHATEST_ON");
       material.DisableKeyword("_ALPHABLEND_ON");
@@ -56,11 +54,10 @@ namespace NewtonVR {
 
     public static void SetProperty(object obj, string propertyName, object value, bool isPublic) {
       BindingFlags flags = BindingFlags.Instance;
-      if (isPublic) {
+      if (isPublic)
         flags = flags | BindingFlags.Public;
-      } else {
+      else
         flags = flags | BindingFlags.NonPublic;
-      }
 
       PropertyInfo propertyInfo = obj.GetType().GetProperty(propertyName, flags);
       propertyInfo.SetValue(obj, value, null);
@@ -68,11 +65,10 @@ namespace NewtonVR {
 
     public static void SetField(object obj, string fieldName, object value, bool isPublic) {
       BindingFlags flags = BindingFlags.Instance;
-      if (isPublic) {
+      if (isPublic)
         flags = flags | BindingFlags.Public;
-      } else {
+      else
         flags = flags | BindingFlags.NonPublic;
-      }
 
       FieldInfo fieldInfo = obj.GetType().GetField(fieldName, flags);
       fieldInfo.SetValue(obj, value);

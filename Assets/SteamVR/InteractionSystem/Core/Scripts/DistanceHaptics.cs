@@ -4,19 +4,20 @@
 //
 //=============================================================================
 
-using System.Collections;
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class DistanceHaptics : MonoBehaviour {
-    public AnimationCurve distanceIntensityCurve = AnimationCurve.Linear(0.0f, 800.0f, 1.0f, 800.0f);
     public Transform firstTransform;
-    public AnimationCurve pulseIntervalCurve = AnimationCurve.Linear(0.0f, 0.01f, 1.0f, 0.0f);
     public Transform secondTransform;
 
+    public AnimationCurve distanceIntensityCurve = AnimationCurve.Linear(0.0f, 800.0f, 1.0f, 800.0f);
+    public AnimationCurve pulseIntervalCurve = AnimationCurve.Linear(0.0f, 0.01f, 1.0f, 0.0f);
+
     //-------------------------------------------------
-    private IEnumerator Start() {
+    IEnumerator Start() {
       while (true) {
         float distance = Vector3.Distance(firstTransform.position, secondTransform.position);
 

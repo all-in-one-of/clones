@@ -5,6 +5,7 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -15,12 +16,11 @@ namespace Valve.VR.InteractionSystem {
       TwoHanded
     }
 
-    public GameObject fadedPreviewPrefab; // used to preview insubstantial inputObject
-    public GameObject itemPrefab; // object to be spawned on tracked controller
-
     public new string name;
-    public GameObject otherHandItemPrefab; // object to be spawned in Other Hand
     public ItemPackageType packageType = ItemPackageType.Unrestricted;
+    public GameObject itemPrefab; // object to be spawned on tracked controller
+    public GameObject otherHandItemPrefab; // object to be spawned in Other Hand
     public GameObject previewPrefab; // used to preview inputObject
+    public GameObject fadedPreviewPrefab; // used to preview insubstantial inputObject
   }
 }

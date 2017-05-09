@@ -5,23 +5,24 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class SoundPlayOneshot : MonoBehaviour {
-    public float pitchMax;
-
-    public float pitchMin;
-
-    public bool playOnAwake;
+    public AudioClip[] waveFiles;
     private AudioSource thisAudioSource;
-    public float volMax;
 
     public float volMin;
-    public AudioClip[] waveFiles;
+    public float volMax;
+
+    public float pitchMin;
+    public float pitchMax;
+
+    public bool playOnAwake;
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       thisAudioSource = GetComponent<AudioSource>();
 
       if (playOnAwake) {

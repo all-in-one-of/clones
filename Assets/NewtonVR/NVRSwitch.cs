@@ -1,41 +1,41 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 namespace NewtonVR {
   public class NVRSwitch : MonoBehaviour {
     public bool CurrentState = true;
-    private bool FixedState = true;
-    private readonly float ForceMagic = 100f;
     public bool LastState = true;
-
-    public Transform OffButton;
-    public Renderer OffButtonRenderer;
+    private bool FixedState = true;
 
     public Transform OnButton;
     public Renderer OnButtonRenderer;
 
+    public Transform OffButton;
+    public Renderer OffButtonRenderer;
+
     private Rigidbody Rigidbody;
+    private float ForceMagic = 100f;
 
     private void Awake() {
-      Rigidbody = GetComponent<Rigidbody>();
+      Rigidbody = this.GetComponent<Rigidbody>();
       SetRotation(CurrentState);
     }
 
     private void FixedUpdate() {
-      float angle = transform.localEulerAngles.z;
-      if (angle > 180) {
+      float angle = this.transform.localEulerAngles.z;
+      if (angle > 180)
         angle -= 360;
-      }
 
       if (angle > -7.5f) {
         if (angle < -0.2f) {
-          Rigidbody.AddForceAtPosition(-transform.right * ForceMagic, OnButton.position);
-        } else if (angle > -0.2f && angle < -0.1f || angle > 0.1f) {
+          Rigidbody.AddForceAtPosition(-this.transform.right * ForceMagic, OnButton.position);
+        } else if ((angle > -0.2f && angle < -0.1f) || angle > 0.1f) {
           SetRotation(true);
         }
       } else if (angle < -7.5f) {
         if (angle > -14.8f) {
-          Rigidbody.AddForceAtPosition(-transform.right * ForceMagic, OffButton.position);
-        } else if (angle < -14.8f && angle > -14.9f || angle < -15.1) {
+          Rigidbody.AddForceAtPosition(-this.transform.right * ForceMagic, OffButton.position);
+        } else if ((angle < -14.8f && angle > -14.9f) || angle < -15.1) {
           SetRotation(false);
         }
       }
@@ -48,12 +48,12 @@ namespace NewtonVR {
 
     private void SetRotation(bool forState) {
       FixedState = forState;
-      if (FixedState) {
-        transform.localEulerAngles = Vector3.zero;
+      if (FixedState == true) {
+        this.transform.localEulerAngles = Vector3.zero;
         OnButtonRenderer.material.color = Color.yellow;
         OffButtonRenderer.material.color = Color.white;
       } else {
-        transform.localEulerAngles = new Vector3(0, 0, -15);
+        this.transform.localEulerAngles = new Vector3(0, 0, -15);
         OnButtonRenderer.material.color = Color.white;
         OffButtonRenderer.material.color = Color.red;
       }

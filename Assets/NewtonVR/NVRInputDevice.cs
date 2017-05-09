@@ -1,4 +1,8 @@
-﻿using Optional;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Optional;
 using UnityEngine;
 
 namespace NewtonVR {
@@ -6,16 +10,16 @@ namespace NewtonVR {
     // TODO: See if we can remove this link
     protected NVRHand Hand;
 
-    public abstract bool IsCurrentlyTracked { get; }
-
     public virtual void Initialize(NVRHand hand) {
       Hand = hand;
     }
 
+    public abstract bool IsCurrentlyTracked { get; }
+
     public abstract Collider[] SetupDefaultPhysicalColliders(Transform ModelParent);
 
     /// <summary>
-    ///   Return a render model that represents this device, if one exists.
+    /// Return a render model that represents this device, if one exists.
     /// </summary>
     public abstract Option<GameObject> SetupDefaultRenderModel();
 

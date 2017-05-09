@@ -1,19 +1,19 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
 
 namespace NewtonVR.Example {
   public class NVRExampleLeverResultRocket : MonoBehaviour {
+    public GameObject RocketPrefab;
     public NVRLever Control;
 
     private GameObject RocketInstance;
-    public GameObject RocketPrefab;
 
     private void Awake() {
       StartCoroutine(DoSpawnShip());
     }
 
     private void Update() {
-      if (Control.LeverEngaged) {
+      if (Control.LeverEngaged == true) {
         StartCoroutine(DoBlastOff());
       }
     }
@@ -29,7 +29,8 @@ namespace NewtonVR.Example {
 
     private IEnumerator DoSpawnShip() {
       RocketInstance =
-        Instantiate(RocketPrefab, transform.position, transform.rotation);
+        (GameObject)
+        GameObject.Instantiate(RocketPrefab, this.transform.position, this.transform.rotation);
       RocketInstance.GetComponent<Rigidbody>().isKinematic = true;
       RocketInstance.GetComponent<NVRInteractableItem>().CanAttach = false;
 

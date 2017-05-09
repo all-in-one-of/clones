@@ -4,11 +4,13 @@
 //
 //=============================================================================
 
-using System;
 using UnityEngine;
 using Valve.VR;
 
 public class SteamVR_Skybox : MonoBehaviour {
+  // Note: Unity's Left and Right Skybox shader variables are switched.
+  public Texture front, back, left, right, top, bottom;
+
   public enum CellSize {
     x1024,
     x64,
@@ -16,9 +18,6 @@ public class SteamVR_Skybox : MonoBehaviour {
     x16,
     x8
   }
-
-  // Note: Unity's Left and Right Skybox shader variables are switched.
-  public Texture front, back, left, right, top, bottom;
 
   public CellSize StereoCellSize = CellSize.x32;
 
@@ -65,7 +64,7 @@ public class SteamVR_Skybox : MonoBehaviour {
     return null;
   }
 
-  public static void SetOverride(
+  static public void SetOverride(
     Texture front = null,
     Texture back = null,
     Texture left = null,
@@ -74,40 +73,38 @@ public class SteamVR_Skybox : MonoBehaviour {
     Texture bottom = null) {
     var compositor = OpenVR.Compositor;
     if (compositor != null) {
-      var handles = new[] {front, back, left, right, top, bottom};
+      var handles = new Texture[] {front, back, left, right, top, bottom};
       var textures = new Texture_t[6];
       for (int i = 0; i < 6; i++) {
-        textures[i].handle = handles[i] != null
+        textures[i].handle = (handles[i] != null)
           ? handles[i].GetNativeTexturePtr()
-          : IntPtr.Zero;
+          : System.IntPtr.Zero;
         textures[i].eType = SteamVR.instance.textureType;
         textures[i].eColorSpace = EColorSpace.Auto;
       }
       var error = compositor.SetSkyboxOverride(textures);
       if (error != EVRCompositorError.None) {
         Debug.LogError("Failed to set skybox override with error: " + error);
-        if (error == EVRCompositorError.TextureIsOnWrongDevice) {
+        if (error == EVRCompositorError.TextureIsOnWrongDevice)
           Debug.Log(
             "Set your graphics driver to use the same video card as the headset is plugged into for Unity.");
-        } else if (error == EVRCompositorError.TextureUsesUnsupportedFormat) {
+        else if (error == EVRCompositorError.TextureUsesUnsupportedFormat)
           Debug.Log("Ensure skybox textures are not compressed and have no mipmaps.");
-        }
       }
     }
   }
 
-  public static void ClearOverride() {
+  static public void ClearOverride() {
     var compositor = OpenVR.Compositor;
-    if (compositor != null) {
+    if (compositor != null)
       compositor.ClearSkyboxOverride();
-    }
   }
 
-  private void OnEnable() {
+  void OnEnable() {
     SetOverride(front, back, left, right, top, bottom);
   }
 
-  private void OnDisable() {
+  void OnDisable() {
     ClearOverride();
   }
 }

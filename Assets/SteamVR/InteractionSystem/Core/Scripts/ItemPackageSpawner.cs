@@ -5,8 +5,12 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine.Events;
 #if UNITY_EDITOR
+using UnityEditor;
 
 #endif
 
@@ -14,36 +18,36 @@ namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   [RequireComponent(typeof(Interactable))]
   public class ItemPackageSpawner : MonoBehaviour {
-    public ItemPackage _itemPackage;
-    // if a hand enters this trigger and has the item this spawner dispenses at the top of the stack, remove it from the stack
-
-    public bool acceptDifferentItems = false;
-
-    [EnumFlags] public Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags;
-    public string attachmentPoint;
-    public UnityEvent dropEvent;
-    private bool itemIsSpawned;
-
-    public bool justPickedUpItem;
-
-    public UnityEvent pickupEvent;
-    private GameObject previewObject;
-    public bool requireTriggerPressToReturn = false;
-
-    public bool requireTriggerPressToTake = false;
-    public bool showTriggerHint = false;
-
-    private GameObject spawnedItem;
-
-    public bool takeBackItem = false;
-    private bool useFadedPreview;
-
-    private readonly bool useItemPackagePreview = true;
-
     public ItemPackage itemPackage {
       get { return _itemPackage; }
       set { CreatePreviewObject(); }
     }
+
+    public ItemPackage _itemPackage;
+
+    private bool useItemPackagePreview = true;
+    private bool useFadedPreview = false;
+    private GameObject previewObject;
+
+    public bool requireTriggerPressToTake = false;
+    public bool requireTriggerPressToReturn = false;
+    public bool showTriggerHint = false;
+
+    [EnumFlags] public Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags;
+    public string attachmentPoint;
+
+    public bool takeBackItem = false;
+      // if a hand enters this trigger and has the item this spawner dispenses at the top of the stack, remove it from the stack
+
+    public bool acceptDifferentItems = false;
+
+    private GameObject spawnedItem;
+    private bool itemIsSpawned = false;
+
+    public UnityEvent pickupEvent;
+    public UnityEvent dropEvent;
+
+    public bool justPickedUpItem = false;
 
     //-------------------------------------------------
     private void CreatePreviewObject() {
@@ -63,7 +67,8 @@ namespace Valve.VR.InteractionSystem {
         {
           if (itemPackage.previewPrefab != null) {
             previewObject =
-              Instantiate(itemPackage.previewPrefab, transform.position, Quaternion.identity);
+              Instantiate(itemPackage.previewPrefab, transform.position, Quaternion.identity) as
+                GameObject;
             previewObject.transform.parent = transform;
             previewObject.transform.localRotation = Quaternion.identity;
           }
@@ -71,7 +76,8 @@ namespace Valve.VR.InteractionSystem {
         {
           if (itemPackage.fadedPreviewPrefab != null) {
             previewObject =
-              Instantiate(itemPackage.fadedPreviewPrefab, transform.position, Quaternion.identity);
+              Instantiate(itemPackage.fadedPreviewPrefab, transform.position, Quaternion.identity)
+                as GameObject;
             previewObject.transform.parent = transform;
             previewObject.transform.localRotation = Quaternion.identity;
           }
@@ -80,7 +86,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void Start() {
+    void Start() {
       VerifyItemPackage();
     }
 
@@ -104,17 +110,18 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     private void ClearPreview() {
-      foreach (Transform child in transform)
+      foreach (Transform child in transform) {
         if (Time.time > 0) {
-          Destroy(child.gameObject);
+          GameObject.Destroy(child.gameObject);
         } else {
-          DestroyImmediate(child.gameObject);
+          GameObject.DestroyImmediate(child.gameObject);
         }
+      }
     }
 
     //-------------------------------------------------
-    private void Update() {
-      if (itemIsSpawned && spawnedItem == null) {
+    void Update() {
+      if ((itemIsSpawned == true) && (spawnedItem == null)) {
         itemIsSpawned = false;
         useFadedPreview = false;
         dropEvent.Invoke();
@@ -143,7 +150,7 @@ namespace Valve.VR.InteractionSystem {
       }
 
       if (requireTriggerPressToTake && showTriggerHint) {
-        ControllerButtonHints.ShowTextHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger,
+        ControllerButtonHints.ShowTextHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger,
           "PickUp");
       }
     }
@@ -174,7 +181,7 @@ namespace Valve.VR.InteractionSystem {
       }
 
       ItemPackage attachedItemPackage = packageReference.itemPackage;
-      // return the ItemPackage reference we find.
+        // return the ItemPackage reference we find.
 
       return attachedItemPackage;
     }
@@ -191,7 +198,7 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     private void OnHandHoverEnd(Hand hand) {
       if (!justPickedUpItem && requireTriggerPressToTake && showTriggerHint) {
-        ControllerButtonHints.HideTextHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
+        ControllerButtonHints.HideTextHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
       }
 
       justPickedUpItem = false;
@@ -204,7 +211,7 @@ namespace Valve.VR.InteractionSystem {
           hand.AttachedObjects[i].attachedObject.GetComponent<ItemPackageReference>();
         if (packageReference != null) {
           ItemPackage attachedObjectItemPackage = packageReference.itemPackage;
-          if (attachedObjectItemPackage != null && attachedObjectItemPackage == package) {
+          if ((attachedObjectItemPackage != null) && (attachedObjectItemPackage == package)) {
             GameObject detachedItem = hand.AttachedObjects[i].attachedObject;
             hand.DetachObject(detachedItem);
           }
@@ -237,7 +244,7 @@ namespace Valve.VR.InteractionSystem {
       }
 
       if (showTriggerHint) {
-        ControllerButtonHints.HideTextHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
+        ControllerButtonHints.HideTextHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
       }
 
       if (itemPackage.otherHandItemPrefab != null) {
@@ -262,12 +269,12 @@ namespace Valve.VR.InteractionSystem {
         RemoveMatchingItemTypesFromHand(ItemPackage.ItemPackageType.TwoHanded, hand.otherHand);
       }
 
-      spawnedItem = Instantiate(itemPackage.itemPrefab);
+      spawnedItem = GameObject.Instantiate(itemPackage.itemPrefab);
       spawnedItem.SetActive(true);
       hand.AttachObject(spawnedItem, attachmentFlags, attachmentPoint);
 
-      if (itemPackage.otherHandItemPrefab != null && hand.otherHand.controller != null) {
-        GameObject otherHandObjectToAttach = Instantiate(itemPackage.otherHandItemPrefab);
+      if ((itemPackage.otherHandItemPrefab != null) && (hand.otherHand.controller != null)) {
+        GameObject otherHandObjectToAttach = GameObject.Instantiate(itemPackage.otherHandItemPrefab);
         otherHandObjectToAttach.SetActive(true);
         hand.otherHand.AttachObject(otherHandObjectToAttach, attachmentFlags);
       }

@@ -1,4 +1,8 @@
-﻿namespace NewtonVR {
+﻿using UnityEngine;
+using System.Collections;
+using UnityEngine.Events;
+
+namespace NewtonVR {
   public class NVRInteractableItemAutoAttach : NVRInteractableItem {
     public float PickupAfterSeconds = 0.5f;
 

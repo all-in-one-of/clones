@@ -1,14 +1,15 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class Rotator : MonoBehaviour {
   public float RotationSpeed = 70;
 
   // Use this for initialization
-  private void Start() {
+  void Start() {
   }
 
   // Update is called once per frame
-  private void Update() {
+  void Update() {
     transform.Rotate(new Vector3(0, RotationSpeed * Time.deltaTime, 0));
   }
 }

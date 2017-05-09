@@ -7,7 +7,7 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
+using Valve.VR;
 
 namespace Valve.VR {
   [StructLayout(LayoutKind.Sequential)]
@@ -69,7 +69,7 @@ namespace Valve.VR {
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate void _GetDeviceToAbsoluteTrackingPose(
       ETrackingUniverseOrigin eOrigin, float fPredictedSecondsToPhotonsFromNow,
-      [In] [Out] TrackedDevicePose_t[] pTrackedDevicePoseArray, uint unTrackedDevicePoseArrayCount);
+      [In, Out] TrackedDevicePose_t[] pTrackedDevicePoseArray, uint unTrackedDevicePoseArrayCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetDeviceToAbsoluteTrackingPose
       GetDeviceToAbsoluteTrackingPose;
@@ -93,7 +93,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetSortedTrackedDeviceIndicesOfClass(
-      ETrackedDeviceClass eTrackedDeviceClass, [In] [Out] uint[] punTrackedDeviceIndexArray,
+      ETrackedDeviceClass eTrackedDeviceClass, [In, Out] uint[] punTrackedDeviceIndexArray,
       uint unTrackedDeviceIndexArrayCount, uint unRelativeToTrackedDeviceIndex);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetSortedTrackedDeviceIndicesOfClass
@@ -174,7 +174,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetStringTrackedDeviceProperty(
-      uint unDeviceIndex, ETrackedDeviceProperty prop, StringBuilder pchValue,
+      uint unDeviceIndex, ETrackedDeviceProperty prop, System.Text.StringBuilder pchValue,
       uint unBufferSize, ref ETrackedPropertyError pError);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetStringTrackedDeviceProperty
@@ -415,7 +415,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate EVRApplicationError _GetApplicationKeyByIndex(
-      uint unApplicationIndex, StringBuilder pchAppKeyBuffer, uint unAppKeyBufferLen);
+      uint unApplicationIndex, System.Text.StringBuilder pchAppKeyBuffer, uint unAppKeyBufferLen);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetApplicationKeyByIndex
       GetApplicationKeyByIndex;
@@ -434,7 +434,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate EVRApplicationError _LaunchTemplateApplication(
-      string pchTemplateAppKey, string pchNewAppKey, [In] [Out] AppOverrideKeys_t[] pKeys,
+      string pchTemplateAppKey, string pchNewAppKey, [In, Out] AppOverrideKeys_t[] pKeys,
       uint unKeys);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _LaunchTemplateApplication
@@ -476,7 +476,7 @@ namespace Valve.VR {
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetApplicationPropertyString(
       string pchAppKey, EVRApplicationProperty eProperty,
-      StringBuilder pchPropertyValueBuffer, uint unPropertyValueBufferLen,
+      System.Text.StringBuilder pchPropertyValueBuffer, uint unPropertyValueBufferLen,
       ref EVRApplicationError peError);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetApplicationPropertyString
@@ -656,14 +656,14 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate bool _GetWorkingCollisionBoundsInfo(
-      [In] [Out] HmdQuad_t[] pQuadsBuffer, ref uint punQuadsCount);
+      [In, Out] HmdQuad_t[] pQuadsBuffer, ref uint punQuadsCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetWorkingCollisionBoundsInfo
       GetWorkingCollisionBoundsInfo;
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate bool _GetLiveCollisionBoundsInfo(
-      [In] [Out] HmdQuad_t[] pQuadsBuffer, ref uint punQuadsCount);
+      [In, Out] HmdQuad_t[] pQuadsBuffer, ref uint punQuadsCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetLiveCollisionBoundsInfo
       GetLiveCollisionBoundsInfo;
@@ -689,7 +689,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate void _SetWorkingCollisionBoundsInfo(
-      [In] [Out] HmdQuad_t[] pQuadsBuffer, uint unQuadsCount);
+      [In, Out] HmdQuad_t[] pQuadsBuffer, uint unQuadsCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _SetWorkingCollisionBoundsInfo
       SetWorkingCollisionBoundsInfo;
@@ -722,35 +722,35 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate void _SetWorkingCollisionBoundsTagsInfo(
-      [In] [Out] byte[] pTagsBuffer, uint unTagCount);
+      [In, Out] byte[] pTagsBuffer, uint unTagCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _SetWorkingCollisionBoundsTagsInfo
       SetWorkingCollisionBoundsTagsInfo;
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate bool _GetLiveCollisionBoundsTagsInfo(
-      [In] [Out] byte[] pTagsBuffer, ref uint punTagCount);
+      [In, Out] byte[] pTagsBuffer, ref uint punTagCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetLiveCollisionBoundsTagsInfo
       GetLiveCollisionBoundsTagsInfo;
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate bool _SetWorkingPhysicalBoundsInfo(
-      [In] [Out] HmdQuad_t[] pQuadsBuffer, uint unQuadsCount);
+      [In, Out] HmdQuad_t[] pQuadsBuffer, uint unQuadsCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _SetWorkingPhysicalBoundsInfo
       SetWorkingPhysicalBoundsInfo;
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate bool _GetLivePhysicalBoundsInfo(
-      [In] [Out] HmdQuad_t[] pQuadsBuffer, ref uint punQuadsCount);
+      [In, Out] HmdQuad_t[] pQuadsBuffer, ref uint punQuadsCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetLivePhysicalBoundsInfo
       GetLivePhysicalBoundsInfo;
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate bool _ExportLiveToBuffer(
-      StringBuilder pBuffer, ref uint pnBufferLength);
+      System.Text.StringBuilder pBuffer, ref uint pnBufferLength);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _ExportLiveToBuffer ExportLiveToBuffer;
 
@@ -775,15 +775,15 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate EVRCompositorError _WaitGetPoses(
-      [In] [Out] TrackedDevicePose_t[] pRenderPoseArray, uint unRenderPoseArrayCount,
-      [In] [Out] TrackedDevicePose_t[] pGamePoseArray, uint unGamePoseArrayCount);
+      [In, Out] TrackedDevicePose_t[] pRenderPoseArray, uint unRenderPoseArrayCount,
+      [In, Out] TrackedDevicePose_t[] pGamePoseArray, uint unGamePoseArrayCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _WaitGetPoses WaitGetPoses;
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate EVRCompositorError _GetLastPoses(
-      [In] [Out] TrackedDevicePose_t[] pRenderPoseArray, uint unRenderPoseArrayCount,
-      [In] [Out] TrackedDevicePose_t[] pGamePoseArray, uint unGamePoseArrayCount);
+      [In, Out] TrackedDevicePose_t[] pRenderPoseArray, uint unRenderPoseArrayCount,
+      [In, Out] TrackedDevicePose_t[] pGamePoseArray, uint unGamePoseArrayCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetLastPoses GetLastPoses;
 
@@ -856,7 +856,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate EVRCompositorError _SetSkyboxOverride(
-      [In] [Out] Texture_t[] pTextures, uint unTextureCount);
+      [In, Out] Texture_t[] pTextures, uint unTextureCount);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _SetSkyboxOverride SetSkyboxOverride;
 
@@ -980,14 +980,14 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetVulkanInstanceExtensionsRequired(
-      StringBuilder pchValue, uint unBufferSize);
+      System.Text.StringBuilder pchValue, uint unBufferSize);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetVulkanInstanceExtensionsRequired
       GetVulkanInstanceExtensionsRequired;
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetVulkanDeviceExtensionsRequired(
-      IntPtr pPhysicalDevice, StringBuilder pchValue, uint unBufferSize);
+      IntPtr pPhysicalDevice, System.Text.StringBuilder pchValue, uint unBufferSize);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetVulkanDeviceExtensionsRequired
       GetVulkanDeviceExtensionsRequired;
@@ -1023,14 +1023,14 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetOverlayKey(
-      ulong ulOverlayHandle, StringBuilder pchValue, uint unBufferSize,
+      ulong ulOverlayHandle, System.Text.StringBuilder pchValue, uint unBufferSize,
       ref EVROverlayError pError);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetOverlayKey GetOverlayKey;
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetOverlayName(
-      ulong ulOverlayHandle, StringBuilder pchValue, uint unBufferSize,
+      ulong ulOverlayHandle, System.Text.StringBuilder pchValue, uint unBufferSize,
       ref EVROverlayError pError);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetOverlayName GetOverlayName;
@@ -1417,7 +1417,7 @@ namespace Valve.VR {
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _ShowKeyboardForOverlay ShowKeyboardForOverlay;
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    internal delegate uint _GetKeyboardText(StringBuilder pchText, uint cchText);
+    internal delegate uint _GetKeyboardText(System.Text.StringBuilder pchText, uint cchText);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetKeyboardText GetKeyboardText;
 
@@ -1505,7 +1505,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetRenderModelName(
-      uint unRenderModelIndex, StringBuilder pchRenderModelName,
+      uint unRenderModelIndex, System.Text.StringBuilder pchRenderModelName,
       uint unRenderModelNameLen);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetRenderModelName GetRenderModelName;
@@ -1522,7 +1522,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetComponentName(
-      string pchRenderModelName, uint unComponentIndex, StringBuilder pchComponentName,
+      string pchRenderModelName, uint unComponentIndex, System.Text.StringBuilder pchComponentName,
       uint unComponentNameLen);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetComponentName GetComponentName;
@@ -1536,7 +1536,7 @@ namespace Valve.VR {
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetComponentRenderModelName(
       string pchRenderModelName, string pchComponentName,
-      StringBuilder pchComponentRenderModelName, uint unComponentRenderModelNameLen);
+      System.Text.StringBuilder pchComponentRenderModelName, uint unComponentRenderModelNameLen);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetComponentRenderModelName
       GetComponentRenderModelName;
@@ -1557,7 +1557,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetRenderModelThumbnailURL(
-      string pchRenderModelName, StringBuilder pchThumbnailURL, uint unThumbnailURLLen,
+      string pchRenderModelName, System.Text.StringBuilder pchThumbnailURL, uint unThumbnailURLLen,
       ref EVRRenderModelError peError);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetRenderModelThumbnailURL
@@ -1565,7 +1565,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetRenderModelOriginalPath(
-      string pchRenderModelName, StringBuilder pchOriginalPath, uint unOriginalPathLen,
+      string pchRenderModelName, System.Text.StringBuilder pchOriginalPath, uint unOriginalPathLen,
       ref EVRRenderModelError peError);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetRenderModelOriginalPath
@@ -1650,7 +1650,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate void _GetString(
-      string pchSection, string pchSettingsKey, StringBuilder pchValue, uint unValueLen,
+      string pchSection, string pchSettingsKey, System.Text.StringBuilder pchValue, uint unValueLen,
       ref EVRSettingsError peError);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetString GetString;
@@ -1678,7 +1678,7 @@ namespace Valve.VR {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate EVRScreenshotError _HookScreenshot(
-      [In] [Out] EVRScreenshotType[] pSupportedTypes, int numTypes);
+      [In, Out] EVRScreenshotType[] pSupportedTypes, int numTypes);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _HookScreenshot HookScreenshot;
 
@@ -1692,7 +1692,7 @@ namespace Valve.VR {
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate uint _GetScreenshotPropertyFilename(
       uint screenshotHandle, EVRScreenshotPropertyFilenames filenameType,
-      StringBuilder pchFilename, uint cchFilename, ref EVRScreenshotError pError);
+      System.Text.StringBuilder pchFilename, uint cchFilename, ref EVRScreenshotError pError);
 
     [MarshalAs(UnmanagedType.FunctionPtr)] internal _GetScreenshotPropertyFilename
       GetScreenshotPropertyFilename;
@@ -1735,34 +1735,7 @@ namespace Valve.VR {
   }
 
   public class CVRSystem {
-// This is a terrible hack to workaround the fact that VRControllerState_t was
-// originally mis-compiled with the wrong packing for Linux and OSX.
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    internal delegate bool _GetControllerStatePacked(
-      uint unControllerDeviceIndex, ref VRControllerState_t_Packed pControllerState,
-      uint unControllerStateSize);
-
-    [StructLayout(LayoutKind.Explicit)]
-    private struct GetControllerStateUnion {
-      [FieldOffset(0)] public IVRSystem._GetControllerState pGetControllerState;
-      [FieldOffset(0)] public _GetControllerStatePacked pGetControllerStatePacked;
-    }
-
-// This is a terrible hack to workaround the fact that VRControllerState_t was
-// originally mis-compiled with the wrong packing for Linux and OSX.
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    internal delegate bool _GetControllerStateWithPosePacked(
-      ETrackingUniverseOrigin eOrigin, uint unControllerDeviceIndex,
-      ref VRControllerState_t_Packed pControllerState, uint unControllerStateSize,
-      ref TrackedDevicePose_t pTrackedDevicePose);
-
-    [StructLayout(LayoutKind.Explicit)]
-    private struct GetControllerStateWithPoseUnion {
-      [FieldOffset(0)] public IVRSystem._GetControllerStateWithPose pGetControllerStateWithPose;
-      [FieldOffset(0)] public _GetControllerStateWithPosePacked pGetControllerStateWithPosePacked;
-    }
-
-    private IVRSystem FnTable;
+    IVRSystem FnTable;
 
     internal CVRSystem(IntPtr pInterface) {
       FnTable = (IVRSystem) Marshal.PtrToStructure(pInterface, typeof(IVRSystem));
@@ -1920,7 +1893,7 @@ namespace Valve.VR {
     }
 
     public uint GetStringTrackedDeviceProperty(uint unDeviceIndex, ETrackedDeviceProperty prop,
-                                               StringBuilder pchValue, uint unBufferSize,
+                                               System.Text.StringBuilder pchValue, uint unBufferSize,
                                                ref ETrackedPropertyError pError) {
       uint result = FnTable.GetStringTrackedDeviceProperty(unDeviceIndex, prop, pchValue,
         unBufferSize, ref pError);
@@ -1954,17 +1927,30 @@ namespace Valve.VR {
       return result;
     }
 
+// This is a terrible hack to workaround the fact that VRControllerState_t was
+// originally mis-compiled with the wrong packing for Linux and OSX.
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    internal delegate bool _GetControllerStatePacked(
+      uint unControllerDeviceIndex, ref VRControllerState_t_Packed pControllerState,
+      uint unControllerStateSize);
+
+    [StructLayout(LayoutKind.Explicit)]
+    struct GetControllerStateUnion {
+      [FieldOffset(0)] public IVRSystem._GetControllerState pGetControllerState;
+      [FieldOffset(0)] public _GetControllerStatePacked pGetControllerStatePacked;
+    }
+
     public bool GetControllerState(uint unControllerDeviceIndex,
                                    ref VRControllerState_t pControllerState,
                                    uint unControllerStateSize) {
-      if (Environment.OSVersion.Platform == PlatformID.MacOSX ||
-          Environment.OSVersion.Platform == PlatformID.Unix) {
+      if ((System.Environment.OSVersion.Platform == System.PlatformID.MacOSX) ||
+          (System.Environment.OSVersion.Platform == System.PlatformID.Unix)) {
         GetControllerStateUnion u;
         VRControllerState_t_Packed state_packed = new VRControllerState_t_Packed();
         u.pGetControllerStatePacked = null;
         u.pGetControllerState = FnTable.GetControllerState;
         bool packed_result = u.pGetControllerStatePacked(unControllerDeviceIndex, ref state_packed,
-          (uint) Marshal.SizeOf(typeof(VRControllerState_t_Packed)));
+          (uint) System.Runtime.InteropServices.Marshal.SizeOf(typeof(VRControllerState_t_Packed)));
 
         state_packed.Unpack(ref pControllerState);
         return packed_result;
@@ -1974,20 +1960,34 @@ namespace Valve.VR {
       return result;
     }
 
+// This is a terrible hack to workaround the fact that VRControllerState_t was
+// originally mis-compiled with the wrong packing for Linux and OSX.
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    internal delegate bool _GetControllerStateWithPosePacked(
+      ETrackingUniverseOrigin eOrigin, uint unControllerDeviceIndex,
+      ref VRControllerState_t_Packed pControllerState, uint unControllerStateSize,
+      ref TrackedDevicePose_t pTrackedDevicePose);
+
+    [StructLayout(LayoutKind.Explicit)]
+    struct GetControllerStateWithPoseUnion {
+      [FieldOffset(0)] public IVRSystem._GetControllerStateWithPose pGetControllerStateWithPose;
+      [FieldOffset(0)] public _GetControllerStateWithPosePacked pGetControllerStateWithPosePacked;
+    }
+
     public bool GetControllerStateWithPose(ETrackingUniverseOrigin eOrigin,
                                            uint unControllerDeviceIndex,
                                            ref VRControllerState_t pControllerState,
                                            uint unControllerStateSize,
                                            ref TrackedDevicePose_t pTrackedDevicePose) {
-      if (Environment.OSVersion.Platform == PlatformID.MacOSX ||
-          Environment.OSVersion.Platform == PlatformID.Unix) {
+      if ((System.Environment.OSVersion.Platform == System.PlatformID.MacOSX) ||
+          (System.Environment.OSVersion.Platform == System.PlatformID.Unix)) {
         GetControllerStateWithPoseUnion u;
         VRControllerState_t_Packed state_packed = new VRControllerState_t_Packed();
         u.pGetControllerStateWithPosePacked = null;
         u.pGetControllerStateWithPose = FnTable.GetControllerStateWithPose;
         bool packed_result = u.pGetControllerStateWithPosePacked(eOrigin, unControllerDeviceIndex,
           ref state_packed,
-          (uint) Marshal.SizeOf(typeof(VRControllerState_t_Packed)),
+          (uint) System.Runtime.InteropServices.Marshal.SizeOf(typeof(VRControllerState_t_Packed)),
           ref pTrackedDevicePose);
 
         state_packed.Unpack(ref pControllerState);
@@ -2049,7 +2049,7 @@ namespace Valve.VR {
   }
 
   public class CVRExtendedDisplay {
-    private IVRExtendedDisplay FnTable;
+    IVRExtendedDisplay FnTable;
 
     internal CVRExtendedDisplay(IntPtr pInterface) {
       FnTable = (IVRExtendedDisplay) Marshal.PtrToStructure(pInterface, typeof(IVRExtendedDisplay));
@@ -2080,7 +2080,7 @@ namespace Valve.VR {
   }
 
   public class CVRTrackedCamera {
-    private IVRTrackedCamera FnTable;
+    IVRTrackedCamera FnTable;
 
     internal CVRTrackedCamera(IntPtr pInterface) {
       FnTable = (IVRTrackedCamera) Marshal.PtrToStructure(pInterface, typeof(IVRTrackedCamera));
@@ -2189,7 +2189,7 @@ namespace Valve.VR {
   }
 
   public class CVRApplications {
-    private IVRApplications FnTable;
+    IVRApplications FnTable;
 
     internal CVRApplications(IntPtr pInterface) {
       FnTable = (IVRApplications) Marshal.PtrToStructure(pInterface, typeof(IVRApplications));
@@ -2218,7 +2218,7 @@ namespace Valve.VR {
     }
 
     public EVRApplicationError GetApplicationKeyByIndex(uint unApplicationIndex,
-                                                        StringBuilder pchAppKeyBuffer,
+                                                        System.Text.StringBuilder pchAppKeyBuffer,
                                                         uint unAppKeyBufferLen) {
       EVRApplicationError result = FnTable.GetApplicationKeyByIndex(unApplicationIndex,
         pchAppKeyBuffer, unAppKeyBufferLen);
@@ -2276,7 +2276,7 @@ namespace Valve.VR {
     }
 
     public uint GetApplicationPropertyString(string pchAppKey, EVRApplicationProperty eProperty,
-                                             StringBuilder pchPropertyValueBuffer,
+                                             System.Text.StringBuilder pchPropertyValueBuffer,
                                              uint unPropertyValueBufferLen,
                                              ref EVRApplicationError peError) {
       uint result = FnTable.GetApplicationPropertyString(pchAppKey, eProperty,
@@ -2377,7 +2377,7 @@ namespace Valve.VR {
   }
 
   public class CVRChaperone {
-    private IVRChaperone FnTable;
+    IVRChaperone FnTable;
 
     internal CVRChaperone(IntPtr pInterface) {
       FnTable = (IVRChaperone) Marshal.PtrToStructure(pInterface, typeof(IVRChaperone));
@@ -2426,7 +2426,7 @@ namespace Valve.VR {
   }
 
   public class CVRChaperoneSetup {
-    private IVRChaperoneSetup FnTable;
+    IVRChaperoneSetup FnTable;
 
     internal CVRChaperoneSetup(IntPtr pInterface) {
       FnTable = (IVRChaperoneSetup) Marshal.PtrToStructure(pInterface, typeof(IVRChaperoneSetup));
@@ -2538,7 +2538,7 @@ namespace Valve.VR {
       return result;
     }
 
-    public bool ExportLiveToBuffer(StringBuilder pBuffer, ref uint pnBufferLength) {
+    public bool ExportLiveToBuffer(System.Text.StringBuilder pBuffer, ref uint pnBufferLength) {
       pnBufferLength = 0;
       bool result = FnTable.ExportLiveToBuffer(pBuffer, ref pnBufferLength);
       return result;
@@ -2551,7 +2551,7 @@ namespace Valve.VR {
   }
 
   public class CVRCompositor {
-    private IVRCompositor FnTable;
+    IVRCompositor FnTable;
 
     internal CVRCompositor(IntPtr pInterface) {
       FnTable = (IVRCompositor) Marshal.PtrToStructure(pInterface, typeof(IVRCompositor));
@@ -2748,14 +2748,14 @@ namespace Valve.VR {
       FnTable.UnlockGLSharedTextureForAccess(glSharedTextureHandle);
     }
 
-    public uint GetVulkanInstanceExtensionsRequired(StringBuilder pchValue,
+    public uint GetVulkanInstanceExtensionsRequired(System.Text.StringBuilder pchValue,
                                                     uint unBufferSize) {
       uint result = FnTable.GetVulkanInstanceExtensionsRequired(pchValue, unBufferSize);
       return result;
     }
 
     public uint GetVulkanDeviceExtensionsRequired(IntPtr pPhysicalDevice,
-                                                  StringBuilder pchValue,
+                                                  System.Text.StringBuilder pchValue,
                                                   uint unBufferSize) {
       uint result = FnTable.GetVulkanDeviceExtensionsRequired(pPhysicalDevice, pchValue,
         unBufferSize);
@@ -2764,7 +2764,7 @@ namespace Valve.VR {
   }
 
   public class CVROverlay {
-    private IVROverlay FnTable;
+    IVROverlay FnTable;
 
     internal CVROverlay(IntPtr pInterface) {
       FnTable = (IVROverlay) Marshal.PtrToStructure(pInterface, typeof(IVROverlay));
@@ -2799,13 +2799,13 @@ namespace Valve.VR {
       return result;
     }
 
-    public uint GetOverlayKey(ulong ulOverlayHandle, StringBuilder pchValue,
+    public uint GetOverlayKey(ulong ulOverlayHandle, System.Text.StringBuilder pchValue,
                               uint unBufferSize, ref EVROverlayError pError) {
       uint result = FnTable.GetOverlayKey(ulOverlayHandle, pchValue, unBufferSize, ref pError);
       return result;
     }
 
-    public uint GetOverlayName(ulong ulOverlayHandle, StringBuilder pchValue,
+    public uint GetOverlayName(ulong ulOverlayHandle, System.Text.StringBuilder pchValue,
                                uint unBufferSize, ref EVROverlayError pError) {
       uint result = FnTable.GetOverlayName(ulOverlayHandle, pchValue, unBufferSize, ref pError);
       return result;
@@ -3219,7 +3219,7 @@ namespace Valve.VR {
       return result;
     }
 
-    public uint GetKeyboardText(StringBuilder pchText, uint cchText) {
+    public uint GetKeyboardText(System.Text.StringBuilder pchText, uint cchText) {
       uint result = FnTable.GetKeyboardText(pchText, cchText);
       return result;
     }
@@ -3263,21 +3263,7 @@ namespace Valve.VR {
   }
 
   public class CVRRenderModels {
-// This is a terrible hack to workaround the fact that VRControllerState_t was
-// originally mis-compiled with the wrong packing for Linux and OSX.
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    internal delegate bool _GetComponentStatePacked(
-      string pchRenderModelName, string pchComponentName,
-      ref VRControllerState_t_Packed pControllerState, ref RenderModel_ControllerMode_State_t pState,
-      ref RenderModel_ComponentState_t pComponentState);
-
-    [StructLayout(LayoutKind.Explicit)]
-    private struct GetComponentStateUnion {
-      [FieldOffset(0)] public IVRRenderModels._GetComponentState pGetComponentState;
-      [FieldOffset(0)] public _GetComponentStatePacked pGetComponentStatePacked;
-    }
-
-    private IVRRenderModels FnTable;
+    IVRRenderModels FnTable;
 
     internal CVRRenderModels(IntPtr pInterface) {
       FnTable = (IVRRenderModels) Marshal.PtrToStructure(pInterface, typeof(IVRRenderModels));
@@ -3320,7 +3306,7 @@ namespace Valve.VR {
     }
 
     public uint GetRenderModelName(uint unRenderModelIndex,
-                                   StringBuilder pchRenderModelName,
+                                   System.Text.StringBuilder pchRenderModelName,
                                    uint unRenderModelNameLen) {
       uint result = FnTable.GetRenderModelName(unRenderModelIndex, pchRenderModelName,
         unRenderModelNameLen);
@@ -3338,7 +3324,7 @@ namespace Valve.VR {
     }
 
     public uint GetComponentName(string pchRenderModelName, uint unComponentIndex,
-                                 StringBuilder pchComponentName, uint unComponentNameLen) {
+                                 System.Text.StringBuilder pchComponentName, uint unComponentNameLen) {
       uint result = FnTable.GetComponentName(pchRenderModelName, unComponentIndex, pchComponentName,
         unComponentNameLen);
       return result;
@@ -3350,19 +3336,33 @@ namespace Valve.VR {
     }
 
     public uint GetComponentRenderModelName(string pchRenderModelName, string pchComponentName,
-                                            StringBuilder pchComponentRenderModelName,
+                                            System.Text.StringBuilder pchComponentRenderModelName,
                                             uint unComponentRenderModelNameLen) {
       uint result = FnTable.GetComponentRenderModelName(pchRenderModelName, pchComponentName,
         pchComponentRenderModelName, unComponentRenderModelNameLen);
       return result;
     }
 
+// This is a terrible hack to workaround the fact that VRControllerState_t was
+// originally mis-compiled with the wrong packing for Linux and OSX.
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    internal delegate bool _GetComponentStatePacked(
+      string pchRenderModelName, string pchComponentName,
+      ref VRControllerState_t_Packed pControllerState, ref RenderModel_ControllerMode_State_t pState,
+      ref RenderModel_ComponentState_t pComponentState);
+
+    [StructLayout(LayoutKind.Explicit)]
+    struct GetComponentStateUnion {
+      [FieldOffset(0)] public IVRRenderModels._GetComponentState pGetComponentState;
+      [FieldOffset(0)] public _GetComponentStatePacked pGetComponentStatePacked;
+    }
+
     public bool GetComponentState(string pchRenderModelName, string pchComponentName,
                                   ref VRControllerState_t pControllerState,
                                   ref RenderModel_ControllerMode_State_t pState,
                                   ref RenderModel_ComponentState_t pComponentState) {
-      if (Environment.OSVersion.Platform == PlatformID.MacOSX ||
-          Environment.OSVersion.Platform == PlatformID.Unix) {
+      if ((System.Environment.OSVersion.Platform == System.PlatformID.MacOSX) ||
+          (System.Environment.OSVersion.Platform == System.PlatformID.Unix)) {
         GetComponentStateUnion u;
         VRControllerState_t_Packed state_packed = new VRControllerState_t_Packed();
         u.pGetComponentStatePacked = null;
@@ -3384,7 +3384,7 @@ namespace Valve.VR {
     }
 
     public uint GetRenderModelThumbnailURL(string pchRenderModelName,
-                                           StringBuilder pchThumbnailURL,
+                                           System.Text.StringBuilder pchThumbnailURL,
                                            uint unThumbnailURLLen, ref EVRRenderModelError peError) {
       uint result = FnTable.GetRenderModelThumbnailURL(pchRenderModelName, pchThumbnailURL,
         unThumbnailURLLen, ref peError);
@@ -3392,7 +3392,7 @@ namespace Valve.VR {
     }
 
     public uint GetRenderModelOriginalPath(string pchRenderModelName,
-                                           StringBuilder pchOriginalPath,
+                                           System.Text.StringBuilder pchOriginalPath,
                                            uint unOriginalPathLen, ref EVRRenderModelError peError) {
       uint result = FnTable.GetRenderModelOriginalPath(pchRenderModelName, pchOriginalPath,
         unOriginalPathLen, ref peError);
@@ -3406,7 +3406,7 @@ namespace Valve.VR {
   }
 
   public class CVRNotifications {
-    private IVRNotifications FnTable;
+    IVRNotifications FnTable;
 
     internal CVRNotifications(IntPtr pInterface) {
       FnTable = (IVRNotifications) Marshal.PtrToStructure(pInterface, typeof(IVRNotifications));
@@ -3430,7 +3430,7 @@ namespace Valve.VR {
   }
 
   public class CVRSettings {
-    private IVRSettings FnTable;
+    IVRSettings FnTable;
 
     internal CVRSettings(IntPtr pInterface) {
       FnTable = (IVRSettings) Marshal.PtrToStructure(pInterface, typeof(IVRSettings));
@@ -3482,7 +3482,7 @@ namespace Valve.VR {
     }
 
     public void GetString(string pchSection, string pchSettingsKey,
-                          StringBuilder pchValue, uint unValueLen,
+                          System.Text.StringBuilder pchValue, uint unValueLen,
                           ref EVRSettingsError peError) {
       FnTable.GetString(pchSection, pchSettingsKey, pchValue, unValueLen, ref peError);
     }
@@ -3498,7 +3498,7 @@ namespace Valve.VR {
   }
 
   public class CVRScreenshots {
-    private IVRScreenshots FnTable;
+    IVRScreenshots FnTable;
 
     internal CVRScreenshots(IntPtr pInterface) {
       FnTable = (IVRScreenshots) Marshal.PtrToStructure(pInterface, typeof(IVRScreenshots));
@@ -3515,7 +3515,7 @@ namespace Valve.VR {
 
     public EVRScreenshotError HookScreenshot(EVRScreenshotType[] pSupportedTypes) {
       EVRScreenshotError result = FnTable.HookScreenshot(pSupportedTypes,
-        pSupportedTypes.Length);
+        (int) pSupportedTypes.Length);
       return result;
     }
 
@@ -3527,7 +3527,7 @@ namespace Valve.VR {
 
     public uint GetScreenshotPropertyFilename(uint screenshotHandle,
                                               EVRScreenshotPropertyFilenames filenameType,
-                                              StringBuilder pchFilename,
+                                              System.Text.StringBuilder pchFilename,
                                               uint cchFilename, ref EVRScreenshotError pError) {
       uint result = FnTable.GetScreenshotPropertyFilename(screenshotHandle, filenameType,
         pchFilename, cchFilename, ref pError);
@@ -3557,7 +3557,7 @@ namespace Valve.VR {
   }
 
   public class CVRResources {
-    private IVRResources FnTable;
+    IVRResources FnTable;
 
     internal CVRResources(IntPtr pInterface) {
       FnTable = (IVRResources) Marshal.PtrToStructure(pInterface, typeof(IVRResources));
@@ -3577,45 +3577,45 @@ namespace Valve.VR {
   }
 
   public class OpenVRInterop {
-    [DllImport("openvr_api", EntryPoint = "VR_InitInternal",
+    [DllImportAttribute("openvr_api", EntryPoint = "VR_InitInternal",
       CallingConvention = CallingConvention.Cdecl)]
     internal static extern uint InitInternal(ref EVRInitError peError,
                                              EVRApplicationType eApplicationType);
 
-    [DllImport("openvr_api", EntryPoint = "VR_ShutdownInternal",
+    [DllImportAttribute("openvr_api", EntryPoint = "VR_ShutdownInternal",
       CallingConvention = CallingConvention.Cdecl)]
     internal static extern void ShutdownInternal();
 
-    [DllImport("openvr_api", EntryPoint = "VR_IsHmdPresent",
+    [DllImportAttribute("openvr_api", EntryPoint = "VR_IsHmdPresent",
       CallingConvention = CallingConvention.Cdecl)]
     internal static extern bool IsHmdPresent();
 
-    [DllImport("openvr_api", EntryPoint = "VR_IsRuntimeInstalled",
+    [DllImportAttribute("openvr_api", EntryPoint = "VR_IsRuntimeInstalled",
       CallingConvention = CallingConvention.Cdecl)]
     internal static extern bool IsRuntimeInstalled();
 
-    [DllImport("openvr_api", EntryPoint = "VR_GetStringForHmdError",
+    [DllImportAttribute("openvr_api", EntryPoint = "VR_GetStringForHmdError",
       CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr GetStringForHmdError(EVRInitError error);
 
-    [DllImport("openvr_api", EntryPoint = "VR_GetGenericInterface",
+    [DllImportAttribute("openvr_api", EntryPoint = "VR_GetGenericInterface",
       CallingConvention = CallingConvention.Cdecl)]
     internal static extern IntPtr GetGenericInterface(
-      [In] [MarshalAs(UnmanagedType.LPStr)] string pchInterfaceVersion, ref EVRInitError peError);
+      [In, MarshalAs(UnmanagedType.LPStr)] string pchInterfaceVersion, ref EVRInitError peError);
 
-    [DllImport("openvr_api", EntryPoint = "VR_IsInterfaceVersionValid",
+    [DllImportAttribute("openvr_api", EntryPoint = "VR_IsInterfaceVersionValid",
       CallingConvention = CallingConvention.Cdecl)]
     internal static extern bool IsInterfaceVersionValid(
-      [In] [MarshalAs(UnmanagedType.LPStr)] string pchInterfaceVersion);
+      [In, MarshalAs(UnmanagedType.LPStr)] string pchInterfaceVersion);
 
-    [DllImport("openvr_api", EntryPoint = "VR_GetInitToken",
+    [DllImportAttribute("openvr_api", EntryPoint = "VR_GetInitToken",
       CallingConvention = CallingConvention.Cdecl)]
     internal static extern uint GetInitToken();
   }
 
   public enum EVREye {
     Eye_Left = 0,
-    Eye_Right = 1
+    Eye_Right = 1,
   }
 
   public enum ETextureType {
@@ -3623,13 +3623,13 @@ namespace Valve.VR {
     OpenGL = 1,
     Vulkan = 2,
     IOSurface = 3,
-    DirectX12 = 4
+    DirectX12 = 4,
   }
 
   public enum EColorSpace {
     Auto = 0,
     Gamma = 1,
-    Linear = 2
+    Linear = 2,
   }
 
   public enum ETrackingResult {
@@ -3637,7 +3637,7 @@ namespace Valve.VR {
     Calibrating_InProgress = 100,
     Calibrating_OutOfRange = 101,
     Running_OK = 200,
-    Running_OutOfRange = 201
+    Running_OutOfRange = 201,
   }
 
   public enum ETrackedDeviceClass {
@@ -3645,19 +3645,19 @@ namespace Valve.VR {
     HMD = 1,
     Controller = 2,
     GenericTracker = 3,
-    TrackingReference = 4
+    TrackingReference = 4,
   }
 
   public enum ETrackedControllerRole {
     Invalid = 0,
     LeftHand = 1,
-    RightHand = 2
+    RightHand = 2,
   }
 
   public enum ETrackingUniverseOrigin {
     TrackingUniverseSeated = 0,
     TrackingUniverseStanding = 1,
-    TrackingUniverseRawAndUncalibrated = 2
+    TrackingUniverseRawAndUncalibrated = 2,
   }
 
   public enum ETrackedDeviceProperty {
@@ -3769,7 +3769,7 @@ namespace Valve.VR {
     Prop_UserConfigPath_String = 6000,
     Prop_InstallPath_String = 6001,
     Prop_VendorSpecific_Reserved_Start = 10000,
-    Prop_VendorSpecific_Reserved_End = 10999
+    Prop_VendorSpecific_Reserved_End = 10999,
   }
 
   public enum ETrackedPropertyError {
@@ -3784,14 +3784,14 @@ namespace Valve.VR {
     TrackedProp_StringExceedsMaximumLength = 8,
     TrackedProp_NotYetAvailable = 9,
     TrackedProp_PermissionDenied = 10,
-    TrackedProp_InvalidOperation = 11
+    TrackedProp_InvalidOperation = 11,
   }
 
   public enum EVRSubmitFlags {
     Submit_Default = 0,
     Submit_LensDistortionAlreadyApplied = 1,
     Submit_GlRenderBuffer = 2,
-    Submit_Reserved = 4
+    Submit_Reserved = 4,
   }
 
   public enum EVRState {
@@ -3803,7 +3803,7 @@ namespace Valve.VR {
     Ready_Alert = 4,
     NotReady = 5,
     Standby = 6,
-    Ready_Alert_Low = 7
+    Ready_Alert_Low = 7,
   }
 
   public enum EVREventType {
@@ -3915,7 +3915,7 @@ namespace Valve.VR {
     VREvent_PerformanceTest_FidelityLevel = 1602,
     VREvent_MessageOverlay_Closed = 1650,
     VREvent_VendorSpecific_Reserved_Start = 10000,
-    VREvent_VendorSpecific_Reserved_End = 19999
+    VREvent_VendorSpecific_Reserved_End = 19999,
   }
 
   public enum EDeviceActivityLevel {
@@ -3923,7 +3923,7 @@ namespace Valve.VR {
     k_EDeviceActivityLevel_Idle = 0,
     k_EDeviceActivityLevel_UserInteraction = 1,
     k_EDeviceActivityLevel_UserInteraction_Timeout = 2,
-    k_EDeviceActivityLevel_Standby = 3
+    k_EDeviceActivityLevel_Standby = 3,
   }
 
   public enum EVRButtonId {
@@ -3944,32 +3944,32 @@ namespace Valve.VR {
     k_EButton_SteamVR_Touchpad = 32,
     k_EButton_SteamVR_Trigger = 33,
     k_EButton_Dashboard_Back = 2,
-    k_EButton_Max = 64
+    k_EButton_Max = 64,
   }
 
   public enum EVRMouseButton {
     Left = 1,
     Right = 2,
-    Middle = 4
+    Middle = 4,
   }
 
   public enum EHiddenAreaMeshType {
     k_eHiddenAreaMesh_Standard = 0,
     k_eHiddenAreaMesh_Inverse = 1,
     k_eHiddenAreaMesh_LineLoop = 2,
-    k_eHiddenAreaMesh_Max = 3
+    k_eHiddenAreaMesh_Max = 3,
   }
 
   public enum EVRControllerAxisType {
     k_eControllerAxis_None = 0,
     k_eControllerAxis_TrackPad = 1,
     k_eControllerAxis_Joystick = 2,
-    k_eControllerAxis_Trigger = 3
+    k_eControllerAxis_Trigger = 3,
   }
 
   public enum EVRControllerEventOutputType {
     ControllerEventOutput_OSEvents = 0,
-    ControllerEventOutput_VREvents = 1
+    ControllerEventOutput_VREvents = 1,
   }
 
   public enum ECollisionBoundsStyle {
@@ -3978,7 +3978,7 @@ namespace Valve.VR {
     COLLISION_BOUNDS_STYLE_SQUARES = 2,
     COLLISION_BOUNDS_STYLE_ADVANCED = 3,
     COLLISION_BOUNDS_STYLE_NONE = 4,
-    COLLISION_BOUNDS_STYLE_COUNT = 5
+    COLLISION_BOUNDS_STYLE_COUNT = 5,
   }
 
   public enum EVROverlayError {
@@ -4002,7 +4002,7 @@ namespace Valve.VR {
     KeyboardAlreadyInUse = 26,
     NoNeighbor = 27,
     TooManyMaskPrimitives = 29,
-    BadMaskPrimitive = 30
+    BadMaskPrimitive = 30,
   }
 
   public enum EVRApplicationType {
@@ -4013,13 +4013,13 @@ namespace Valve.VR {
     VRApplication_Utility = 4,
     VRApplication_VRMonitor = 5,
     VRApplication_SteamWatchdog = 6,
-    VRApplication_Max = 7
+    VRApplication_Max = 7,
   }
 
   public enum EVRFirmwareError {
     None = 0,
     Success = 1,
-    Fail = 2
+    Fail = 2,
   }
 
   public enum EVRNotificationError {
@@ -4027,7 +4027,7 @@ namespace Valve.VR {
     InvalidNotificationId = 100,
     NotificationQueueFull = 101,
     InvalidOverlayHandle = 102,
-    SystemWithUserValueAlreadyExists = 103
+    SystemWithUserValueAlreadyExists = 103,
   }
 
   public enum EVRInitError {
@@ -4108,7 +4108,7 @@ namespace Valve.VR {
     VendorSpecific_HmdFound_UserDataAddressRange = 1111,
     VendorSpecific_HmdFound_UserDataError = 1112,
     VendorSpecific_HmdFound_ConfigFailedSanityCheck = 1113,
-    Steam_SteamInstallationNotFound = 2000
+    Steam_SteamInstallationNotFound = 2000,
   }
 
   public enum EVRScreenshotType {
@@ -4117,12 +4117,12 @@ namespace Valve.VR {
     Stereo = 2,
     Cubemap = 3,
     MonoPanorama = 4,
-    StereoPanorama = 5
+    StereoPanorama = 5,
   }
 
   public enum EVRScreenshotPropertyFilenames {
     Preview = 0,
-    VR = 1
+    VR = 1,
   }
 
   public enum EVRTrackedCameraError {
@@ -4142,14 +4142,14 @@ namespace Valve.VR {
     SharedTextureFailure = 112,
     NoFrameAvailable = 113,
     InvalidArgument = 114,
-    InvalidFrameBufferSize = 115
+    InvalidFrameBufferSize = 115,
   }
 
   public enum EVRTrackedCameraFrameType {
     Distorted = 0,
     Undistorted = 1,
     MaximumUndistorted = 2,
-    MAX_CAMERA_FRAME_TYPES = 3
+    MAX_CAMERA_FRAME_TYPES = 3,
   }
 
   public enum EVRApplicationError {
@@ -4172,7 +4172,7 @@ namespace Valve.VR {
     BufferTooSmall = 200,
     PropertyNotSet = 201,
     UnknownProperty = 202,
-    InvalidParameter = 203
+    InvalidParameter = 203,
   }
 
   public enum EVRApplicationProperty {
@@ -4190,14 +4190,14 @@ namespace Valve.VR {
     IsTemplate_Bool = 61,
     IsInstanced_Bool = 62,
     IsInternal_Bool = 63,
-    LastLaunchTime_Uint64 = 70
+    LastLaunchTime_Uint64 = 70,
   }
 
   public enum EVRApplicationTransitionState {
     VRApplicationTransition_None = 0,
     VRApplicationTransition_OldAppQuitSent = 10,
     VRApplicationTransition_WaitingForExternalLaunch = 11,
-    VRApplicationTransition_NewAppLaunched = 20
+    VRApplicationTransition_NewAppLaunched = 20,
   }
 
   public enum ChaperoneCalibrationState {
@@ -4210,16 +4210,16 @@ namespace Valve.VR {
     Error_BaseStationUninitialized = 201,
     Error_BaseStationConflict = 202,
     Error_PlayAreaInvalid = 203,
-    Error_CollisionBoundsInvalid = 204
+    Error_CollisionBoundsInvalid = 204,
   }
 
   public enum EChaperoneConfigFile {
     Live = 1,
-    Temp = 2
+    Temp = 2,
   }
 
   public enum EChaperoneImportFlags {
-    EChaperoneImport_BoundsOnly = 1
+    EChaperoneImport_BoundsOnly = 1,
   }
 
   public enum EVRCompositorError {
@@ -4233,19 +4233,19 @@ namespace Valve.VR {
     TextureUsesUnsupportedFormat = 105,
     SharedTexturesNotSupported = 106,
     IndexOutOfRange = 107,
-    AlreadySubmitted = 108
+    AlreadySubmitted = 108,
   }
 
   public enum VROverlayInputMethod {
     None = 0,
-    Mouse = 1
+    Mouse = 1,
   }
 
   public enum VROverlayTransformType {
     VROverlayTransform_Absolute = 0,
     VROverlayTransform_TrackedDeviceRelative = 1,
     VROverlayTransform_SystemOverlay = 2,
-    VROverlayTransform_TrackedComponent = 3
+    VROverlayTransform_TrackedComponent = 3,
   }
 
   public enum VROverlayFlags {
@@ -4264,7 +4264,7 @@ namespace Valve.VR {
     Panorama = 12,
     StereoPanorama = 13,
     SortWithNonSceneOverlays = 14,
-    VisibleInDashboard = 15
+    VisibleInDashboard = 15,
   }
 
   public enum VRMessageOverlayResponse {
@@ -4274,18 +4274,18 @@ namespace Valve.VR {
     ButtonPress_3 = 3,
     CouldntFindSystemOverlay = 4,
     CouldntFindOrCreateClientOverlay = 5,
-    ApplicationQuit = 6
+    ApplicationQuit = 6,
   }
 
   public enum EGamepadTextInputMode {
     k_EGamepadTextInputModeNormal = 0,
     k_EGamepadTextInputModePassword = 1,
-    k_EGamepadTextInputModeSubmit = 2
+    k_EGamepadTextInputModeSubmit = 2,
   }
 
   public enum EGamepadTextInputLineMode {
     k_EGamepadTextInputLineModeSingleLine = 0,
-    k_EGamepadTextInputLineModeMultipleLines = 1
+    k_EGamepadTextInputLineModeMultipleLines = 1,
   }
 
   public enum EOverlayDirection {
@@ -4293,12 +4293,12 @@ namespace Valve.VR {
     Down = 1,
     Left = 2,
     Right = 3,
-    Count = 4
+    Count = 4,
   }
 
   public enum EVROverlayIntersectionMaskPrimitiveType {
     OverlayIntersectionPrimitiveType_Rectangle = 0,
-    OverlayIntersectionPrimitiveType_Circle = 1
+    OverlayIntersectionPrimitiveType_Circle = 1,
   }
 
   public enum EVRRenderModelError {
@@ -4314,7 +4314,7 @@ namespace Valve.VR {
     BufferTooSmall = 306,
     NotEnoughNormals = 307,
     NotEnoughTexCoords = 308,
-    InvalidTexture = 400
+    InvalidTexture = 400,
   }
 
   public enum EVRComponentProperty {
@@ -4322,13 +4322,13 @@ namespace Valve.VR {
     IsVisible = 2,
     IsTouched = 4,
     IsPressed = 8,
-    IsScrolled = 16
+    IsScrolled = 16,
   }
 
   public enum EVRNotificationType {
     Transient = 0,
     Persistent = 1,
-    Transient_SystemWithUserValue = 2
+    Transient_SystemWithUserValue = 2,
   }
 
   public enum EVRNotificationStyle {
@@ -4336,7 +4336,7 @@ namespace Valve.VR {
     Application = 100,
     Contact_Disabled = 200,
     Contact_Enabled = 201,
-    Contact_Active = 202
+    Contact_Active = 202,
   }
 
   public enum EVRSettingsError {
@@ -4345,7 +4345,7 @@ namespace Valve.VR {
     WriteFailed = 2,
     ReadFailed = 3,
     JsonParseFailed = 4,
-    UnsetSettingHasNoDefault = 5
+    UnsetSettingHasNoDefault = 5,
   }
 
   public enum EVRScreenshotError {
@@ -4354,7 +4354,7 @@ namespace Valve.VR {
     IncompatibleVersion = 100,
     NotFound = 101,
     BufferTooSmall = 102,
-    ScreenshotAlreadyInProgress = 108
+    ScreenshotAlreadyInProgress = 108,
   }
 
   [StructLayout(LayoutKind.Explicit)]
@@ -4379,7 +4379,7 @@ namespace Valve.VR {
     [FieldOffset(0)] public VREvent_MessageOverlay_t messageOverlay;
 
     [FieldOffset(0)] public VREvent_Keyboard_t keyboard;
-    // This has to be at the end due to a mono bug
+      // This has to be at the end due to a mono bug
   }
 
   [StructLayout(LayoutKind.Explicit)]
@@ -4710,14 +4710,14 @@ namespace Valve.VR {
     public VRControllerAxis_t rAxis4;
 
     public void Unpack(ref VRControllerState_t unpacked) {
-      unpacked.unPacketNum = unPacketNum;
-      unpacked.ulButtonPressed = ulButtonPressed;
-      unpacked.ulButtonTouched = ulButtonTouched;
-      unpacked.rAxis0 = rAxis0;
-      unpacked.rAxis1 = rAxis1;
-      unpacked.rAxis2 = rAxis2;
-      unpacked.rAxis3 = rAxis3;
-      unpacked.rAxis4 = rAxis4;
+      unpacked.unPacketNum = this.unPacketNum;
+      unpacked.ulButtonPressed = this.ulButtonPressed;
+      unpacked.ulButtonTouched = this.ulButtonTouched;
+      unpacked.rAxis0 = this.rAxis0;
+      unpacked.rAxis1 = this.rAxis1;
+      unpacked.rAxis2 = this.rAxis2;
+      unpacked.rAxis3 = this.rAxis3;
+      unpacked.rAxis4 = this.rAxis4;
     }
   }
 
@@ -4868,9 +4868,9 @@ namespace Valve.VR {
     public IntPtr rubTextureMapData; // const uint8_t *
 
     public void Unpack(ref RenderModel_TextureMap_t unpacked) {
-      unpacked.unWidth = unWidth;
-      unpacked.unHeight = unHeight;
-      unpacked.rubTextureMapData = rubTextureMapData;
+      unpacked.unWidth = this.unWidth;
+      unpacked.unHeight = this.unHeight;
+      unpacked.rubTextureMapData = this.rubTextureMapData;
     }
   }
 
@@ -4893,11 +4893,11 @@ namespace Valve.VR {
     public int diffuseTextureId;
 
     public void Unpack(ref RenderModel_t unpacked) {
-      unpacked.rVertexData = rVertexData;
-      unpacked.unVertexCount = unVertexCount;
-      unpacked.rIndexData = rIndexData;
-      unpacked.unTriangleCount = unTriangleCount;
-      unpacked.diffuseTextureId = diffuseTextureId;
+      unpacked.rVertexData = this.rVertexData;
+      unpacked.unVertexCount = this.unVertexCount;
+      unpacked.rIndexData = this.rIndexData;
+      unpacked.unTriangleCount = this.unTriangleCount;
+      unpacked.diffuseTextureId = this.diffuseTextureId;
     }
   }
 
@@ -4931,188 +4931,36 @@ namespace Valve.VR {
   }
 
   public class OpenVR {
-    private class COpenVRContext {
-      private CVRApplications m_pVRApplications;
-      private CVRChaperone m_pVRChaperone;
-      private CVRChaperoneSetup m_pVRChaperoneSetup;
-      private CVRCompositor m_pVRCompositor;
-      private CVRExtendedDisplay m_pVRExtendedDisplay;
-      private CVROverlay m_pVROverlay;
-      private CVRRenderModels m_pVRRenderModels;
-      private CVRScreenshots m_pVRScreenshots;
-      private CVRSettings m_pVRSettings;
+    public static uint InitInternal(ref EVRInitError peError, EVRApplicationType eApplicationType) {
+      return OpenVRInterop.InitInternal(ref peError, eApplicationType);
+    }
 
-      private CVRSystem m_pVRSystem;
-      private CVRTrackedCamera m_pVRTrackedCamera;
+    public static void ShutdownInternal() {
+      OpenVRInterop.ShutdownInternal();
+    }
 
-      public COpenVRContext() {
-        Clear();
-      }
+    public static bool IsHmdPresent() {
+      return OpenVRInterop.IsHmdPresent();
+    }
 
-      public void Clear() {
-        m_pVRSystem = null;
-        m_pVRChaperone = null;
-        m_pVRChaperoneSetup = null;
-        m_pVRCompositor = null;
-        m_pVROverlay = null;
-        m_pVRRenderModels = null;
-        m_pVRExtendedDisplay = null;
-        m_pVRSettings = null;
-        m_pVRApplications = null;
-        m_pVRScreenshots = null;
-        m_pVRTrackedCamera = null;
-      }
+    public static bool IsRuntimeInstalled() {
+      return OpenVRInterop.IsRuntimeInstalled();
+    }
 
-      private void CheckClear() {
-        if (VRToken != GetInitToken()) {
-          Clear();
-          VRToken = GetInitToken();
-        }
-      }
+    public static string GetStringForHmdError(EVRInitError error) {
+      return Marshal.PtrToStringAnsi(OpenVRInterop.GetStringForHmdError(error));
+    }
 
-      public CVRSystem VRSystem() {
-        CheckClear();
-        if (m_pVRSystem == null) {
-          var eError = EVRInitError.None;
-          var pInterface = OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRSystem_Version,
-            ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRSystem = new CVRSystem(pInterface);
-          }
-        }
-        return m_pVRSystem;
-      }
+    public static IntPtr GetGenericInterface(string pchInterfaceVersion, ref EVRInitError peError) {
+      return OpenVRInterop.GetGenericInterface(pchInterfaceVersion, ref peError);
+    }
 
-      public CVRChaperone VRChaperone() {
-        CheckClear();
-        if (m_pVRChaperone == null) {
-          var eError = EVRInitError.None;
-          var pInterface = OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRChaperone_Version,
-            ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRChaperone = new CVRChaperone(pInterface);
-          }
-        }
-        return m_pVRChaperone;
-      }
+    public static bool IsInterfaceVersionValid(string pchInterfaceVersion) {
+      return OpenVRInterop.IsInterfaceVersionValid(pchInterfaceVersion);
+    }
 
-      public CVRChaperoneSetup VRChaperoneSetup() {
-        CheckClear();
-        if (m_pVRChaperoneSetup == null) {
-          var eError = EVRInitError.None;
-          var pInterface =
-            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRChaperoneSetup_Version, ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRChaperoneSetup = new CVRChaperoneSetup(pInterface);
-          }
-        }
-        return m_pVRChaperoneSetup;
-      }
-
-      public CVRCompositor VRCompositor() {
-        CheckClear();
-        if (m_pVRCompositor == null) {
-          var eError = EVRInitError.None;
-          var pInterface = OpenVRInterop.GetGenericInterface(
-            FnTable_Prefix + IVRCompositor_Version, ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRCompositor = new CVRCompositor(pInterface);
-          }
-        }
-        return m_pVRCompositor;
-      }
-
-      public CVROverlay VROverlay() {
-        CheckClear();
-        if (m_pVROverlay == null) {
-          var eError = EVRInitError.None;
-          var pInterface = OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVROverlay_Version,
-            ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVROverlay = new CVROverlay(pInterface);
-          }
-        }
-        return m_pVROverlay;
-      }
-
-      public CVRRenderModels VRRenderModels() {
-        CheckClear();
-        if (m_pVRRenderModels == null) {
-          var eError = EVRInitError.None;
-          var pInterface =
-            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRRenderModels_Version, ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRRenderModels = new CVRRenderModels(pInterface);
-          }
-        }
-        return m_pVRRenderModels;
-      }
-
-      public CVRExtendedDisplay VRExtendedDisplay() {
-        CheckClear();
-        if (m_pVRExtendedDisplay == null) {
-          var eError = EVRInitError.None;
-          var pInterface =
-            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRExtendedDisplay_Version,
-              ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRExtendedDisplay = new CVRExtendedDisplay(pInterface);
-          }
-        }
-        return m_pVRExtendedDisplay;
-      }
-
-      public CVRSettings VRSettings() {
-        CheckClear();
-        if (m_pVRSettings == null) {
-          var eError = EVRInitError.None;
-          var pInterface = OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRSettings_Version,
-            ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRSettings = new CVRSettings(pInterface);
-          }
-        }
-        return m_pVRSettings;
-      }
-
-      public CVRApplications VRApplications() {
-        CheckClear();
-        if (m_pVRApplications == null) {
-          var eError = EVRInitError.None;
-          var pInterface =
-            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRApplications_Version, ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRApplications = new CVRApplications(pInterface);
-          }
-        }
-        return m_pVRApplications;
-      }
-
-      public CVRScreenshots VRScreenshots() {
-        CheckClear();
-        if (m_pVRScreenshots == null) {
-          var eError = EVRInitError.None;
-          var pInterface = OpenVRInterop.GetGenericInterface(
-            FnTable_Prefix + IVRScreenshots_Version, ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRScreenshots = new CVRScreenshots(pInterface);
-          }
-        }
-        return m_pVRScreenshots;
-      }
-
-      public CVRTrackedCamera VRTrackedCamera() {
-        CheckClear();
-        if (m_pVRTrackedCamera == null) {
-          var eError = EVRInitError.None;
-          var pInterface =
-            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRTrackedCamera_Version, ref eError);
-          if (pInterface != IntPtr.Zero && eError == EVRInitError.None) {
-            m_pVRTrackedCamera = new CVRTrackedCamera(pInterface);
-          }
-        }
-        return m_pVRTrackedCamera;
-      }
+    public static uint GetInitToken() {
+      return OpenVRInterop.GetInitToken();
     }
 
     public const uint k_unMaxDriverDebugResponseSize = 32768;
@@ -5312,17 +5160,188 @@ namespace Valve.VR {
     public const string IVRScreenshots_Version = "IVRScreenshots_001";
     public const string IVRResources_Version = "IVRResources_001";
 
-    private const string FnTable_Prefix = "FnTable:";
+    static uint VRToken { get; set; }
 
-    private static COpenVRContext _OpenVRInternal_ModuleContext;
+    const string FnTable_Prefix = "FnTable:";
 
-    private static uint VRToken { get; set; }
+    class COpenVRContext {
+      public COpenVRContext() {
+        Clear();
+      }
 
-    private static COpenVRContext OpenVRInternal_ModuleContext {
-      get {
-        if (_OpenVRInternal_ModuleContext == null) {
-          _OpenVRInternal_ModuleContext = new COpenVRContext();
+      public void Clear() {
+        m_pVRSystem = null;
+        m_pVRChaperone = null;
+        m_pVRChaperoneSetup = null;
+        m_pVRCompositor = null;
+        m_pVROverlay = null;
+        m_pVRRenderModels = null;
+        m_pVRExtendedDisplay = null;
+        m_pVRSettings = null;
+        m_pVRApplications = null;
+        m_pVRScreenshots = null;
+        m_pVRTrackedCamera = null;
+      }
+
+      void CheckClear() {
+        if (VRToken != GetInitToken()) {
+          Clear();
+          VRToken = GetInitToken();
         }
+      }
+
+      public CVRSystem VRSystem() {
+        CheckClear();
+        if (m_pVRSystem == null) {
+          var eError = EVRInitError.None;
+          var pInterface = OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRSystem_Version,
+            ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRSystem = new CVRSystem(pInterface);
+        }
+        return m_pVRSystem;
+      }
+
+      public CVRChaperone VRChaperone() {
+        CheckClear();
+        if (m_pVRChaperone == null) {
+          var eError = EVRInitError.None;
+          var pInterface = OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRChaperone_Version,
+            ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRChaperone = new CVRChaperone(pInterface);
+        }
+        return m_pVRChaperone;
+      }
+
+      public CVRChaperoneSetup VRChaperoneSetup() {
+        CheckClear();
+        if (m_pVRChaperoneSetup == null) {
+          var eError = EVRInitError.None;
+          var pInterface =
+            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRChaperoneSetup_Version, ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRChaperoneSetup = new CVRChaperoneSetup(pInterface);
+        }
+        return m_pVRChaperoneSetup;
+      }
+
+      public CVRCompositor VRCompositor() {
+        CheckClear();
+        if (m_pVRCompositor == null) {
+          var eError = EVRInitError.None;
+          var pInterface = OpenVRInterop.GetGenericInterface(
+            FnTable_Prefix + IVRCompositor_Version, ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRCompositor = new CVRCompositor(pInterface);
+        }
+        return m_pVRCompositor;
+      }
+
+      public CVROverlay VROverlay() {
+        CheckClear();
+        if (m_pVROverlay == null) {
+          var eError = EVRInitError.None;
+          var pInterface = OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVROverlay_Version,
+            ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVROverlay = new CVROverlay(pInterface);
+        }
+        return m_pVROverlay;
+      }
+
+      public CVRRenderModels VRRenderModels() {
+        CheckClear();
+        if (m_pVRRenderModels == null) {
+          var eError = EVRInitError.None;
+          var pInterface =
+            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRRenderModels_Version, ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRRenderModels = new CVRRenderModels(pInterface);
+        }
+        return m_pVRRenderModels;
+      }
+
+      public CVRExtendedDisplay VRExtendedDisplay() {
+        CheckClear();
+        if (m_pVRExtendedDisplay == null) {
+          var eError = EVRInitError.None;
+          var pInterface =
+            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRExtendedDisplay_Version,
+              ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRExtendedDisplay = new CVRExtendedDisplay(pInterface);
+        }
+        return m_pVRExtendedDisplay;
+      }
+
+      public CVRSettings VRSettings() {
+        CheckClear();
+        if (m_pVRSettings == null) {
+          var eError = EVRInitError.None;
+          var pInterface = OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRSettings_Version,
+            ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRSettings = new CVRSettings(pInterface);
+        }
+        return m_pVRSettings;
+      }
+
+      public CVRApplications VRApplications() {
+        CheckClear();
+        if (m_pVRApplications == null) {
+          var eError = EVRInitError.None;
+          var pInterface =
+            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRApplications_Version, ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRApplications = new CVRApplications(pInterface);
+        }
+        return m_pVRApplications;
+      }
+
+      public CVRScreenshots VRScreenshots() {
+        CheckClear();
+        if (m_pVRScreenshots == null) {
+          var eError = EVRInitError.None;
+          var pInterface = OpenVRInterop.GetGenericInterface(
+            FnTable_Prefix + IVRScreenshots_Version, ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRScreenshots = new CVRScreenshots(pInterface);
+        }
+        return m_pVRScreenshots;
+      }
+
+      public CVRTrackedCamera VRTrackedCamera() {
+        CheckClear();
+        if (m_pVRTrackedCamera == null) {
+          var eError = EVRInitError.None;
+          var pInterface =
+            OpenVRInterop.GetGenericInterface(FnTable_Prefix + IVRTrackedCamera_Version, ref eError);
+          if (pInterface != IntPtr.Zero && eError == EVRInitError.None)
+            m_pVRTrackedCamera = new CVRTrackedCamera(pInterface);
+        }
+        return m_pVRTrackedCamera;
+      }
+
+      private CVRSystem m_pVRSystem;
+      private CVRChaperone m_pVRChaperone;
+      private CVRChaperoneSetup m_pVRChaperoneSetup;
+      private CVRCompositor m_pVRCompositor;
+      private CVROverlay m_pVROverlay;
+      private CVRRenderModels m_pVRRenderModels;
+      private CVRExtendedDisplay m_pVRExtendedDisplay;
+      private CVRSettings m_pVRSettings;
+      private CVRApplications m_pVRApplications;
+      private CVRScreenshots m_pVRScreenshots;
+      private CVRTrackedCamera m_pVRTrackedCamera;
+    };
+
+    private static COpenVRContext _OpenVRInternal_ModuleContext = null;
+
+    static COpenVRContext OpenVRInternal_ModuleContext {
+      get {
+        if (_OpenVRInternal_ModuleContext == null)
+          _OpenVRInternal_ModuleContext = new COpenVRContext();
         return _OpenVRInternal_ModuleContext;
       }
     }
@@ -5371,38 +5390,6 @@ namespace Valve.VR {
       get { return OpenVRInternal_ModuleContext.VRTrackedCamera(); }
     }
 
-    public static uint InitInternal(ref EVRInitError peError, EVRApplicationType eApplicationType) {
-      return OpenVRInterop.InitInternal(ref peError, eApplicationType);
-    }
-
-    public static void ShutdownInternal() {
-      OpenVRInterop.ShutdownInternal();
-    }
-
-    public static bool IsHmdPresent() {
-      return OpenVRInterop.IsHmdPresent();
-    }
-
-    public static bool IsRuntimeInstalled() {
-      return OpenVRInterop.IsRuntimeInstalled();
-    }
-
-    public static string GetStringForHmdError(EVRInitError error) {
-      return Marshal.PtrToStringAnsi(OpenVRInterop.GetStringForHmdError(error));
-    }
-
-    public static IntPtr GetGenericInterface(string pchInterfaceVersion, ref EVRInitError peError) {
-      return OpenVRInterop.GetGenericInterface(pchInterfaceVersion, ref peError);
-    }
-
-    public static bool IsInterfaceVersionValid(string pchInterfaceVersion) {
-      return OpenVRInterop.IsInterfaceVersionValid(pchInterfaceVersion);
-    }
-
-    public static uint GetInitToken() {
-      return OpenVRInterop.GetInitToken();
-    }
-
     /** Finds the active installation of vrclient.dll and initializes it */
 
     public static CVRSystem Init(ref EVRInitError peError,
@@ -5411,9 +5398,8 @@ namespace Valve.VR {
       VRToken = InitInternal(ref peError, eApplicationType);
       OpenVRInternal_ModuleContext.Clear();
 
-      if (peError != EVRInitError.None) {
+      if (peError != EVRInitError.None)
         return null;
-      }
 
       bool bInterfaceValid = IsInterfaceVersionValid(IVRSystem_Version);
       if (!bInterfaceValid) {
@@ -5422,7 +5408,7 @@ namespace Valve.VR {
         return null;
       }
 
-      return System;
+      return OpenVR.System;
     }
 
     /** unloads vrclient.dll. Any interface pointers from the interface are

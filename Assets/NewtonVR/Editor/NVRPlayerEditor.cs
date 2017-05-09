@@ -1,14 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
-using System.Net;
-using System.Threading;
+using System.Text;
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using NewtonVR;
+using System.Net;
+using System.Net.Security;
+using System.IO;
+using System.ComponentModel;
+using System.Threading;
+using System.Security.Cryptography.X509Certificates;
+using UnityEditor.AnimatedValues;
 using UnityEditor.SceneManagement;
-using UnityEngine;
 using UnityEngine.SceneManagement;
-using Random = UnityEngine.Random;
 
 namespace NewtonVR {
   [CustomEditor(typeof(NVRPlayer))]
@@ -16,18 +23,18 @@ namespace NewtonVR {
     private const string SteamVRDefine = "NVR_SteamVR";
     private const string OculusDefine = "NVR_Oculus";
 
-    private static bool hasReloaded;
-    private static bool waitingForReload;
+    private static bool hasReloaded = false;
+    private static bool waitingForReload = false;
     private static DateTime startedWaitingForReload;
 
-    private static bool hasOculusSDK;
-    private static bool hasSteamVR;
-    private static bool hasOculusSDKDefine;
-    private static bool hasSteamVRDefine;
+    private static bool hasOculusSDK = false;
+    private static bool hasSteamVR = false;
+    private static bool hasOculusSDKDefine = false;
+    private static bool hasSteamVRDefine = false;
 
-    private static string progressBarMessage;
+    private static string progressBarMessage = null;
 
-    private static readonly string CheckForUpdatesKey = "NewtonVRCheckForUpdates";
+    private static string CheckForUpdatesKey = "NewtonVRCheckForUpdates";
 
     [DidReloadScripts]
     private static void DidReloadScripts() {
@@ -48,7 +55,7 @@ namespace NewtonVR {
 
       if (PlayerPrefs.HasKey(CheckForUpdatesKey) == false ||
           PlayerPrefs.GetInt(CheckForUpdatesKey) == 1) {
-        Thread thread = new Thread(CheckForUpdate);
+        Thread thread = new Thread(new ThreadStart(CheckForUpdate));
         thread.Start();
       }
     }
@@ -60,7 +67,7 @@ namespace NewtonVR {
         using (WebClient wc = new WebClient()) {
           string version =
             wc.DownloadString("http://www.newtonvr.com/version.php?ver=" + NVRPlayer.NewtonVRVersion);
-          string[] split = version.Split('=');
+          string[] split = version.Split(new char[] {'='});
           version = split[1]; //
           decimal versionResult;
           decimal.TryParse(version, out versionResult);
@@ -123,8 +130,8 @@ namespace NewtonVR {
         progressBarMessage = newMessage;
       }
 
-      EditorUtility.DisplayProgressBar("NewtonVR", progressBarMessage, Random.value);
-      // :D
+      EditorUtility.DisplayProgressBar("NewtonVR", progressBarMessage, UnityEngine.Random.value);
+        // :D
     }
 
     private static void ClearProgressBar() {
@@ -147,18 +154,16 @@ namespace NewtonVR {
       NVRPlayer player = (NVRPlayer) target;
       if (PlayerPrefs.HasKey(CheckForUpdatesKey) == false ||
           PlayerPrefs.GetInt(CheckForUpdatesKey) !=
-          Convert.ToInt32(player.NotifyOnVersionUpdate)) {
+          System.Convert.ToInt32(player.NotifyOnVersionUpdate)) {
         PlayerPrefs.SetInt("NewtonVRCheckForUpdates",
-          Convert.ToInt32(player.NotifyOnVersionUpdate));
+          System.Convert.ToInt32(player.NotifyOnVersionUpdate));
       }
 
-      if (hasReloaded == false) {
+      if (hasReloaded == false)
         DidReloadScripts();
-      }
 
-      if (waitingForReload) {
+      if (waitingForReload)
         HasWaitedLongEnough();
-      }
 
       player.OculusSDKEnabled = hasOculusSDKDefine;
       player.SteamVREnabled = hasSteamVRDefine;
@@ -189,6 +194,7 @@ namespace NewtonVR {
         enableOculusSDK = EditorGUILayout.Toggle("Enable Oculus SDK", player.OculusSDKEnabled);
       }
       EditorGUILayout.EndHorizontal();
+
 
       GUILayout.Space(10);
 
@@ -221,7 +227,7 @@ namespace NewtonVR {
         GUILayout.EndHorizontal();
       }
       EditorGUILayout.EndFadeGroup();
-      if (modelOverrideAll) {
+      if (modelOverrideAll == true) {
         player.OverrideOculus = false;
         player.OverrideSteamVR = false;
       }
@@ -232,7 +238,7 @@ namespace NewtonVR {
 
       GUILayout.Space(10);
 
-      if (player.OculusSDKEnabled) {
+      if (player.OculusSDKEnabled == true) {
         GUILayout.Label("Model override for Oculus SDK");
         using (new EditorGUI.DisabledScope(hasOculusSDK == false)) {
           bool modelOverrideOculus = EditorGUILayout.Toggle("Override hand models for Oculus SDK",
@@ -264,7 +270,7 @@ namespace NewtonVR {
           }
           EditorGUILayout.EndFadeGroup();
 
-          if (modelOverrideOculus) {
+          if (modelOverrideOculus == true) {
             player.OverrideAll = false;
           }
           if (player.OverrideOculus != modelOverrideOculus) {
@@ -274,7 +280,7 @@ namespace NewtonVR {
         }
       }
 
-      if (player.SteamVREnabled) {
+      if (player.SteamVREnabled == true) {
         GUILayout.Label("Model override for SteamVR");
         using (new EditorGUI.DisabledScope(hasSteamVR == false)) {
           bool modelOverrideSteamVR = EditorGUILayout.Toggle("Override hand models for SteamVR",
@@ -306,7 +312,7 @@ namespace NewtonVR {
           }
           EditorGUILayout.EndFadeGroup();
 
-          if (modelOverrideSteamVR) {
+          if (modelOverrideSteamVR == true) {
             player.OverrideAll = false;
           }
           if (player.OverrideSteamVR != modelOverrideSteamVR) {
@@ -318,32 +324,35 @@ namespace NewtonVR {
         GUILayout.Space(10);
       }
 
+
       GUILayout.Space(10);
 
-      if (enableSteamVR == false && player.SteamVREnabled) {
+
+      if (enableSteamVR == false && player.SteamVREnabled == true) {
         RemoveDefine(SteamVRDefine);
-      } else if (enableSteamVR && player.SteamVREnabled == false) {
+      } else if (enableSteamVR == true && player.SteamVREnabled == false) {
         AddDefine(SteamVRDefine);
       }
 
-      if (enableOculusSDK == false && player.OculusSDKEnabled) {
+
+      if (enableOculusSDK == false && player.OculusSDKEnabled == true) {
         RemoveDefine(OculusDefine);
-      } else if (enableOculusSDK && player.OculusSDKEnabled == false) {
+      } else if (enableOculusSDK == true && player.OculusSDKEnabled == false) {
         AddDefine(OculusDefine);
       }
 
-      if (installOculusSDK) {
+      if (installOculusSDK == true) {
         Application.OpenURL(
           "https://developer3.oculus.com/downloads/game-engines/1.10.0/Oculus_Utilities_for_Unity_5/");
       }
 
-      if (installSteamVR) {
+      if (installSteamVR == true) {
         Application.OpenURL("com.unity3d.kharma:content/32647");
       }
 
       DrawDefaultInspector();
 
-      if (waitingForReload || string.IsNullOrEmpty(progressBarMessage) == false) {
+      if (waitingForReload == true || string.IsNullOrEmpty(progressBarMessage) == false) {
         DisplayProgressBar();
       }
       if (GUI.changed) {

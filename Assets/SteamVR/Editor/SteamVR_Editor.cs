@@ -4,26 +4,25 @@
 //
 //=============================================================================
 
-using System.IO;
-using UnityEditor;
 using UnityEngine;
+using UnityEditor;
+using System.IO;
 
-[CustomEditor(typeof(SteamVR_Camera))]
-[CanEditMultipleObjects]
+[CustomEditor(typeof(SteamVR_Camera)), CanEditMultipleObjects]
 public class SteamVR_Editor : Editor {
-  private readonly int bannerHeight = 150;
-  private Texture logo;
+  int bannerHeight = 150;
+  Texture logo;
 
-  private SerializedProperty script, wireframe;
+  SerializedProperty script, wireframe;
 
-  private string GetResourcePath() {
+  string GetResourcePath() {
     var ms = MonoScript.FromScriptableObject(this);
     var path = AssetDatabase.GetAssetPath(ms);
     path = Path.GetDirectoryName(path);
     return path.Substring(0, path.Length - "Editor".Length) + "Textures/";
   }
 
-  private void OnEnable() {
+  void OnEnable() {
     var resourcePath = GetResourcePath();
 
     logo = AssetDatabase.LoadAssetAtPath<Texture2D>(resourcePath + "logo.png");
@@ -40,31 +39,27 @@ public class SteamVR_Editor : Editor {
     serializedObject.Update();
 
     var rect = GUILayoutUtility.GetRect(Screen.width - 38, bannerHeight, GUI.skin.box);
-    if (logo) {
+    if (logo)
       GUI.DrawTexture(rect, logo, ScaleMode.ScaleToFit);
-    }
 
     if (!Application.isPlaying) {
       var expand = false;
       var collapse = false;
       foreach (SteamVR_Camera target in targets) {
-        if (AssetDatabase.Contains(target)) {
+        if (AssetDatabase.Contains(target))
           continue;
-        }
-        if (target.isExpanded) {
+        if (target.isExpanded)
           collapse = true;
-        } else {
+        else
           expand = true;
-        }
       }
 
       if (expand) {
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Expand")) {
           foreach (SteamVR_Camera target in targets) {
-            if (AssetDatabase.Contains(target)) {
+            if (AssetDatabase.Contains(target))
               continue;
-            }
             if (!target.isExpanded) {
               target.Expand();
               EditorUtility.SetDirty(target);
@@ -79,9 +74,8 @@ public class SteamVR_Editor : Editor {
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Collapse")) {
           foreach (SteamVR_Camera target in targets) {
-            if (AssetDatabase.Contains(target)) {
+            if (AssetDatabase.Contains(target))
               continue;
-            }
             if (target.isExpanded) {
               target.Collapse();
               EditorUtility.SetDirty(target);
@@ -100,7 +94,7 @@ public class SteamVR_Editor : Editor {
   }
 
   public static void ExportPackage() {
-    AssetDatabase.ExportPackage(new[] {
+    AssetDatabase.ExportPackage(new string[] {
       "Assets/SteamVR",
       "Assets/Plugins/openvr_api.cs",
       "Assets/Plugins/openvr_api.bundle",

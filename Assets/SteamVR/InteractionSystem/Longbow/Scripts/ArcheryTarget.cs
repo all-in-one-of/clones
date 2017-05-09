@@ -4,22 +4,23 @@
 //
 //=============================================================================
 
-using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class ArcheryTarget : MonoBehaviour {
-    private const float targetRadius = 0.25f;
+    public UnityEvent onTakeDamage;
+
+    public bool onceOnly = false;
+    public Transform targetCenter;
 
     public Transform baseTransform;
     public Transform fallenDownTransform;
     public float fallTime = 0.5f;
 
-    public bool onceOnly = false;
-    public UnityEvent onTakeDamage;
-    public Transform targetCenter;
+    const float targetRadius = 0.25f;
 
     private bool targetEnabled = true;
 
@@ -37,7 +38,7 @@ namespace Valve.VR.InteractionSystem {
     private void OnDamageTaken() {
       if (targetEnabled) {
         onTakeDamage.Invoke();
-        StartCoroutine(FallDown());
+        StartCoroutine(this.FallDown());
 
         if (onceOnly) {
           targetEnabled = false;

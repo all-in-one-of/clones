@@ -1,49 +1,49 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 namespace NewtonVR {
   public class NVRInteractableRotator : NVRInteractable {
     public float CurrentAngle;
 
-    protected Transform InitialAttachPoint;
-
     protected virtual float DeltaMagic {
       get { return 1f; }
     }
 
+    protected Transform InitialAttachPoint;
+
     protected override void Awake() {
       base.Awake();
-      Rigidbody.maxAngularVelocity = 100f;
+      this.Rigidbody.maxAngularVelocity = 100f;
     }
 
     protected virtual void FixedUpdate() {
-      if (IsAttached) {
+      if (IsAttached == true) {
         Vector3 PositionDelta = (AttachedHand.transform.position - InitialAttachPoint.position) *
                                 DeltaMagic;
 
-        Rigidbody.AddForceAtPosition(PositionDelta, InitialAttachPoint.position,
+        this.Rigidbody.AddForceAtPosition(PositionDelta, InitialAttachPoint.position,
           ForceMode.VelocityChange);
       }
 
-      CurrentAngle = Quaternion.Angle(Quaternion.identity, transform.rotation);
+      CurrentAngle = Quaternion.Angle(Quaternion.identity, this.transform.rotation);
     }
 
     public override void BeginInteraction(NVRHand hand) {
       base.BeginInteraction(hand);
 
       InitialAttachPoint =
-        new GameObject(string.Format("[{0}] InitialAttachPoint", gameObject.name)).transform;
+        new GameObject(string.Format("[{0}] InitialAttachPoint", this.gameObject.name)).transform;
       InitialAttachPoint.position = hand.transform.position;
       InitialAttachPoint.rotation = hand.transform.rotation;
       InitialAttachPoint.localScale = Vector3.one * 0.25f;
-      InitialAttachPoint.parent = transform;
+      InitialAttachPoint.parent = this.transform;
     }
 
     public override void EndInteraction() {
       base.EndInteraction();
 
-      if (InitialAttachPoint != null) {
+      if (InitialAttachPoint != null)
         Destroy(InitialAttachPoint.gameObject);
-      }
     }
   }
 }

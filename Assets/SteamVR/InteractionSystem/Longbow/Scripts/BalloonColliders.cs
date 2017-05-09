@@ -5,18 +5,19 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class BalloonColliders : MonoBehaviour {
+    public GameObject[] colliders;
     private Vector3[] colliderLocalPositions;
     private Quaternion[] colliderLocalRotations;
-    public GameObject[] colliders;
 
     private Rigidbody rb;
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       rb = GetComponent<Rigidbody>();
 
       colliderLocalPositions = new Vector3[colliders.Length];
@@ -31,7 +32,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void OnEnable() {
+    void OnEnable() {
       for (int i = 0; i < colliders.Length; ++i) {
         colliders[i].transform.SetParent(transform);
 
@@ -52,18 +53,21 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void OnDisable() {
-      for (int i = 0; i < colliders.Length; ++i)
+    void OnDisable() {
+      for (int i = 0; i < colliders.Length; ++i) {
         if (colliders[i] != null) {
           Destroy(colliders[i].GetComponent<FixedJoint>());
 
           colliders[i].SetActive(false);
         }
+      }
     }
 
     //-------------------------------------------------
-    private void OnDestroy() {
-      for (int i = 0; i < colliders.Length; ++i) Destroy(colliders[i]);
+    void OnDestroy() {
+      for (int i = 0; i < colliders.Length; ++i) {
+        Destroy(colliders[i]);
+      }
     }
   }
 }

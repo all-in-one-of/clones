@@ -1,6 +1,7 @@
 ﻿//======= Copyright (c) Valve Corporation, All rights reserved. ===============
 
 using UnityEngine;
+using System.Collections;
 
 public struct GazeEventArgs {
   public float distance;
@@ -9,41 +10,40 @@ public struct GazeEventArgs {
 public delegate void GazeEventHandler(object sender, GazeEventArgs e);
 
 public class SteamVR_GazeTracker : MonoBehaviour {
+  public bool isInGaze = false;
+  public event GazeEventHandler GazeOn;
+  public event GazeEventHandler GazeOff;
   public float gazeInCutoff = 0.15f;
   public float gazeOutCutoff = 0.4f;
 
   // Contains a HMD tracked object that we can use to find the user's gaze
-  private Transform hmdTrackedObject;
-  public bool isInGaze;
-  public event GazeEventHandler GazeOn;
-  public event GazeEventHandler GazeOff;
+  Transform hmdTrackedObject = null;
 
   // Use this for initialization
-  private void Start() {
+  void Start() {
   }
 
   public virtual void OnGazeOn(GazeEventArgs e) {
-    if (GazeOn != null) {
+    if (GazeOn != null)
       GazeOn(this, e);
-    }
   }
 
   public virtual void OnGazeOff(GazeEventArgs e) {
-    if (GazeOff != null) {
+    if (GazeOff != null)
       GazeOff(this, e);
-    }
   }
 
   // Update is called once per frame
-  private void Update() {
+  void Update() {
     // If we haven't set up hmdTrackedObject find what the user is looking at
     if (hmdTrackedObject == null) {
       SteamVR_TrackedObject[] trackedObjects = FindObjectsOfType<SteamVR_TrackedObject>();
-      foreach (SteamVR_TrackedObject tracked in trackedObjects)
+      foreach (SteamVR_TrackedObject tracked in trackedObjects) {
         if (tracked.index == SteamVR_TrackedObject.EIndex.Hmd) {
           hmdTrackedObject = tracked.transform;
           break;
         }
+      }
     }
 
     if (hmdTrackedObject) {

@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class TestUpdatePrint : MonoBehaviour {
-  private void Update() {
+  void Update() {
     Debug.Log("UpdatePrint: " + Time.frameCount);
     Debug.Log("Update is being called!");
   }

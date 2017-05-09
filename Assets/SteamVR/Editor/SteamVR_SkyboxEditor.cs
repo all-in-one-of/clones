@@ -4,14 +4,14 @@
 //
 //=============================================================================
 
-using System.Diagnostics;
-using System.IO;
-using UnityEditor;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
+using UnityEditor;
+using System.Text;
+using System.Collections.Generic;
+using Valve.VR;
+using System.IO;
 
-[CustomEditor(typeof(SteamVR_Skybox))]
-[CanEditMultipleObjects]
+[CustomEditor(typeof(SteamVR_Skybox)), CanEditMultipleObjects]
 public class SteamVR_SkyboxEditor : Editor {
   private const string nameFormat = "{0}/{1}-{2}.png";
 
@@ -35,7 +35,7 @@ public class SteamVR_SkyboxEditor : Editor {
     EditorGUILayout.HelpBox(helpText, MessageType.Info);
 
     if (GUILayout.Button("Take snapshot")) {
-      var directions = new[] {
+      var directions = new Quaternion[] {
         Quaternion.LookRotation(Vector3.forward),
         Quaternion.LookRotation(Vector3.back),
         Quaternion.LookRotation(Vector3.left),
@@ -57,9 +57,8 @@ public class SteamVR_SkyboxEditor : Editor {
 
         var camera = target.GetComponent<Camera>();
         if (camera == null) {
-          if (tempCamera == null) {
+          if (tempCamera == null)
             tempCamera = new GameObject().AddComponent<Camera>();
-          }
           camera = tempCamera;
         }
 
@@ -92,7 +91,7 @@ public class SteamVR_SkyboxEditor : Editor {
           RenderTexture.active = null;
 
           var assetName = string.Format(nameFormat, assetPath, target.name, i);
-          File.WriteAllBytes(assetName, texture.EncodeToPNG());
+          System.IO.File.WriteAllBytes(assetName, texture.EncodeToPNG());
         }
 
         if (camera != tempCamera) {
@@ -102,7 +101,7 @@ public class SteamVR_SkyboxEditor : Editor {
       }
 
       if (tempCamera != null) {
-        DestroyImmediate(tempCamera.gameObject);
+        Object.DestroyImmediate(tempCamera.gameObject);
       }
 
       // Now that everything has be written out, reload the associated assets and assign them.
@@ -134,12 +133,12 @@ public class SteamVR_SkyboxEditor : Editor {
       const int height = width / 2;
       const int halfHeight = height / 2;
 
-      var textures = new[] {
+      var textures = new Texture2D[] {
         new Texture2D(width, height, TextureFormat.ARGB32, false),
         new Texture2D(width, height, TextureFormat.ARGB32, false)
       };
 
-      var timer = new Stopwatch();
+      var timer = new System.Diagnostics.Stopwatch();
 
       Camera tempCamera = null;
       foreach (SteamVR_Skybox target in targets) {
@@ -156,9 +155,8 @@ public class SteamVR_SkyboxEditor : Editor {
 
         var camera = target.GetComponent<Camera>();
         if (camera == null) {
-          if (tempCamera == null) {
+          if (tempCamera == null)
             tempCamera = new GameObject().AddComponent<Camera>();
-          }
           camera = tempCamera;
         }
 
@@ -197,7 +195,7 @@ public class SteamVR_SkyboxEditor : Editor {
         // top and bottom sections, sweeping horizontally around the sphere,
         // alternating left and right eyes.
         for (int v = 0; v < vTotal; v++) {
-          var pitch = 90.0f - v * dv - dvHalf;
+          var pitch = 90.0f - (v * dv) - dvHalf;
           var uTotal = width / targetTexture.width;
           var du = 360.0f / uTotal; // horizontal degrees per segment
           var duHalf = du / 2.0f;
@@ -212,7 +210,7 @@ public class SteamVR_SkyboxEditor : Editor {
             }
 
             for (int u = 0; u < uTotal; u++) {
-              var yaw = -180.0f + u * du + duHalf;
+              var yaw = -180.0f + (u * du) + duHalf;
 
               var uTarget = u * width / uTotal;
 
@@ -236,11 +234,11 @@ public class SteamVR_SkyboxEditor : Editor {
                 var N = direction * Vector3.forward;
 
                 // horizontal span of this section in degrees
-                var phi0 = yaw - du / 2;
+                var phi0 = yaw - (du / 2);
                 var phi1 = phi0 + du;
 
                 // vertical span of this section in degrees
-                var theta0 = pitch + dv / 2;
+                var theta0 = pitch + (dv / 2);
                 var theta1 = theta0 - dv;
 
                 var midPhi = (phi0 + phi1) / 2;

@@ -10,7 +10,7 @@ using Valve.VR;
 [RequireComponent(typeof(Camera))]
 public class SteamVR_UpdatePoses : MonoBehaviour {
 #if !(UNITY_5_6)
-  private void Awake() {
+  void Awake() {
     var camera = GetComponent<Camera>();
     camera.stereoTargetEye = StereoTargetEyeMask.None;
     camera.clearFlags = CameraClearFlags.Nothing;
@@ -20,7 +20,7 @@ public class SteamVR_UpdatePoses : MonoBehaviour {
   }
 #endif
 
-  private void OnPreCull() {
+  void OnPreCull() {
     var compositor = OpenVR.Compositor;
     if (compositor != null) {
       var render = SteamVR_Render.instance;

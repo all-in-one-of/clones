@@ -5,19 +5,21 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class SeeThru : MonoBehaviour {
-    private Renderer destRenderer;
-    private Interactable interactable;
+    public Material seeThruMaterial;
 
     private GameObject seeThru;
-    public Material seeThruMaterial;
+    private Interactable interactable;
     private Renderer sourceRenderer;
+    private Renderer destRenderer;
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       interactable = GetComponentInParent<Interactable>();
 
       //
@@ -70,29 +72,33 @@ namespace Valve.VR.InteractionSystem {
       if (sourceRenderer != null && destRenderer != null) {
         int materialCount = sourceRenderer.sharedMaterials.Length;
         Material[] destRendererMaterials = new Material[materialCount];
-        for (int i = 0; i < materialCount; i++) destRendererMaterials[i] = seeThruMaterial;
+        for (int i = 0; i < materialCount; i++) {
+          destRendererMaterials[i] = seeThruMaterial;
+        }
         destRenderer.sharedMaterials = destRendererMaterials;
 
-        for (int i = 0; i < destRenderer.materials.Length; i++)
+        for (int i = 0; i < destRenderer.materials.Length; i++) {
           destRenderer.materials[i].renderQueue = 2001; // Rendered after geometry
+        }
 
-        for (int i = 0; i < sourceRenderer.materials.Length; i++)
+        for (int i = 0; i < sourceRenderer.materials.Length; i++) {
           if (sourceRenderer.materials[i].renderQueue == 2000) {
             sourceRenderer.materials[i].renderQueue = 2002;
           }
+        }
       }
 
       seeThru.gameObject.SetActive(false);
     }
 
     //-------------------------------------------------
-    private void OnEnable() {
+    void OnEnable() {
       interactable.onAttachedToHand += AttachedToHand;
       interactable.onDetachedFromHand += DetachedFromHand;
     }
 
     //-------------------------------------------------
-    private void OnDisable() {
+    void OnDisable() {
       interactable.onAttachedToHand -= AttachedToHand;
       interactable.onDetachedFromHand -= DetachedFromHand;
     }
@@ -108,7 +114,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void Update() {
+    void Update() {
       if (seeThru.activeInHierarchy) {
         int materialCount = Mathf.Min(sourceRenderer.materials.Length, destRenderer.materials.Length);
         for (int i = 0; i < materialCount; i++) {

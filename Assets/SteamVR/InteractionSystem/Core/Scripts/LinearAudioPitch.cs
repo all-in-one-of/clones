@@ -6,20 +6,21 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class LinearAudioPitch : MonoBehaviour {
+    public LinearMapping linearMapping;
+    public AnimationCurve pitchCurve;
+    public float minPitch;
+    public float maxPitch;
     public bool applyContinuously = true;
 
     private AudioSource audioSource;
-    public LinearMapping linearMapping;
-    public float maxPitch;
-    public float minPitch;
-    public AnimationCurve pitchCurve;
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       if (audioSource == null) {
         audioSource = GetComponent<AudioSource>();
       }
@@ -30,7 +31,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void Update() {
+    void Update() {
       if (applyContinuously) {
         Apply();
       }

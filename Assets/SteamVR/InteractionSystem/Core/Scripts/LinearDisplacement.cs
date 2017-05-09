@@ -5,17 +5,18 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class LinearDisplacement : MonoBehaviour {
     public Vector3 displacement;
-
-    private Vector3 initialPosition;
     public LinearMapping linearMapping;
 
+    private Vector3 initialPosition;
+
     //-------------------------------------------------
-    private void Start() {
+    void Start() {
       initialPosition = transform.localPosition;
 
       if (linearMapping == null) {
@@ -24,7 +25,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void Update() {
+    void Update() {
       if (linearMapping) {
         transform.localPosition = initialPosition + linearMapping.value * displacement;
       }

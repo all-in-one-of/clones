@@ -5,6 +5,7 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -14,15 +15,15 @@ namespace Valve.VR.InteractionSystem {
     private bool useTag;
 
     //-------------------------------------------------
-    private void Start() {
+    void Start() {
       if (!string.IsNullOrEmpty(tagFilter)) {
         useTag = true;
       }
     }
 
     //-------------------------------------------------
-    private void OnTriggerEnter(Collider collider) {
-      if (!useTag || useTag && collider.gameObject.tag == tagFilter) {
+    void OnTriggerEnter(Collider collider) {
+      if (!useTag || (useTag && collider.gameObject.tag == tagFilter)) {
         Destroy(collider.gameObject.transform.root.gameObject);
       }
     }

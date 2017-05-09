@@ -5,8 +5,8 @@
 //
 //=============================================================================
 
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -14,33 +14,34 @@ namespace Valve.VR.InteractionSystem {
   public class ComplexThrowable : MonoBehaviour {
     public enum AttachMode {
       FixedJoint,
-      Force
+      Force,
     }
 
     public float attachForce = 800.0f;
     public float attachForceDamper = 25.0f;
 
+    public AttachMode attachMode = AttachMode.FixedJoint;
+
     [EnumFlags] public Hand.AttachmentFlags attachmentFlags = 0;
 
-    public AttachMode attachMode = AttachMode.FixedJoint;
-    private readonly List<Rigidbody> holdingBodies = new List<Rigidbody>();
+    private List<Hand> holdingHands = new List<Hand>();
+    private List<Rigidbody> holdingBodies = new List<Rigidbody>();
+    private List<Vector3> holdingPoints = new List<Vector3>();
 
-    private readonly List<Hand> holdingHands = new List<Hand>();
-    private readonly List<Vector3> holdingPoints = new List<Vector3>();
-
-    private readonly List<Rigidbody> rigidBodies = new List<Rigidbody>();
+    private List<Rigidbody> rigidBodies = new List<Rigidbody>();
 
     //-------------------------------------------------
-    private void Awake() {
-      GetComponentsInChildren(rigidBodies);
+    void Awake() {
+      GetComponentsInChildren<Rigidbody>(rigidBodies);
     }
 
     //-------------------------------------------------
-    private void Update() {
-      for (int i = 0; i < holdingHands.Count; i++)
+    void Update() {
+      for (int i = 0; i < holdingHands.Count; i++) {
         if (!holdingHands[i].GetStandardInteractionButton()) {
           PhysicsDetach(holdingHands[i]);
         }
+      }
     }
 
     //-------------------------------------------------
@@ -86,9 +87,8 @@ namespace Valve.VR.InteractionSystem {
       }
 
       // Couldn't grab onto a body
-      if (holdingBody == null) {
+      if (holdingBody == null)
         return;
-      }
 
       // Create a fixed joint from the hand to the holding body
       if (attachMode == AttachMode.FixedJoint) {
@@ -108,7 +108,7 @@ namespace Valve.VR.InteractionSystem {
       holdingPoint =
         holdingBody.transform.InverseTransformPoint(holdingBody.worldCenterOfMass + offset);
 
-      hand.AttachObject(gameObject, attachmentFlags);
+      hand.AttachObject(this.gameObject, attachmentFlags);
 
       // Update holding list
       holdingHands.Add(hand);
@@ -122,7 +122,7 @@ namespace Valve.VR.InteractionSystem {
 
       if (i != -1) {
         // Detach this object from the hand
-        holdingHands[i].DetachObject(gameObject, false);
+        holdingHands[i].DetachObject(this.gameObject, false);
 
         // Allow the hand to do other things
         holdingHands[i].HoverUnlock(null);
@@ -143,7 +143,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void FixedUpdate() {
+    void FixedUpdate() {
       if (attachMode == AttachMode.Force) {
         for (int i = 0; i < holdingHands.Count; i++) {
           Vector3 targetPoint = holdingBodies[i].transform.TransformPoint(holdingPoints[i]);

@@ -4,19 +4,38 @@
 //
 //=============================================================================
 
-using System;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using UnityEngine;
-using UnityEngine.Rendering;
 using Valve.VR;
 
 [ExecuteInEditMode]
 public class SteamVR_RenderModel : MonoBehaviour {
+  public SteamVR_TrackedObject.EIndex index = SteamVR_TrackedObject.EIndex.None;
+  public string modelOverride;
+
+  // Shader to apply to model.
+  public Shader shader;
+
+  // Enable to print out when render models are loaded.
+  public bool verbose = false;
+
+  // If available, break down into separate components instead of loading as a single mesh.
+  public bool createComponents = true;
+
+  // Update transforms of components at runtime to reflect user action.
+  public bool updateDynamically = true;
+
+  // Additional controller settings for showing scrollwheel, etc.
+  public RenderModel_ControllerMode_State_t controllerModeState;
+
+  // Name of the sub-object which represents the "local" coordinate space for each component.
+  public const string k_localTransformName = "attach";
+
+  // Cached name of this render model for updating component transforms at runtime.
+  public string renderModelName { get; private set; }
+
   // If someone knows how to keep these from getting cleaned up every time
   // you exit play mode, let me know.  I've tried marking the RenderModel
   // class below as [System.Serializable] and switching to normal public
@@ -36,10 +55,13 @@ public class SteamVR_RenderModel : MonoBehaviour {
     public Material material { get; private set; }
   }
 
+  public static Hashtable models = new Hashtable();
+  public static Hashtable materials = new Hashtable();
+
   // Helper class to load render models interface on demand and clean up when done.
-  public sealed class RenderModelInterfaceHolder : IDisposable {
-    private CVRRenderModels _instance;
+  public sealed class RenderModelInterfaceHolder : System.IDisposable {
     private bool needsShutdown, failedLoadInterface;
+    private CVRRenderModels _instance;
 
     public CVRRenderModels instance {
       get {
@@ -62,48 +84,10 @@ public class SteamVR_RenderModel : MonoBehaviour {
     }
 
     public void Dispose() {
-      if (needsShutdown) {
+      if (needsShutdown)
         OpenVR.Shutdown();
-      }
     }
   }
-
-  // Name of the sub-object which represents the "local" coordinate space for each component.
-  public const string k_localTransformName = "attach";
-
-  public static Hashtable models = new Hashtable();
-  public static Hashtable materials = new Hashtable();
-
-  // Additional controller settings for showing scrollwheel, etc.
-  public RenderModel_ControllerMode_State_t controllerModeState;
-
-  // If available, break down into separate components instead of loading as a single mesh.
-  public bool createComponents = true;
-
-  private SteamVR_Events.Action deviceConnectedAction,
-    hideRenderModelsAction,
-    modelSkinSettingsHaveChangedAction;
-
-  public SteamVR_TrackedObject.EIndex index = SteamVR_TrackedObject.EIndex.None;
-  public string modelOverride;
-
-  private Dictionary<int, string> nameCache;
-
-  // Shader to apply to model.
-  public Shader shader;
-
-  // Update transforms of components at runtime to reflect user action.
-  public bool updateDynamically = true;
-
-#if UNITY_EDITOR
-  private Hashtable values;
-#endif
-
-  // Enable to print out when render models are loaded.
-  public bool verbose = false;
-
-  // Cached name of this render model for updating component transforms at runtime.
-  public string renderModelName { get; private set; }
 
   private void OnModelSkinSettingsHaveChanged(VREvent_t vrEvent) {
     if (!string.IsNullOrEmpty(renderModelName)) {
@@ -114,17 +98,15 @@ public class SteamVR_RenderModel : MonoBehaviour {
 
   private void OnHideRenderModels(bool hidden) {
     var meshRenderer = GetComponent<MeshRenderer>();
-    if (meshRenderer != null) {
+    if (meshRenderer != null)
       meshRenderer.enabled = !hidden;
-    }
     foreach (var child in transform.GetComponentsInChildren<MeshRenderer>())
       child.enabled = !hidden;
   }
 
   private void OnDeviceConnected(int i, bool connected) {
-    if (i != (int) index) {
+    if (i != (int) index)
       return;
-    }
 
     if (connected) {
       UpdateModel();
@@ -133,9 +115,8 @@ public class SteamVR_RenderModel : MonoBehaviour {
 
   public void UpdateModel() {
     var system = OpenVR.System;
-    if (system == null) {
+    if (system == null)
       return;
-    }
 
     var error = ETrackedPropertyError.TrackedProp_Success;
     var capacity = system.GetStringTrackedDeviceProperty((uint) index,
@@ -145,7 +126,7 @@ public class SteamVR_RenderModel : MonoBehaviour {
       return;
     }
 
-    var buffer = new StringBuilder((int) capacity);
+    var buffer = new System.Text.StringBuilder((int) capacity);
     system.GetStringTrackedDeviceProperty((uint) index,
       ETrackedDeviceProperty.Prop_RenderModelName_String, buffer, capacity, ref error);
 
@@ -156,17 +137,15 @@ public class SteamVR_RenderModel : MonoBehaviour {
     }
   }
 
-  private IEnumerator SetModelAsync(string renderModelName) {
-    if (string.IsNullOrEmpty(renderModelName)) {
+  IEnumerator SetModelAsync(string renderModelName) {
+    if (string.IsNullOrEmpty(renderModelName))
       yield break;
-    }
 
     // Preload all render models before asking for the data to create meshes.
     using (var holder = new RenderModelInterfaceHolder()) {
       var renderModels = holder.instance;
-      if (renderModels == null) {
+      if (renderModels == null)
         yield break;
-      }
 
       // Gather names of render models to preload.
       string[] renderModelNames;
@@ -177,27 +156,23 @@ public class SteamVR_RenderModel : MonoBehaviour {
 
         for (int i = 0; i < count; i++) {
           var capacity = renderModels.GetComponentName(renderModelName, (uint) i, null, 0);
-          if (capacity == 0) {
+          if (capacity == 0)
             continue;
-          }
 
-          var componentName = new StringBuilder((int) capacity);
-          if (renderModels.GetComponentName(renderModelName, (uint) i, componentName, capacity) == 0) {
+          var componentName = new System.Text.StringBuilder((int) capacity);
+          if (renderModels.GetComponentName(renderModelName, (uint) i, componentName, capacity) == 0)
             continue;
-          }
 
           capacity = renderModels.GetComponentRenderModelName(renderModelName,
             componentName.ToString(), null, 0);
-          if (capacity == 0) {
+          if (capacity == 0)
             continue;
-          }
 
-          var name = new StringBuilder((int) capacity);
+          var name = new System.Text.StringBuilder((int) capacity);
           if (
             renderModels.GetComponentRenderModelName(renderModelName, componentName.ToString(), name,
-              capacity) == 0) {
+              capacity) == 0)
             continue;
-          }
 
           var s = name.ToString();
 
@@ -211,7 +186,7 @@ public class SteamVR_RenderModel : MonoBehaviour {
         // Only need to preload if not already cached.
         var model = models[renderModelName] as RenderModel;
         if (model == null || model.mesh == null) {
-          renderModelNames = new[] {renderModelName};
+          renderModelNames = new string[] {renderModelName};
         } else {
           renderModelNames = new string[0];
         }
@@ -221,11 +196,10 @@ public class SteamVR_RenderModel : MonoBehaviour {
       while (true) {
         var loading = false;
         foreach (var name in renderModelNames) {
-          if (string.IsNullOrEmpty(name)) {
+          if (string.IsNullOrEmpty(name))
             continue;
-          }
 
-          var pRenderModel = IntPtr.Zero;
+          var pRenderModel = System.IntPtr.Zero;
 
           var error = renderModels.LoadRenderModel_Async(name, ref pRenderModel);
           if (error == EVRRenderModelError.Loading) {
@@ -237,7 +211,7 @@ public class SteamVR_RenderModel : MonoBehaviour {
             // Check the cache first.
             var material = materials[renderModel.diffuseTextureId] as Material;
             if (material == null || material.mainTexture == null) {
-              var pDiffuseTexture = IntPtr.Zero;
+              var pDiffuseTexture = System.IntPtr.Zero;
 
               error = renderModels.LoadTexture_Async(renderModel.diffuseTextureId,
                 ref pDiffuseTexture);
@@ -278,18 +252,15 @@ public class SteamVR_RenderModel : MonoBehaviour {
         var model = models[renderModelName] as RenderModel;
         if (model == null || model.mesh == null) {
           var renderModels = holder.instance;
-          if (renderModels == null) {
+          if (renderModels == null)
             return false;
-          }
 
-          if (verbose) {
+          if (verbose)
             Debug.Log("Loading render model " + renderModelName);
-          }
 
           model = LoadRenderModel(renderModels, renderModelName, renderModelName);
-          if (model == null) {
+          if (model == null)
             return false;
-          }
 
           models[renderModelName] = model;
         }
@@ -303,22 +274,21 @@ public class SteamVR_RenderModel : MonoBehaviour {
     return false;
   }
 
-  private RenderModel LoadRenderModel(CVRRenderModels renderModels, string renderModelName, string baseName) {
-    var pRenderModel = IntPtr.Zero;
+  RenderModel LoadRenderModel(CVRRenderModels renderModels, string renderModelName, string baseName) {
+    var pRenderModel = System.IntPtr.Zero;
 
     EVRRenderModelError error;
     while (true) {
       error = renderModels.LoadRenderModel_Async(renderModelName, ref pRenderModel);
-      if (error != EVRRenderModelError.Loading) {
+      if (error != EVRRenderModelError.Loading)
         break;
-      }
 
-      Thread.Sleep(1);
+      System.Threading.Thread.Sleep(1);
     }
 
     if (error != EVRRenderModelError.None) {
       Debug.LogError(string.Format("Failed to load render model {0} - {1}", renderModelName,
-        error));
+        error.ToString()));
       return null;
     }
 
@@ -330,7 +300,7 @@ public class SteamVR_RenderModel : MonoBehaviour {
 
     var type = typeof(RenderModel_Vertex_t);
     for (int iVert = 0; iVert < renderModel.unVertexCount; iVert++) {
-      var ptr = new IntPtr(renderModel.rVertexData.ToInt64() + iVert * Marshal.SizeOf(type));
+      var ptr = new System.IntPtr(renderModel.rVertexData.ToInt64() + iVert * Marshal.SizeOf(type));
       var vert = (RenderModel_Vertex_t) Marshal.PtrToStructure(ptr, type);
 
       vertices[iVert] = new Vector3(vert.vPosition.v0, vert.vPosition.v1, -vert.vPosition.v2);
@@ -344,9 +314,9 @@ public class SteamVR_RenderModel : MonoBehaviour {
 
     var triangles = new int[indexCount];
     for (int iTri = 0; iTri < renderModel.unTriangleCount; iTri++) {
-      triangles[iTri * 3 + 0] = indices[iTri * 3 + 2];
-      triangles[iTri * 3 + 1] = indices[iTri * 3 + 1];
-      triangles[iTri * 3 + 2] = indices[iTri * 3 + 0];
+      triangles[iTri * 3 + 0] = (int) indices[iTri * 3 + 2];
+      triangles[iTri * 3 + 1] = (int) indices[iTri * 3 + 1];
+      triangles[iTri * 3 + 2] = (int) indices[iTri * 3 + 0];
     }
 
     var mesh = new Mesh();
@@ -363,47 +333,46 @@ public class SteamVR_RenderModel : MonoBehaviour {
     // Check cache before loading texture.
     var material = materials[renderModel.diffuseTextureId] as Material;
     if (material == null || material.mainTexture == null) {
-      var pDiffuseTexture = IntPtr.Zero;
+      var pDiffuseTexture = System.IntPtr.Zero;
 
       while (true) {
         error = renderModels.LoadTexture_Async(renderModel.diffuseTextureId, ref pDiffuseTexture);
-        if (error != EVRRenderModelError.Loading) {
+        if (error != EVRRenderModelError.Loading)
           break;
-        }
 
-        Thread.Sleep(1);
+        System.Threading.Thread.Sleep(1);
       }
 
       if (error == EVRRenderModelError.None) {
         var diffuseTexture = MarshalRenderModel_TextureMap(pDiffuseTexture);
         var texture = new Texture2D(diffuseTexture.unWidth, diffuseTexture.unHeight,
           TextureFormat.ARGB32, false);
-        if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Direct3D11) {
+        if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Direct3D11) {
           texture.Apply();
 
           while (true) {
             error = renderModels.LoadIntoTextureD3D11_Async(renderModel.diffuseTextureId,
               texture.GetNativeTexturePtr());
-            if (error != EVRRenderModelError.Loading) {
+            if (error != EVRRenderModelError.Loading)
               break;
-            }
 
-            Thread.Sleep(1);
+            System.Threading.Thread.Sleep(1);
           }
         } else {
           var textureMapData = new byte[diffuseTexture.unWidth * diffuseTexture.unHeight * 4];
-          // RGBA
+            // RGBA
           Marshal.Copy(diffuseTexture.rubTextureMapData, textureMapData, 0, textureMapData.Length);
 
           var colors = new Color32[diffuseTexture.unWidth * diffuseTexture.unHeight];
           int iColor = 0;
-          for (int iHeight = 0; iHeight < diffuseTexture.unHeight; iHeight++)
-          for (int iWidth = 0; iWidth < diffuseTexture.unWidth; iWidth++) {
-            var r = textureMapData[iColor++];
-            var g = textureMapData[iColor++];
-            var b = textureMapData[iColor++];
-            var a = textureMapData[iColor++];
-            colors[iHeight * diffuseTexture.unWidth + iWidth] = new Color32(r, g, b, a);
+          for (int iHeight = 0; iHeight < diffuseTexture.unHeight; iHeight++) {
+            for (int iWidth = 0; iWidth < diffuseTexture.unWidth; iWidth++) {
+              var r = textureMapData[iColor++];
+              var g = textureMapData[iColor++];
+              var b = textureMapData[iColor++];
+              var a = textureMapData[iColor++];
+              colors[iHeight * diffuseTexture.unWidth + iWidth] = new Color32(r, g, b, a);
+            }
           }
 
           texture.SetPixels32(colors);
@@ -425,18 +394,16 @@ public class SteamVR_RenderModel : MonoBehaviour {
     // Delay freeing when we can since we'll often get multiple requests for the same model right
     // after another (e.g. two controllers or two basestations).
 #if UNITY_EDITOR
-    if (!Application.isPlaying) {
+    if (!Application.isPlaying)
       renderModels.FreeRenderModel(pRenderModel);
-    } else
+    else
 #endif
-    {
       StartCoroutine(FreeRenderModel(pRenderModel));
-    }
 
     return new RenderModel(mesh, material);
   }
 
-  private IEnumerator FreeRenderModel(IntPtr pRenderModel) {
+  IEnumerator FreeRenderModel(System.IntPtr pRenderModel) {
     yield return new WaitForSeconds(1.0f);
 
     using (var holder = new RenderModelInterfaceHolder()) {
@@ -449,23 +416,20 @@ public class SteamVR_RenderModel : MonoBehaviour {
     var t = transform;
     for (int i = 0; i < t.childCount; i++) {
       var child = t.GetChild(i);
-      if (child.name == componentName) {
+      if (child.name == componentName)
         return child;
-      }
     }
     return null;
   }
 
   private void StripMesh(GameObject go) {
     var meshRenderer = go.GetComponent<MeshRenderer>();
-    if (meshRenderer != null) {
+    if (meshRenderer != null)
       DestroyImmediate(meshRenderer);
-    }
 
     var meshFilter = go.GetComponent<MeshFilter>();
-    if (meshFilter != null) {
+    if (meshFilter != null)
       DestroyImmediate(meshFilter);
-    }
   }
 
   private bool LoadComponents(RenderModelInterfaceHolder holder, string renderModelName) {
@@ -479,30 +443,25 @@ public class SteamVR_RenderModel : MonoBehaviour {
     }
 
     // If no model specified, we're done; return success.
-    if (string.IsNullOrEmpty(renderModelName)) {
+    if (string.IsNullOrEmpty(renderModelName))
       return true;
-    }
 
     var renderModels = holder.instance;
-    if (renderModels == null) {
+    if (renderModels == null)
       return false;
-    }
 
     var count = renderModels.GetComponentCount(renderModelName);
-    if (count == 0) {
+    if (count == 0)
       return false;
-    }
 
     for (int i = 0; i < count; i++) {
       var capacity = renderModels.GetComponentName(renderModelName, (uint) i, null, 0);
-      if (capacity == 0) {
+      if (capacity == 0)
         continue;
-      }
 
-      var componentName = new StringBuilder((int) capacity);
-      if (renderModels.GetComponentName(renderModelName, (uint) i, componentName, capacity) == 0) {
+      var componentName = new System.Text.StringBuilder((int) capacity);
+      if (renderModels.GetComponentName(renderModelName, (uint) i, componentName, capacity) == 0)
         continue;
-      }
 
       // Create (or reuse) a child object for this component (some components are dynamic and don't have meshes).
       t = FindComponent(componentName.ToString());
@@ -529,28 +488,24 @@ public class SteamVR_RenderModel : MonoBehaviour {
 
       capacity = renderModels.GetComponentRenderModelName(renderModelName, componentName.ToString(),
         null, 0);
-      if (capacity == 0) {
+      if (capacity == 0)
         continue;
-      }
 
-      var componentRenderModelName = new StringBuilder((int) capacity);
+      var componentRenderModelName = new System.Text.StringBuilder((int) capacity);
       if (
         renderModels.GetComponentRenderModelName(renderModelName, componentName.ToString(),
-          componentRenderModelName, capacity) == 0) {
+          componentRenderModelName, capacity) == 0)
         continue;
-      }
 
       // Check the cache or load into memory.
       var model = models[componentRenderModelName] as RenderModel;
       if (model == null || model.mesh == null) {
-        if (verbose) {
+        if (verbose)
           Debug.Log("Loading render model " + componentRenderModelName);
-        }
 
         model = LoadRenderModel(renderModels, componentRenderModelName.ToString(), renderModelName);
-        if (model == null) {
+        if (model == null)
           continue;
-        }
 
         models[componentRenderModelName] = model;
       }
@@ -562,7 +517,11 @@ public class SteamVR_RenderModel : MonoBehaviour {
     return true;
   }
 
-  private void Awake() {
+  SteamVR_Events.Action deviceConnectedAction,
+    hideRenderModelsAction,
+    modelSkinSettingsHaveChangedAction;
+
+  void Awake() {
     deviceConnectedAction = SteamVR_Events.DeviceConnectedAction(OnDeviceConnected);
     hideRenderModelsAction = SteamVR_Events.HideRenderModelsAction(OnHideRenderModels);
     modelSkinSettingsHaveChangedAction =
@@ -570,11 +529,10 @@ public class SteamVR_RenderModel : MonoBehaviour {
         OnModelSkinSettingsHaveChanged);
   }
 
-  private void OnEnable() {
+  void OnEnable() {
 #if UNITY_EDITOR
-    if (!Application.isPlaying) {
+    if (!Application.isPlaying)
       return;
-    }
 #endif
     if (!string.IsNullOrEmpty(modelOverride)) {
       Debug.Log(
@@ -593,24 +551,27 @@ public class SteamVR_RenderModel : MonoBehaviour {
     modelSkinSettingsHaveChangedAction.enabled = true;
   }
 
-  private void OnDisable() {
+  void OnDisable() {
 #if UNITY_EDITOR
-    if (!Application.isPlaying) {
+    if (!Application.isPlaying)
       return;
-    }
 #endif
     deviceConnectedAction.enabled = false;
     hideRenderModelsAction.enabled = false;
     modelSkinSettingsHaveChangedAction.enabled = false;
   }
 
-  private void Update() {
+#if UNITY_EDITOR
+  Hashtable values;
+#endif
+
+  void Update() {
 #if UNITY_EDITOR
     if (!Application.isPlaying) {
       // See if anything has changed since this gets called whenever anything gets touched.
       var fields =
         GetType()
-          .GetFields(BindingFlags.Instance | BindingFlags.Public);
+          .GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
 
       bool modified = false;
 
@@ -649,32 +610,30 @@ public class SteamVR_RenderModel : MonoBehaviour {
       }
 
       return;
-      // Do not update transforms (below) when not playing in Editor (to avoid keeping OpenVR running all the time).
+        // Do not update transforms (below) when not playing in Editor (to avoid keeping OpenVR running all the time).
     }
 #endif
     // Update component transforms dynamically.
-    if (updateDynamically) {
+    if (updateDynamically)
       UpdateComponents(OpenVR.RenderModels);
-    }
   }
 
+  Dictionary<int, string> nameCache;
+
   public void UpdateComponents(CVRRenderModels renderModels) {
-    if (renderModels == null) {
+    if (renderModels == null)
       return;
-    }
 
     var t = transform;
-    if (t.childCount == 0) {
+    if (t.childCount == 0)
       return;
-    }
 
-    var controllerState = index != SteamVR_TrackedObject.EIndex.None
+    var controllerState = (index != SteamVR_TrackedObject.EIndex.None)
       ? SteamVR_Controller.Input((int) index).GetState()
       : new VRControllerState_t();
 
-    if (nameCache == null) {
+    if (nameCache == null)
       nameCache = new Dictionary<int, string>();
-    }
 
     for (int i = 0; i < t.childCount; i++) {
       var child = t.GetChild(i);
@@ -689,9 +648,8 @@ public class SteamVR_RenderModel : MonoBehaviour {
       var componentState = new RenderModel_ComponentState_t();
       if (
         !renderModels.GetComponentState(renderModelName, name, ref controllerState,
-          ref controllerModeState, ref componentState)) {
+          ref controllerModeState, ref componentState))
         continue;
-      }
 
       var componentTransform =
         new SteamVR_Utils.RigidTransform(componentState.mTrackingToComponentRenderModel);
@@ -723,41 +681,43 @@ public class SteamVR_RenderModel : MonoBehaviour {
   }
 
   /// <summary>
-  ///   Helper function to handle the inconvenient fact that the packing for RenderModel_t is
-  ///   different on Linux/OSX (4) than it is on Windows (8)
+  /// Helper function to handle the inconvenient fact that the packing for RenderModel_t is 
+  /// different on Linux/OSX (4) than it is on Windows (8)
   /// </summary>
   /// <param name="pRenderModel">native pointer to the RenderModel_t</param>
   /// <returns></returns>
-  private RenderModel_t MarshalRenderModel(IntPtr pRenderModel) {
-    if (Environment.OSVersion.Platform == PlatformID.MacOSX ||
-        Environment.OSVersion.Platform == PlatformID.Unix) {
+  private RenderModel_t MarshalRenderModel(System.IntPtr pRenderModel) {
+    if ((System.Environment.OSVersion.Platform == System.PlatformID.MacOSX) ||
+        (System.Environment.OSVersion.Platform == System.PlatformID.Unix)) {
       var packedModel =
         (RenderModel_t_Packed) Marshal.PtrToStructure(pRenderModel, typeof(RenderModel_t_Packed));
       RenderModel_t model = new RenderModel_t();
       packedModel.Unpack(ref model);
       return model;
+    } else {
+      return (RenderModel_t) Marshal.PtrToStructure(pRenderModel, typeof(RenderModel_t));
     }
-    return (RenderModel_t) Marshal.PtrToStructure(pRenderModel, typeof(RenderModel_t));
   }
 
   /// <summary>
-  ///   Helper function to handle the inconvenient fact that the packing for RenderModel_TextureMap_t is
-  ///   different on Linux/OSX (4) than it is on Windows (8)
+  /// Helper function to handle the inconvenient fact that the packing for RenderModel_TextureMap_t is 
+  /// different on Linux/OSX (4) than it is on Windows (8)
   /// </summary>
   /// <param name="pRenderModel">native pointer to the RenderModel_TextureMap_t</param>
   /// <returns></returns>
-  private RenderModel_TextureMap_t MarshalRenderModel_TextureMap(IntPtr pRenderModel) {
-    if (Environment.OSVersion.Platform == PlatformID.MacOSX ||
-        Environment.OSVersion.Platform == PlatformID.Unix) {
+  private RenderModel_TextureMap_t MarshalRenderModel_TextureMap(System.IntPtr pRenderModel) {
+    if ((System.Environment.OSVersion.Platform == System.PlatformID.MacOSX) ||
+        (System.Environment.OSVersion.Platform == System.PlatformID.Unix)) {
       var packedModel =
         (RenderModel_TextureMap_t_Packed)
         Marshal.PtrToStructure(pRenderModel, typeof(RenderModel_TextureMap_t_Packed));
       RenderModel_TextureMap_t model = new RenderModel_TextureMap_t();
       packedModel.Unpack(ref model);
       return model;
+    } else {
+      return
+        (RenderModel_TextureMap_t)
+        Marshal.PtrToStructure(pRenderModel, typeof(RenderModel_TextureMap_t));
     }
-    return
-      (RenderModel_TextureMap_t)
-      Marshal.PtrToStructure(pRenderModel, typeof(RenderModel_TextureMap_t));
   }
 }

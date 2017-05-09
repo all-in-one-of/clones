@@ -1,4 +1,7 @@
 ﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using NewtonVR;
 
 namespace NewtonVR {
   public class NVRAttachPoint : MonoBehaviour {
@@ -7,22 +10,22 @@ namespace NewtonVR {
     private const float VelocityMagic = 3000f;
     private const float AngularVelocityMagic = 25f;
 
-    public bool IsAttached;
+    [HideInInspector] public Rigidbody Rigidbody;
 
     [HideInInspector] public NVRInteractableItem Item;
 
-    [HideInInspector] public Rigidbody Rigidbody;
+    public bool IsAttached;
 
     protected virtual void Awake() {
       IsAttached = false;
 
-      Item = FindNVRItem(gameObject);
+      Item = FindNVRItem(this.gameObject);
       if (Item == null) {
-        Debug.LogError("No NVRInteractableItem found on this object. " + gameObject.name,
-          gameObject);
+        Debug.LogError("No NVRInteractableItem found on this object. " + this.gameObject.name,
+          this.gameObject);
       }
 
-      AttachPointMapper.Register(GetComponent<Collider>(), this);
+      AttachPointMapper.Register(this.GetComponent<Collider>(), this);
     }
 
     protected virtual void Start() {
@@ -32,22 +35,20 @@ namespace NewtonVR {
     private NVRInteractableItem FindNVRItem(GameObject gameobject) {
       NVRInteractableItem item = gameobject.GetComponent<NVRInteractableItem>();
 
-      if (item != null) {
+      if (item != null)
         return item;
-      }
 
-      if (gameobject.transform.parent != null) {
+      if (gameobject.transform.parent != null)
         return FindNVRItem(gameobject.transform.parent.gameObject);
-      }
 
       return null;
     }
 
     public virtual void Attached(NVRAttachJoint joint) {
       Vector3 targetPosition = joint.transform.position +
-                               (Item.transform.position - transform.position);
+                               (Item.transform.position - this.transform.position);
       Rigidbody.MovePosition(targetPosition);
-      if (joint.MatchRotation) {
+      if (joint.MatchRotation == true) {
         Rigidbody.MoveRotation(joint.transform.rotation);
       }
 
@@ -61,7 +62,7 @@ namespace NewtonVR {
     public virtual void Detached(NVRAttachJoint joint) {
       IsAttached = false;
 
-      if (Item.EnableGravityOnDetach) {
+      if (Item.EnableGravityOnDetach == true) {
         Rigidbody.useGravity = true;
       }
     }
@@ -71,8 +72,8 @@ namespace NewtonVR {
       float angularVelocityMagic = AngularVelocityMagic /
                                    (Time.deltaTime / NVRPlayer.NewtonVRExpectedDeltaTime);
 
-      Vector3 positionDelta = joint.transform.position - transform.position;
-      Vector3 velocityTarget = positionDelta * velocityMagic * Time.deltaTime;
+      Vector3 positionDelta = joint.transform.position - this.transform.position;
+      Vector3 velocityTarget = (positionDelta * velocityMagic) * Time.deltaTime;
 
       if (float.IsNaN(velocityTarget.x) == false) {
         velocityTarget = Vector3.MoveTowards(Item.Rigidbody.velocity, velocityTarget,
@@ -80,7 +81,8 @@ namespace NewtonVR {
         Item.AddExternalVelocity(velocityTarget);
       }
 
-      if (joint.MatchRotation) {
+
+      if (joint.MatchRotation == true) {
         Quaternion rotationDelta = joint.transform.rotation *
                                    Quaternion.Inverse(Item.transform.rotation);
 
@@ -89,14 +91,13 @@ namespace NewtonVR {
 
         rotationDelta.ToAngleAxis(out angle, out axis);
 
-        if (angle > 180) {
+        if (angle > 180)
           angle -= 360;
-        }
 
         if (angle != 0) {
           Vector3 angularTarget = angle * axis;
           if (float.IsNaN(angularTarget.x) == false) {
-            angularTarget = angularTarget * angularVelocityMagic * Time.deltaTime;
+            angularTarget = (angularTarget * angularVelocityMagic) * Time.deltaTime;
             angularTarget = Vector3.MoveTowards(Item.Rigidbody.angularVelocity, angularTarget,
               MaxAngularVelocityChange);
             Item.AddExternalAngularVelocity(angularTarget);

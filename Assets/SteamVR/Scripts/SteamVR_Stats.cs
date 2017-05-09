@@ -4,18 +4,16 @@
 //
 //=============================================================================
 
-using System.Runtime.InteropServices;
 using UnityEngine;
 using Valve.VR;
 
 public class SteamVR_Stats : MonoBehaviour {
+  public GUIText text;
+
   public Color fadeColor = Color.black;
   public float fadeDuration = 1.0f;
 
-  private double lastUpdate;
-  public GUIText text;
-
-  private void Awake() {
+  void Awake() {
     if (text == null) {
       text = GetComponent<GUIText>();
       text.enabled = false;
@@ -27,7 +25,9 @@ public class SteamVR_Stats : MonoBehaviour {
     }
   }
 
-  private void Update() {
+  double lastUpdate = 0.0f;
+
+  void Update() {
     if (text != null) {
       if (Input.GetKeyDown(KeyCode.I)) {
         text.enabled = !text.enabled;
@@ -38,12 +38,12 @@ public class SteamVR_Stats : MonoBehaviour {
         if (compositor != null) {
           var timing = new Compositor_FrameTiming();
           timing.m_nSize =
-            (uint) Marshal.SizeOf(typeof(Compositor_FrameTiming));
+            (uint) System.Runtime.InteropServices.Marshal.SizeOf(typeof(Compositor_FrameTiming));
           compositor.GetFrameTiming(ref timing, 0);
 
           var update = timing.m_flSystemTimeInSeconds;
           if (update > lastUpdate) {
-            var framerate = lastUpdate > 0.0f ? 1.0f / (update - lastUpdate) : 0.0f;
+            var framerate = (lastUpdate > 0.0f) ? 1.0f / (update - lastUpdate) : 0.0f;
             lastUpdate = update;
             text.text = string.Format("framerate: {0:N0}\ndropped frames: {1}", framerate,
               (int) timing.m_nNumDroppedFrames);

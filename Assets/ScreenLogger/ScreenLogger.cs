@@ -1,14 +1,19 @@
-﻿using System;
+﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 using System.Linq;
-using UnityEngine;
 using UnityEngine.UI;
 
 namespace AClockworkBerry {
   public class ScreenLogger : MonoBehaviour {
-    private class LogMessage {
-      public readonly string Message;
-      public readonly LogType Type;
+    public static bool IsPersistent = true;
+
+    private static ScreenLogger instance;
+    private static bool instantiated = false;
+
+    class LogMessage {
+      public string Message;
+      public LogType Type;
 
       public LogMessage(string msg, LogType type) {
         Message = msg;
@@ -23,60 +28,52 @@ namespace AClockworkBerry {
       BottomRight
     }
 
-    public static bool IsPersistent = true;
-
-    private static ScreenLogger instance;
-    private static bool instantiated;
-
-    private static Queue<LogMessage> queue = new Queue<LogMessage>();
-
-    public LogAnchor AnchorPosition = LogAnchor.BottomLeft;
-    public Color BackgroundColor = Color.black;
-
-    [Range(0f, 01f)] public float BackgroundOpacity = 0.5f;
-    public Canvas canvas = null;
-
-    private bool destroying;
-    public Color ErrorColor = new Color(1, 0.5f, 0.5f);
-
-    public int FontSize = 14;
-
-    [Tooltip("Height of the log area as a percentage of the screen height")] [Range(0.3f, 1.0f)] public float Height =
-      0.5f;
-
-    private readonly List<Text> line_ui = new List<Text>();
-    public bool LogErrors = true;
-
-    public bool LogMessages = true;
-    public bool LogWarnings = true;
-
-    public int Margin = 20;
-
-    public Color MessageColor = Color.white;
-    private readonly int padding = 5;
-    public Text sample_text = null;
+    public bool ShowLog = true;
     public bool ShowInEditor = true;
 
-    public bool ShowLog = true;
-    public bool StackTraceErrors = true;
-
-    public bool StackTraceMessages = false;
-    public bool StackTraceWarnings = false;
-
-    private GUIStyle styleContainer, styleText;
-
-    public int TotalRows = 50;
-    public Color WarningColor = Color.yellow;
+    [Tooltip("Height of the log area as a percentage of the screen height")] [Range(0.3f, 1.0f)] public float Height = 0.5f;
 
     [Tooltip("Width of the log area as a percentage of the screen width")] [Range(0.3f, 1.0f)] public float Width = 0.5f;
 
+    public int Margin = 20;
+
+    public LogAnchor AnchorPosition = LogAnchor.BottomLeft;
+
+    public int FontSize = 14;
+
+    public int TotalRows = 50;
+    public Canvas canvas = null;
+    public Text sample_text = null;
+
+    [Range(0f, 01f)] public float BackgroundOpacity = 0.5f;
+    public Color BackgroundColor = Color.black;
+
+    public bool LogMessages = true;
+    public bool LogWarnings = true;
+    public bool LogErrors = true;
+
+    public Color MessageColor = Color.white;
+    public Color WarningColor = Color.yellow;
+    public Color ErrorColor = new Color(1, 0.5f, 0.5f);
+
+    public bool StackTraceMessages = false;
+    public bool StackTraceWarnings = false;
+    public bool StackTraceErrors = true;
+
+    static Queue<LogMessage> queue = new Queue<LogMessage>();
+
+    GUIStyle styleContainer, styleText;
+    int padding = 5;
+
+    private bool destroying = false;
+    private List<Text> line_ui = new List<Text>();
+
     public static ScreenLogger Instance {
       get {
-        if (instantiated) {
+        if (instantiated)
           return instance;
-        }
 
-        instance = FindObjectOfType(typeof(ScreenLogger)) as ScreenLogger;
+        instance = GameObject.FindObjectOfType(typeof(ScreenLogger)) as ScreenLogger;
 
         // Object not found, we create a new one
         if (instance == null) {
@@ -94,9 +91,8 @@ namespace AClockworkBerry {
           // Problem during the creation, this should not happen
           if (instance == null) {
             Debug.LogError("Problem during the creation of ScreenLogger");
-          } else {
+          } else
             instantiated = true;
-          }
         } else {
           instantiated = true;
         }
@@ -106,7 +102,7 @@ namespace AClockworkBerry {
     }
 
     public void Awake() {
-      ScreenLogger[] obj = FindObjectsOfType<ScreenLogger>();
+      ScreenLogger[] obj = GameObject.FindObjectsOfType<ScreenLogger>();
 
       if (obj.Length > 1) {
         Debug.Log("Destroying ScreenLogger, already exists...");
@@ -119,9 +115,8 @@ namespace AClockworkBerry {
 
       InitStyles();
 
-      if (IsPersistent) {
+      if (IsPersistent)
         DontDestroyOnLoad(this);
-      }
     }
 
     private void InitStyles() {
@@ -139,10 +134,9 @@ namespace AClockworkBerry {
       styleText.fontSize = FontSize;
     }
 
-    private void OnEnable() {
-      if (!ShowInEditor && Application.isEditor) {
+    void OnEnable() {
+      if (!ShowInEditor && Application.isEditor)
         return;
-      }
 
       queue = new Queue<LogMessage>();
 
@@ -153,11 +147,10 @@ namespace AClockworkBerry {
 #endif
     }
 
-    private void OnDisable() {
+    void OnDisable() {
       // If destroyed because already exists, don't need to de-register callback
-      if (destroying) {
+      if (destroying)
         return;
-      }
 
 #if UNITY_4_5 || UNITY_4_6 || UNITY_4_7
             Application.RegisterLogCallback(null);
@@ -166,10 +159,9 @@ namespace AClockworkBerry {
 #endif
     }
 
-    private void Update() {
-      if (!ShowInEditor && Application.isEditor) {
+    void Update() {
+      if (!ShowInEditor && Application.isEditor)
         return;
-      }
 
       float InnerHeight = (Screen.height - 2 * Margin) * Height - 2 * padding;
 
@@ -180,7 +172,7 @@ namespace AClockworkBerry {
       RenderGUI();
     }
 
-    private void Start() {
+    void Start() {
       RectTransform canvas_rt = canvas.GetComponent<RectTransform>();
 
       for (int i = 0; i < TotalRows; i++) {
@@ -198,13 +190,11 @@ namespace AClockworkBerry {
       }
     }
 
-    private void RenderGUI() {
-      if (!ShowLog) {
+    void RenderGUI() {
+      if (!ShowLog)
         return;
-      }
-      if (!ShowInEditor && Application.isEditor) {
+      if (!ShowInEditor && Application.isEditor)
         return;
-      }
 
       int line_number = 0;
       foreach (LogMessage m in queue.Reverse()) {
@@ -234,50 +224,39 @@ namespace AClockworkBerry {
       }
     }
 
-    private void HandleLog(string message, string stackTrace, LogType type) {
-      if (type == LogType.Assert && !LogErrors) {
+    void HandleLog(string message, string stackTrace, LogType type) {
+      if (type == LogType.Assert && !LogErrors)
         return;
-      }
-      if (type == LogType.Error && !LogErrors) {
+      if (type == LogType.Error && !LogErrors)
         return;
-      }
-      if (type == LogType.Exception && !LogErrors) {
+      if (type == LogType.Exception && !LogErrors)
         return;
-      }
-      if (type == LogType.Log && !LogMessages) {
+      if (type == LogType.Log && !LogMessages)
         return;
-      }
-      if (type == LogType.Warning && !LogWarnings) {
+      if (type == LogType.Warning && !LogWarnings)
         return;
-      }
 
-      string[] lines = message.Split('\n');
+      string[] lines = message.Split(new char[] {'\n'});
 
       foreach (string l in lines)
         queue.Enqueue(new LogMessage(l, type));
 
-      if (type == LogType.Assert && !StackTraceErrors) {
+      if (type == LogType.Assert && !StackTraceErrors)
         return;
-      }
-      if (type == LogType.Error && !StackTraceErrors) {
+      if (type == LogType.Error && !StackTraceErrors)
         return;
-      }
-      if (type == LogType.Exception && !StackTraceErrors) {
+      if (type == LogType.Exception && !StackTraceErrors)
         return;
-      }
-      if (type == LogType.Log && !StackTraceMessages) {
+      if (type == LogType.Log && !StackTraceMessages)
         return;
-      }
-      if (type == LogType.Warning && !StackTraceWarnings) {
+      if (type == LogType.Warning && !StackTraceWarnings)
         return;
-      }
 
-      string[] trace = stackTrace.Split('\n');
+      string[] trace = stackTrace.Split(new char[] {'\n'});
 
       foreach (string t in trace)
-        if (t.Length != 0) {
+        if (t.Length != 0)
           queue.Enqueue(new LogMessage("  " + t, type));
-        }
     }
 
     public void InspectorGUIUpdated() {

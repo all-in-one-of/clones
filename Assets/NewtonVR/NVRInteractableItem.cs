@@ -8,35 +8,35 @@ namespace NewtonVR {
     private const float MaxAngularVelocityChange = 20f;
     private const float VelocityMagic = 6000f;
     private const float AngularVelocityMagic = 50f;
-    protected Vector3?[] AngularVelocityHistory;
-    protected int CurrentVelocityHistoryStep;
 
     public bool DisablePhysicalMaterialsOnAttach = true;
-    protected Vector3 ExternalAngularVelocity;
-
-    protected Vector3 ExternalVelocity;
 
     [Tooltip(
       "If you have a specific point you'd like the object held at, create a transform there and set it to this variable"
     )] public Transform InteractionPoint;
 
-    protected Dictionary<Collider, PhysicMaterial> MaterialCache =
-      new Dictionary<Collider, PhysicMaterial>();
+    public UnityEvent OnUseButtonDown;
+    public UnityEvent OnUseButtonUp;
+
+    public UnityEvent OnHovering;
 
     public UnityEvent OnBeginInteraction;
     public UnityEvent OnEndInteraction;
 
-    public UnityEvent OnHovering;
-
-    public UnityEvent OnUseButtonDown;
-    public UnityEvent OnUseButtonUp;
-
     protected Transform PickupTransform;
-    protected float StartingAngularDrag = -1;
 
-    protected float StartingDrag = -1;
+    protected Vector3 ExternalVelocity;
+    protected Vector3 ExternalAngularVelocity;
 
     protected Vector3?[] VelocityHistory;
+    protected Vector3?[] AngularVelocityHistory;
+    protected int CurrentVelocityHistoryStep;
+
+    protected float StartingDrag = -1;
+    protected float StartingAngularDrag = -1;
+
+    protected Dictionary<Collider, PhysicMaterial> MaterialCache =
+      new Dictionary<Collider, PhysicMaterial>();
 
     protected override void Awake() {
       base.Awake();
@@ -71,32 +71,32 @@ namespace NewtonVR {
       {
         rotationDelta = AttachedHand.transform.rotation *
                         Quaternion.Inverse(InteractionPoint.rotation);
-        positionDelta = AttachedHand.transform.position - InteractionPoint.position;
+        positionDelta = (AttachedHand.transform.position - InteractionPoint.position);
       } else {
         rotationDelta = PickupTransform.rotation * Quaternion.Inverse(transform.rotation);
-        positionDelta = PickupTransform.position - transform.position;
+        positionDelta = (PickupTransform.position - transform.position);
       }
 
       rotationDelta.ToAngleAxis(out angle, out axis);
 
-      if (angle > 180) {
+      if (angle > 180)
         angle -= 360;
-      }
 
       if (angle != 0) {
         Vector3 angularTarget = angle * axis;
         if (float.IsNaN(angularTarget.x) == false) {
-          angularTarget = angularTarget * angularVelocityMagic * Time.deltaTime;
+          angularTarget = (angularTarget * angularVelocityMagic) * Time.deltaTime;
           Rigidbody.angularVelocity = Vector3.MoveTowards(Rigidbody.angularVelocity, angularTarget,
             MaxAngularVelocityChange);
         }
       }
 
-      Vector3 velocityTarget = positionDelta * velocityMagic * Time.deltaTime;
+      Vector3 velocityTarget = (positionDelta * velocityMagic) * Time.deltaTime;
       if (float.IsNaN(velocityTarget.x) == false) {
         Rigidbody.velocity = Vector3.MoveTowards(Rigidbody.velocity, velocityTarget,
           MaxVelocityChange);
       }
+
 
       if (VelocityHistory != null) {
         CurrentVelocityHistoryStep++;
@@ -244,7 +244,7 @@ namespace NewtonVR {
       float z = 0f;
 
       int count = 0;
-      for (int index = 0; index < positions.Length; index++)
+      for (int index = 0; index < positions.Length; index++) {
         if (positions[index] != null) {
           x += positions[index].Value.x;
           y += positions[index].Value.y;
@@ -252,6 +252,7 @@ namespace NewtonVR {
 
           count++;
         }
+      }
 
       if (count > 0) {
         return new Vector3(x / count, y / count, z / count);
@@ -287,7 +288,7 @@ namespace NewtonVR {
       base.UpdateColliders();
 
       if (DisablePhysicalMaterialsOnAttach) {
-        for (int colliderIndex = 0; colliderIndex < Colliders.Length; colliderIndex++)
+        for (int colliderIndex = 0; colliderIndex < Colliders.Length; colliderIndex++) {
           if (MaterialCache.ContainsKey(Colliders[colliderIndex]) == false) {
             MaterialCache.Add(Colliders[colliderIndex], Colliders[colliderIndex].sharedMaterial);
 
@@ -295,6 +296,7 @@ namespace NewtonVR {
               Colliders[colliderIndex].sharedMaterial = null;
             }
           }
+        }
       }
     }
   }

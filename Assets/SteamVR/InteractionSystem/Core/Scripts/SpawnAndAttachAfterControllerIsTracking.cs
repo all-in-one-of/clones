@@ -6,6 +6,7 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -14,16 +15,16 @@ namespace Valve.VR.InteractionSystem {
     public GameObject itemPrefab;
 
     //-------------------------------------------------
-    private void Start() {
+    void Start() {
       hand = GetComponentInParent<Hand>();
     }
 
     //-------------------------------------------------
-    private void Update() {
+    void Update() {
       if (itemPrefab != null) {
         if (hand.controller != null) {
           if (hand.controller.hasTracking) {
-            GameObject objectToAttach = Instantiate(itemPrefab);
+            GameObject objectToAttach = GameObject.Instantiate(itemPrefab);
             objectToAttach.SetActive(true);
             hand.AttachObject(objectToAttach);
             hand.controller.TriggerHapticPulse(800);

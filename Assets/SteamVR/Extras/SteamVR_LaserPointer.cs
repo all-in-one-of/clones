@@ -1,6 +1,7 @@
 ﻿//======= Copyright (c) Valve Corporation, All rights reserved. ===============
 
 using UnityEngine;
+using System.Collections;
 
 public struct PointerEventArgs {
   public uint controllerIndex;
@@ -13,22 +14,22 @@ public delegate void PointerEventHandler(object sender, PointerEventArgs e);
 
 public class SteamVR_LaserPointer : MonoBehaviour {
   public bool active = true;
-  public bool addRigidBody = false;
   public Color color;
-  public GameObject holder;
-  private bool isActive;
-  public GameObject pointer;
-
-  private Transform previousContact;
-  public Transform reference;
   public float thickness = 0.002f;
+  public GameObject holder;
+  public GameObject pointer;
+  bool isActive = false;
+  public bool addRigidBody = false;
+  public Transform reference;
   public event PointerEventHandler PointerIn;
   public event PointerEventHandler PointerOut;
 
+  Transform previousContact = null;
+
   // Use this for initialization
-  private void Start() {
+  void Start() {
     holder = new GameObject();
-    holder.transform.parent = transform;
+    holder.transform.parent = this.transform;
     holder.transform.localPosition = Vector3.zero;
     holder.transform.localRotation = Quaternion.identity;
 
@@ -46,7 +47,7 @@ public class SteamVR_LaserPointer : MonoBehaviour {
       rigidBody.isKinematic = true;
     } else {
       if (collider) {
-        Destroy(collider);
+        Object.Destroy(collider);
       }
     }
     Material newMaterial = new Material(Shader.Find("Unlit/Color"));
@@ -55,22 +56,20 @@ public class SteamVR_LaserPointer : MonoBehaviour {
   }
 
   public virtual void OnPointerIn(PointerEventArgs e) {
-    if (PointerIn != null) {
+    if (PointerIn != null)
       PointerIn(this, e);
-    }
   }
 
   public virtual void OnPointerOut(PointerEventArgs e) {
-    if (PointerOut != null) {
+    if (PointerOut != null)
       PointerOut(this, e);
-    }
   }
 
   // Update is called once per frame
-  private void Update() {
+  void Update() {
     if (!isActive) {
       isActive = true;
-      transform.GetChild(0).gameObject.SetActive(true);
+      this.transform.GetChild(0).gameObject.SetActive(true);
     }
 
     float dist = 100f;

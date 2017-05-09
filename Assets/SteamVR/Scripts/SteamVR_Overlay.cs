@@ -4,41 +4,34 @@
 //
 //=============================================================================
 
-using System.Runtime.InteropServices;
 using UnityEngine;
+using System.Collections;
 using Valve.VR;
 
 public class SteamVR_Overlay : MonoBehaviour {
-  public struct IntersectionResults {
-    public Vector3 point;
-    public Vector3 normal;
-    public Vector2 UVs;
-    public float distance;
-  }
-
-  public float alpha = 1.0f; // opacity 0..1
-  public bool antialias = true;
-  public bool curved = true;
-  public Vector2 curvedRange = new Vector2(1, 2);
-  public float distance = 1.25f; // distance from surface
-
-  private ulong handle = OpenVR.k_ulOverlayHandleInvalid;
-  public bool highquality = true;
-
-  public VROverlayInputMethod inputMethod = VROverlayInputMethod.None;
-  public Vector2 mouseScale = new Vector2(1, 1);
-  public float scale = 3.0f; // size of overlay view
   public Texture texture;
+  public bool curved = true;
+  public bool antialias = true;
+  public bool highquality = true;
+  public float scale = 3.0f; // size of overlay view
+  public float distance = 1.25f; // distance from surface
+  public float alpha = 1.0f; // opacity 0..1
 
   public Vector4 uvOffset = new Vector4(0, 0, 1, 1);
+  public Vector2 mouseScale = new Vector2(1, 1);
+  public Vector2 curvedRange = new Vector2(1, 2);
 
-  public static SteamVR_Overlay instance { get; private set; }
+  public VROverlayInputMethod inputMethod = VROverlayInputMethod.None;
 
-  public static string key {
+  static public SteamVR_Overlay instance { get; private set; }
+
+  static public string key {
     get { return "unity:" + Application.companyName + "." + Application.productName; }
   }
 
-  private void OnEnable() {
+  private ulong handle = OpenVR.k_ulOverlayHandleInvalid;
+
+  void OnEnable() {
     var overlay = OpenVR.Overlay;
     if (overlay != null) {
       var error = overlay.CreateOverlay(key, gameObject.name, ref handle);
@@ -49,10 +42,10 @@ public class SteamVR_Overlay : MonoBehaviour {
       }
     }
 
-    instance = this;
+    SteamVR_Overlay.instance = this;
   }
 
-  private void OnDisable() {
+  void OnDisable() {
     if (handle != OpenVR.k_ulOverlayHandleInvalid) {
       var overlay = OpenVR.Overlay;
       if (overlay != null) {
@@ -62,21 +55,19 @@ public class SteamVR_Overlay : MonoBehaviour {
       handle = OpenVR.k_ulOverlayHandleInvalid;
     }
 
-    instance = null;
+    SteamVR_Overlay.instance = null;
   }
 
   public void UpdateOverlay() {
     var overlay = OpenVR.Overlay;
-    if (overlay == null) {
+    if (overlay == null)
       return;
-    }
 
     if (texture != null) {
       var error = overlay.ShowOverlay(handle);
       if (error == EVROverlayError.InvalidHandle || error == EVROverlayError.UnknownOverlay) {
-        if (overlay.FindOverlay(key, ref handle) != EVROverlayError.None) {
+        if (overlay.FindOverlay(key, ref handle) != EVROverlayError.None)
           return;
-        }
       }
 
       var tex = new Texture_t();
@@ -116,9 +107,8 @@ public class SteamVR_Overlay : MonoBehaviour {
 
       overlay.SetOverlayInputMethod(handle, inputMethod);
 
-      if (curved || antialias) {
+      if (curved || antialias)
         highquality = true;
-      }
 
       if (highquality) {
         overlay.SetHighQualityOverlay(handle);
@@ -134,19 +124,24 @@ public class SteamVR_Overlay : MonoBehaviour {
 
   public bool PollNextEvent(ref VREvent_t pEvent) {
     var overlay = OpenVR.Overlay;
-    if (overlay == null) {
+    if (overlay == null)
       return false;
-    }
 
-    var size = (uint) Marshal.SizeOf(typeof(VREvent_t));
+    var size = (uint) System.Runtime.InteropServices.Marshal.SizeOf(typeof(Valve.VR.VREvent_t));
     return overlay.PollNextOverlayEvent(handle, ref pEvent, size);
+  }
+
+  public struct IntersectionResults {
+    public Vector3 point;
+    public Vector3 normal;
+    public Vector2 UVs;
+    public float distance;
   }
 
   public bool ComputeIntersection(Vector3 source, Vector3 direction, ref IntersectionResults results) {
     var overlay = OpenVR.Overlay;
-    if (overlay == null) {
+    if (overlay == null)
       return false;
-    }
 
     var input = new VROverlayIntersectionParams_t();
     input.eOrigin = SteamVR_Render.instance.trackingSpace;
@@ -158,9 +153,8 @@ public class SteamVR_Overlay : MonoBehaviour {
     input.vDirection.v2 = -direction.z;
 
     var output = new VROverlayIntersectionResults_t();
-    if (!overlay.ComputeOverlayIntersection(handle, ref input, ref output)) {
+    if (!overlay.ComputeOverlayIntersection(handle, ref input, ref output))
       return false;
-    }
 
     results.point = new Vector3(output.vPoint.v0, output.vPoint.v1, -output.vPoint.v2);
     results.normal = new Vector3(output.vNormal.v0, output.vNormal.v1, -output.vNormal.v2);

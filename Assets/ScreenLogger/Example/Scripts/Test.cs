@@ -1,24 +1,23 @@
-﻿using AClockworkBerry;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
+using AClockworkBerry;
 
 public class Test : MonoBehaviour {
-  private int i = 0;
-  private float timeout = 5, lasttime = -1;
+  float timeout = 5, lasttime = -1;
+  int i = 0;
 
-  private void Start() {
+  void Start() {
     ScreenLogger.Instance.ShowLog = true;
 
     TestMessageTypes();
   }
 
-  private void Update() {
-    if (timeout > 0) {
+  void Update() {
+    if (timeout > 0)
       timeout -= Time.deltaTime;
-    }
 
-    if ((int) lasttime != (int) timeout && timeout > 0) {
+    if ((int) lasttime != (int) timeout && timeout > 0)
       Debug.Log("-" + ((int) timeout + 1));
-    }
 
     lasttime = timeout;
 
@@ -29,7 +28,7 @@ public class Test : MonoBehaviour {
     }
   }
 
-  private void TestMessageTypes() {
+  void TestMessageTypes() {
     Debug.Log("Log message...");
     Debug.LogWarning("Warning message...");
     Debug.LogError("Error message...");

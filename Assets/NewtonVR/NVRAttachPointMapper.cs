@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace NewtonVR {
   public class AttachPointMapper {
-    private static readonly Dictionary<Collider, NVRAttachPoint> Colliders =
+    private static Dictionary<Collider, NVRAttachPoint> Colliders =
       new Dictionary<Collider, NVRAttachPoint>();
 
     public static void Register(Collider col, NVRAttachPoint point) {

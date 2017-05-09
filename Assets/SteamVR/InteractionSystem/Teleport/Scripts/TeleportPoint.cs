@@ -17,38 +17,38 @@ namespace Valve.VR.InteractionSystem {
     public enum TeleportPointType {
       MoveToLocation,
       SwitchToNewScene
-    }
+    };
+
+    //Public variables
+    public TeleportPointType teleportType = TeleportPointType.MoveToLocation;
+    public string title;
+    public string switchToScene;
+    public Color titleVisibleColor;
+    public Color titleHighlightedColor;
+    public Color titleLockedColor;
+    public bool playerSpawnPoint = false;
+
+    //Private data
+    private bool gotReleventComponents = false;
+    private MeshRenderer markerMesh;
+    private MeshRenderer switchSceneIcon;
+    private MeshRenderer moveLocationIcon;
+    private MeshRenderer lockedIcon;
+    private MeshRenderer pointIcon;
+    private Transform lookAtJointTransform;
+    private new Animation animation;
+    private Text titleText;
+    private Player player;
+    private Vector3 lookAtPosition = Vector3.zero;
+    private int tintColorID = 0;
+    private Color tintColor = Color.clear;
+    private Color titleColor = Color.clear;
+    private float fullTitleAlpha = 0.0f;
 
     //Constants
     private const string switchSceneAnimation = "switch_scenes_idle";
     private const string moveLocationAnimation = "move_location_idle";
     private const string lockedAnimation = "locked_idle";
-    private new Animation animation;
-    private float fullTitleAlpha;
-
-    //Private data
-    private bool gotReleventComponents;
-    private MeshRenderer lockedIcon;
-    private Transform lookAtJointTransform;
-    private Vector3 lookAtPosition = Vector3.zero;
-    private MeshRenderer markerMesh;
-    private MeshRenderer moveLocationIcon;
-    private Player player;
-    public bool playerSpawnPoint = false;
-    private MeshRenderer pointIcon;
-    private MeshRenderer switchSceneIcon;
-    public string switchToScene;
-
-    //Public variables
-    public TeleportPointType teleportType = TeleportPointType.MoveToLocation;
-    private Color tintColor = Color.clear;
-    private int tintColorID;
-    public string title;
-    private Color titleColor = Color.clear;
-    public Color titleHighlightedColor;
-    public Color titleLockedColor;
-    private Text titleText;
-    public Color titleVisibleColor;
 
     //-------------------------------------------------
     public override bool showReticle {
@@ -56,7 +56,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       GetRelevantComponents();
 
       animation = GetComponent<Animation>();
@@ -71,12 +71,12 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void Start() {
+    void Start() {
       player = Player.instance;
     }
 
     //-------------------------------------------------
-    private void Update() {
+    void Update() {
       if (Application.isPlaying) {
         lookAtPosition.x = player.hmdTransform.position.x;
         lookAtPosition.y = lookAtJointTransform.position.y;
@@ -88,7 +88,7 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     public override bool ShouldActivate(Vector3 playerPosition) {
-      return Vector3.Distance(transform.position, playerPosition) > 1.0f;
+      return (Vector3.Distance(transform.position, playerPosition) > 1.0f);
     }
 
     //-------------------------------------------------
@@ -268,7 +268,7 @@ namespace Valve.VR.InteractionSystem {
   [CustomEditor(typeof(TeleportPoint))]
   public class TeleportPointEditor : Editor {
     //-------------------------------------------------
-    private void OnEnable() {
+    void OnEnable() {
       if (Selection.activeTransform) {
         TeleportPoint teleportPoint = Selection.activeTransform.GetComponent<TeleportPoint>();
         teleportPoint.UpdateVisualsInEditor();

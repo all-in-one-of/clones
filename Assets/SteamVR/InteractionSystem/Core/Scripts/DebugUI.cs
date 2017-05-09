@@ -5,25 +5,28 @@
 //=============================================================================
 
 using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class DebugUI : MonoBehaviour {
-    //-------------------------------------------------
-    private static DebugUI _instance;
     private Player player;
 
-    public static DebugUI instance {
+    //-------------------------------------------------
+    static private DebugUI _instance;
+
+    static public DebugUI instance {
       get {
         if (_instance == null) {
-          _instance = FindObjectOfType<DebugUI>();
+          _instance = GameObject.FindObjectOfType<DebugUI>();
         }
         return _instance;
       }
     }
 
     //-------------------------------------------------
-    private void Start() {
+    void Start() {
       player = Player.instance;
     }
 

@@ -5,37 +5,39 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class FireSource : MonoBehaviour {
+    public GameObject fireParticlePrefab;
+    public bool startActive;
+    private GameObject fireObject;
+
+    public ParticleSystem customParticles;
+
+    public bool isBurning;
+
     public float burnTime;
+    public float ignitionDelay = 0;
+    private float ignitionTime;
+
+    private Hand hand;
+
+    public AudioSource ignitionSound;
 
     public bool canSpreadFromThisSource = true;
 
-    public ParticleSystem customParticles;
-    private GameObject fireObject;
-    public GameObject fireParticlePrefab;
-
-    private Hand hand;
-    public float ignitionDelay = 0;
-
-    public AudioSource ignitionSound;
-    private float ignitionTime;
-
-    public bool isBurning;
-    public bool startActive;
-
     //-------------------------------------------------
-    private void Start() {
+    void Start() {
       if (startActive) {
         StartBurning();
       }
     }
 
     //-------------------------------------------------
-    private void Update() {
-      if (burnTime != 0 && Time.time > ignitionTime + burnTime && isBurning) {
+    void Update() {
+      if ((burnTime != 0) && (Time.time > (ignitionTime + burnTime)) && isBurning) {
         isBurning = false;
         if (customParticles != null) {
           customParticles.Stop();
@@ -46,7 +48,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void OnTriggerEnter(Collider other) {
+    void OnTriggerEnter(Collider other) {
       if (isBurning && canSpreadFromThisSource) {
         other.SendMessageUpwards("FireExposure", SendMessageOptions.DontRequireReceiver);
       }
@@ -78,7 +80,7 @@ namespace Valve.VR.InteractionSystem {
       } else {
         if (fireParticlePrefab != null) {
           fireObject =
-            Instantiate(fireParticlePrefab, transform.position, transform.rotation);
+            Instantiate(fireParticlePrefab, transform.position, transform.rotation) as GameObject;
           fireObject.transform.parent = transform;
         }
       }

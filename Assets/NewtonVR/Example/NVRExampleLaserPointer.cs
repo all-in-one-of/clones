@@ -1,23 +1,24 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 namespace NewtonVR.Example {
   public class NVRExampleLaserPointer : MonoBehaviour {
-    public bool ForceLineVisible = true;
-
-    private NVRHand Hand;
-
-    private LineRenderer Line;
     public Color LineColor;
     public float LineWidth = 0.02f;
+    public bool ForceLineVisible = true;
 
     public bool OnlyVisibleOnTrigger = true;
 
+    private LineRenderer Line;
+
+    private NVRHand Hand;
+
     private void Awake() {
-      Line = GetComponent<LineRenderer>();
-      Hand = GetComponent<NVRHand>();
+      Line = this.GetComponent<LineRenderer>();
+      Hand = this.GetComponent<NVRHand>();
 
       if (Line == null) {
-        Line = gameObject.AddComponent<LineRenderer>();
+        Line = this.gameObject.AddComponent<LineRenderer>();
       }
 
       if (Line.sharedMaterial == null) {
@@ -31,26 +32,26 @@ namespace NewtonVR.Example {
 
     private void LateUpdate() {
       Line.enabled = ForceLineVisible ||
-                     OnlyVisibleOnTrigger && Hand != null &&
-                     Hand.Inputs[NVRButtons.Trigger].IsPressed;
+                     (OnlyVisibleOnTrigger && Hand != null &&
+                      Hand.Inputs[NVRButtons.Trigger].IsPressed);
 
-      if (Line.enabled) {
+      if (Line.enabled == true) {
         Line.material.SetColor("_Color", LineColor);
         NVRHelpers.LineRendererSetColor(Line, LineColor, LineColor);
         NVRHelpers.LineRendererSetWidth(Line, LineWidth, LineWidth);
 
         RaycastHit hitInfo;
-        bool hit = Physics.Raycast(transform.position, transform.forward, out hitInfo,
+        bool hit = Physics.Raycast(this.transform.position, this.transform.forward, out hitInfo,
           1000);
         Vector3 endPoint;
 
-        if (hit) {
+        if (hit == true) {
           endPoint = hitInfo.point;
         } else {
-          endPoint = transform.position + transform.forward * 1000f;
+          endPoint = this.transform.position + (this.transform.forward * 1000f);
         }
 
-        Line.SetPositions(new[] {transform.position, endPoint});
+        Line.SetPositions(new Vector3[] {this.transform.position, endPoint});
       }
     }
   }

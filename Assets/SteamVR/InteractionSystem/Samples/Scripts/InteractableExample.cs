@@ -5,22 +5,24 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   [RequireComponent(typeof(Interactable))]
   public class InteractableExample : MonoBehaviour {
-    private readonly Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags &
-                                                            ~Hand.AttachmentFlags.SnapOnAttach &
-                                                            ~Hand.AttachmentFlags.DetachOthers;
-
-    private float attachTime;
+    private TextMesh textMesh;
     private Vector3 oldPosition;
     private Quaternion oldRotation;
-    private TextMesh textMesh;
+
+    private float attachTime;
+
+    private Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags &
+                                                   (~Hand.AttachmentFlags.SnapOnAttach) &
+                                                   (~Hand.AttachmentFlags.DetachOthers);
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       textMesh = GetComponentInChildren<TextMesh>();
       textMesh.text = "No Hand Hovering";
     }
@@ -44,8 +46,8 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     private void HandHoverUpdate(Hand hand) {
       if (hand.GetStandardInteractionButtonDown() ||
-          hand.controller != null &&
-          hand.controller.GetPressDown(EVRButtonId.k_EButton_Grip)) {
+          ((hand.controller != null) &&
+           hand.controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_Grip))) {
         if (hand.currentAttachedObject != gameObject) {
           // Save our position/rotation so that we can restore it when we detach
           oldPosition = transform.position;

@@ -1,10 +1,10 @@
-﻿using System;
+﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.VR;
+using System.Linq;
+using UnityEngine.Events;
+using Valve.VR.InteractionSystem;
 
 namespace NewtonVR {
   public class NVRPlayer : MonoBehaviour {
@@ -12,67 +12,28 @@ namespace NewtonVR {
     public const float NewtonVRExpectedDeltaTime = 0.0111f;
 
     public static List<NVRPlayer> Instances = new List<NVRPlayer>();
-    public bool AutomaticallySetControllerTransparency = true;
-
-    public bool AutoSetFixedDeltaTime = true;
-
-    private Dictionary<Collider, NVRHand> ColliderToHandMapping;
-
-    [HideInInspector] public NVRSDKIntegrations CurrentIntegrationType = NVRSDKIntegrations.None;
-    public bool DEBUGDropFrames = false;
-
-    [Space] public bool DEBUGEnableFallback2D = false;
-    public int DEBUGSleepPerFrame = 13;
-    public Mesh EditorPlayerPreview;
-    public Vector2 EditorPlayspaceDefault = new Vector2(2, 1.5f);
-    public bool EditorPlayspaceOverride = false;
-    public Mesh EditorPlayspacePreview;
-
-    [Space] public bool EnableEditorPlayerPreview = true;
-    public NVRHand FakeHand;
-    public NVRHand FakeHand2;
-
-    [HideInInspector] public List<NVRHand> Hands = new List<NVRHand>();
-
-    [Space] public NVRHead Head;
-
-    private NVRIntegration Integration;
-
-    public InterationStyle InteractionStyle;
-    public NVRHand LeftHand;
-    public bool MakeControllerInvisibleOnInteraction = false;
-    public bool NotifyOnVersionUpdate = true;
-    [HideInInspector] public bool OculusSDKEnabled = false;
-
-    public UnityEvent OnInitialized;
-
-    [Space] [HideInInspector] public bool OverrideAll;
-    [HideInInspector] public GameObject OverrideAllLeftHand;
-    [HideInInspector] public GameObject OverrideAllLeftHandPhysicalColliders;
-    [HideInInspector] public GameObject OverrideAllRightHand;
-    [HideInInspector] public GameObject OverrideAllRightHandPhysicalColliders;
-
-    [HideInInspector] public bool OverrideOculus;
-    [HideInInspector] public GameObject OverrideOculusLeftHand;
-    [HideInInspector] public GameObject OverrideOculusLeftHandPhysicalColliders;
-    [HideInInspector] public GameObject OverrideOculusRightHand;
-    [HideInInspector] public GameObject OverrideOculusRightHandPhysicalColliders;
-
-    [HideInInspector] public bool OverrideSteamVR;
-    [HideInInspector] public GameObject OverrideSteamVRLeftHand;
-    [HideInInspector] public GameObject OverrideSteamVRLeftHandPhysicalColliders;
-    [HideInInspector] public GameObject OverrideSteamVRRightHand;
-    [HideInInspector] public GameObject OverrideSteamVRRightHandPhysicalColliders;
-    public bool PhysicalHands = true;
-    public NVRHand RightHand;
-
-    [HideInInspector] public bool SteamVREnabled = false;
-    public int VelocityHistorySteps = 3;
-    public bool VibrateOnHover = true;
 
     public static NVRPlayer Instance {
       get { return Instances.First(player => player != null && player.gameObject != null); }
     }
+
+    [HideInInspector] public bool SteamVREnabled = false;
+    [HideInInspector] public bool OculusSDKEnabled = false;
+
+    public InterationStyle InteractionStyle;
+    public bool PhysicalHands = true;
+    public bool MakeControllerInvisibleOnInteraction = false;
+    public bool AutomaticallySetControllerTransparency = true;
+    public bool VibrateOnHover = true;
+    public int VelocityHistorySteps = 3;
+
+    public UnityEvent OnInitialized;
+
+    [Space] public bool EnableEditorPlayerPreview = true;
+    public Mesh EditorPlayerPreview;
+    public Mesh EditorPlayspacePreview;
+    public bool EditorPlayspaceOverride = false;
+    public Vector2 EditorPlayspaceDefault = new Vector2(2, 1.5f);
 
     public Vector3 PlayspaceSize {
       get {
@@ -83,28 +44,71 @@ namespace NewtonVR {
                 }
 #endif
 
+
         if (Integration != null) {
           return Integration.GetPlayspaceBounds();
-        }
-        if (OculusSDKEnabled) {
-          Integration = new NVROculusIntegration();
-          if (Integration.IsHmdPresent()) {
-            return Integration.GetPlayspaceBounds();
+        } else {
+          if (OculusSDKEnabled == true) {
+            Integration = new NVROculusIntegration();
+            if (Integration.IsHmdPresent() == true) {
+              return Integration.GetPlayspaceBounds();
+            } else {
+              Integration = null;
+            }
           }
-          Integration = null;
-        }
 
-        if (SteamVREnabled) {
-          Integration = new NVRSteamVRIntegration();
-          if (Integration.IsHmdPresent()) {
-            return Integration.GetPlayspaceBounds();
+          if (SteamVREnabled == true) {
+            Integration = new NVRSteamVRIntegration();
+            if (Integration.IsHmdPresent() == true) {
+              return Integration.GetPlayspaceBounds();
+            } else {
+              Integration = null;
+            }
           }
-          Integration = null;
-        }
 
-        return Vector3.zero;
+          return Vector3.zero;
+        }
       }
     }
+
+    [Space] [HideInInspector] public bool OverrideAll;
+    [HideInInspector] public GameObject OverrideAllLeftHand;
+    [HideInInspector] public GameObject OverrideAllLeftHandPhysicalColliders;
+    [HideInInspector] public GameObject OverrideAllRightHand;
+    [HideInInspector] public GameObject OverrideAllRightHandPhysicalColliders;
+
+    [HideInInspector] public bool OverrideSteamVR;
+    [HideInInspector] public GameObject OverrideSteamVRLeftHand;
+    [HideInInspector] public GameObject OverrideSteamVRLeftHandPhysicalColliders;
+    [HideInInspector] public GameObject OverrideSteamVRRightHand;
+    [HideInInspector] public GameObject OverrideSteamVRRightHandPhysicalColliders;
+
+    [HideInInspector] public bool OverrideOculus;
+    [HideInInspector] public GameObject OverrideOculusLeftHand;
+    [HideInInspector] public GameObject OverrideOculusLeftHandPhysicalColliders;
+    [HideInInspector] public GameObject OverrideOculusRightHand;
+    [HideInInspector] public GameObject OverrideOculusRightHandPhysicalColliders;
+
+    [Space] public NVRHead Head;
+    public NVRHand LeftHand;
+    public NVRHand RightHand;
+    public NVRHand FakeHand;
+    public NVRHand FakeHand2;
+
+    [HideInInspector] public List<NVRHand> Hands = new List<NVRHand>();
+
+    [HideInInspector] public NVRSDKIntegrations CurrentIntegrationType = NVRSDKIntegrations.None;
+
+    private NVRIntegration Integration;
+
+    private Dictionary<Collider, NVRHand> ColliderToHandMapping;
+
+    [Space] public bool DEBUGEnableFallback2D = false;
+    public bool DEBUGDropFrames = false;
+    public int DEBUGSleepPerFrame = 13;
+
+    public bool AutoSetFixedDeltaTime = true;
+    public bool NotifyOnVersionUpdate = true;
 
     private void Awake() {
       if (AutoSetFixedDeltaTime) {
@@ -116,7 +120,7 @@ namespace NewtonVR {
       NVRInteractables.Initialize();
 
       if (Head == null) {
-        Head = GetComponentInChildren<NVRHead>();
+        Head = this.GetComponentInChildren<NVRHead>();
       }
       Head.Initialize();
 
@@ -170,14 +174,16 @@ namespace NewtonVR {
       } else if (CurrentIntegrationType == NVRSDKIntegrations.SteamVR) {
         Integration = new NVRSteamVRIntegration();
       } else if (CurrentIntegrationType == NVRSDKIntegrations.FallbackNonVR) {
-        if (logOutput) {
+        if (logOutput == true) {
           Debug.LogError("[NewtonVR] Fallback non-vr not yet implemented.");
         }
+        return;
       } else {
-        if (logOutput) {
+        if (logOutput == true) {
           Debug.LogError(
             "[NewtonVR] Critical Error: Oculus / SteamVR not setup properly or no headset found.");
         }
+        return;
       }
     }
 
@@ -185,7 +191,7 @@ namespace NewtonVR {
       NVRSDKIntegrations currentIntegration = NVRSDKIntegrations.None;
       string resultLog = "[NewtonVR] Version : " + NewtonVRVersion + ". ";
 
-      if (VRDevice.isPresent) {
+      if (VRDevice.isPresent == true) {
         resultLog += "Found VRDevice: " + VRDevice.model + ". ";
 
 #if !NVR_Oculus && !NVR_SteamVR
@@ -210,14 +216,14 @@ namespace NewtonVR {
       }
 
       if (currentIntegration == NVRSDKIntegrations.None) {
-        if (DEBUGEnableFallback2D) {
+        if (DEBUGEnableFallback2D == true) {
           currentIntegration = NVRSDKIntegrations.FallbackNonVR;
         } else {
           resultLog += "Did not find supported VR device. Or no integrations enabled.";
         }
       }
 
-      if (logOutput) {
+      if (logOutput == true) {
         Debug.Log(resultLog);
       }
 
@@ -227,10 +233,11 @@ namespace NewtonVR {
     public void RegisterHand(NVRHand hand) {
       Collider[] colliders = hand.GetComponentsInChildren<Collider>();
 
-      for (int index = 0; index < colliders.Length; index++)
+      for (int index = 0; index < colliders.Length; index++) {
         if (ColliderToHandMapping.ContainsKey(colliders[index]) == false) {
           ColliderToHandMapping.Add(colliders[index], hand);
         }
+      }
     }
 
     public NVRHand GetHand(Collider collider) {
@@ -239,13 +246,12 @@ namespace NewtonVR {
 
     public static void DeregisterInteractable(NVRInteractable interactable) {
       foreach (NVRPlayer player in Instances) {
-        if (player == null || player.Hands == null) {
-          continue;
-        }
-        foreach (NVRHand hand in player.Hands)
+        if (player == null || player.Hands == null) continue;
+        foreach (NVRHand hand in player.Hands) {
           if (hand != null) {
             hand.DeregisterInteractable(interactable);
           }
+        }
       }
     }
 
@@ -254,25 +260,23 @@ namespace NewtonVR {
     }
 
     private void Update() {
-      if (DEBUGDropFrames) {
-        Thread.Sleep(DEBUGSleepPerFrame);
+      if (DEBUGDropFrames == true) {
+        System.Threading.Thread.Sleep(DEBUGSleepPerFrame);
       }
     }
 
 #if UNITY_EDITOR
-    private static DateTime LastRequestedSize;
+    private static System.DateTime LastRequestedSize;
     private static Vector3 CachedPlayspaceScale;
 
     private void OnDrawGizmos() {
-      if (EnableEditorPlayerPreview == false) {
+      if (EnableEditorPlayerPreview == false)
         return;
-      }
 
-      if (Application.isPlaying) {
+      if (Application.isPlaying == true)
         return;
-      }
 
-      TimeSpan lastRequested = DateTime.Now - LastRequestedSize;
+      System.TimeSpan lastRequested = System.DateTime.Now - LastRequestedSize;
       Vector3 playspaceScale;
       if (lastRequested.TotalSeconds > 1) {
         if (EditorPlayspaceOverride == false) {
@@ -289,7 +293,7 @@ namespace NewtonVR {
         }
 
         playspaceScale.y = 1f;
-        LastRequestedSize = DateTime.Now;
+        LastRequestedSize = System.DateTime.Now;
       } else {
         playspaceScale = CachedPlayspaceScale;
       }
@@ -298,12 +302,12 @@ namespace NewtonVR {
       Color drawColor = Color.green;
       drawColor.a = 0.075f;
       Gizmos.color = drawColor;
-      Gizmos.DrawWireMesh(EditorPlayerPreview, transform.position, transform.rotation,
-        transform.localScale);
+      Gizmos.DrawWireMesh(EditorPlayerPreview, this.transform.position, this.transform.rotation,
+        this.transform.localScale);
       drawColor.a = 0.5f;
       Gizmos.color = drawColor;
-      Gizmos.DrawWireMesh(EditorPlayspacePreview, transform.position, transform.rotation,
-        playspaceScale * transform.localScale.x);
+      Gizmos.DrawWireMesh(EditorPlayspacePreview, this.transform.position, this.transform.rotation,
+        playspaceScale * this.transform.localScale.x);
     }
 #endif
   }

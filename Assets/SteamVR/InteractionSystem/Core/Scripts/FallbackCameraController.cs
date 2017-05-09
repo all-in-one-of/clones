@@ -5,26 +5,27 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   [RequireComponent(typeof(Camera))]
   public class FallbackCameraController : MonoBehaviour {
-    private float realTime;
+    public float speed = 4.0f;
     public float shiftSpeed = 16.0f;
     public bool showInstructions = true;
-    public float speed = 4.0f;
 
     private Vector3 startEulerAngles;
     private Vector3 startMousePosition;
+    private float realTime;
 
     //-------------------------------------------------
-    private void OnEnable() {
+    void OnEnable() {
       realTime = Time.realtimeSinceStartup;
     }
 
     //-------------------------------------------------
-    private void Update() {
+    void Update() {
       float forward = 0.0f;
       if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) {
         forward += 1.0f;
@@ -70,7 +71,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void OnGUI() {
+    void OnGUI() {
       if (showInstructions) {
         GUI.Label(new Rect(10.0f, 10.0f, 600.0f, 400.0f),
           "WASD/Arrow Keys to translate the camera\n" +

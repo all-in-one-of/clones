@@ -5,19 +5,20 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class LinearAnimation : MonoBehaviour {
+    public LinearMapping linearMapping;
     public new Animation animation;
-    private float animLength;
 
     private AnimationState animState;
+    private float animLength;
     private float lastValue;
-    public LinearMapping linearMapping;
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       if (animation == null) {
         animation = GetComponent<Animation>();
       }
@@ -40,7 +41,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    private void Update() {
+    void Update() {
       float value = linearMapping.value;
 
       //No need to set the anim if our value hasn't changed.

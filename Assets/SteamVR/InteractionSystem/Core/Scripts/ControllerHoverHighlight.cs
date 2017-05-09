@@ -5,38 +5,40 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class ControllerHoverHighlight : MonoBehaviour {
-    private MeshRenderer bodyMeshRenderer;
+    public Material highLightMaterial;
     public bool fireHapticsOnHightlight = true;
 
     private Hand hand;
-    public Material highLightMaterial;
-    private SteamVR_RenderModel renderModel;
-    private bool renderModelLoaded;
 
-    private SteamVR_Events.Action renderModelLoadedAction;
+    private MeshRenderer bodyMeshRenderer;
     private MeshRenderer trackingHatMeshRenderer;
+    private SteamVR_RenderModel renderModel;
+    private bool renderModelLoaded = false;
+
+    SteamVR_Events.Action renderModelLoadedAction;
 
     //-------------------------------------------------
-    private void Start() {
+    void Start() {
       hand = GetComponentInParent<Hand>();
     }
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       renderModelLoadedAction = SteamVR_Events.RenderModelLoadedAction(OnRenderModelLoaded);
     }
 
     //-------------------------------------------------
-    private void OnEnable() {
+    void OnEnable() {
       renderModelLoadedAction.enabled = true;
     }
 
     //-------------------------------------------------
-    private void OnDisable() {
+    void OnDisable() {
       renderModelLoadedAction.enabled = false;
     }
 
@@ -67,17 +69,18 @@ namespace Valve.VR.InteractionSystem {
         trackingHatMeshRenderer.enabled = false;
       }
 
-      foreach (Transform child in transform)
-        if (child.name != "body" && child.name != "trackhat") {
+      foreach (Transform child in transform) {
+        if ((child.name != "body") && (child.name != "trackhat")) {
           Destroy(child.gameObject);
         }
+      }
 
       renderModelLoaded = true;
     }
 
     //-------------------------------------------------
     private void OnParentHandHoverBegin(Interactable other) {
-      if (!isActiveAndEnabled) {
+      if (!this.isActiveAndEnabled) {
         return;
       }
 
@@ -93,7 +96,7 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     private void OnParentHandInputFocusAcquired() {
-      if (!isActiveAndEnabled) {
+      if (!this.isActiveAndEnabled) {
         return;
       }
 

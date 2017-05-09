@@ -6,6 +6,7 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -14,18 +15,17 @@ namespace Valve.VR.InteractionSystem {
     private AudioSource thisAudioSource;
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       thisAudioSource = GetComponent<AudioSource>();
     }
 
     //-------------------------------------------------
-    private void Start() {
+    void Start() {
       // move the sound object out from under the parent 
       gameObject.transform.parent = null;
 
-      if (destroyAfterPlayOnce) {
+      if (destroyAfterPlayOnce)
         Destroy(gameObject, thisAudioSource.clip.length);
-      }
     }
   }
 }

@@ -7,18 +7,18 @@
 using UnityEngine;
 
 public class SteamVR_IK : MonoBehaviour {
-  public float blendPct = 1.0f;
-  public Transform poleVector, upVector;
+  public Transform target;
   public Transform start, joint, end;
+  public Transform poleVector, upVector;
+
+  public float blendPct = 1.0f;
 
   [HideInInspector] public Transform startXform, jointXform, endXform;
-  public Transform target;
 
-  private void LateUpdate() {
+  void LateUpdate() {
     const float epsilon = 0.001f;
-    if (blendPct < epsilon) {
+    if (blendPct < epsilon)
       return;
-    }
 
     var preUp = upVector
       ? upVector.up
@@ -33,9 +33,8 @@ public class SteamVR_IK : MonoBehaviour {
       (end.position - joint.position).magnitude,
       ref result, out forward, out up);
 
-    if (up == Vector3.zero) {
+    if (up == Vector3.zero)
       return;
-    }
 
     var startPosition = start.position;
     var jointPosition = joint.position;
@@ -136,14 +135,15 @@ public class SteamVR_IK : MonoBehaviour {
           var A = Mathf.Sqrt(p * (p - jointDist) * (p - targetDist) * (p - baseDist));
           var height = 2.0f * A / baseDist; // distance of joint from line between root and target
 
-          var dist = Mathf.Sqrt(jointDist * jointDist - height * height);
+          var dist = Mathf.Sqrt((jointDist * jointDist) - (height * height));
           var right = Vector3.Cross(up, forward); // no need to normalized - already orthonormal
 
-          result += forward * dist + right * height;
+          result += (forward * dist) + (right * height);
           return true; // in range
+        } else {
+          // move jointDist toward jointTarget
+          result += poleVectorDir * jointDist;
         }
-        // move jointDist toward jointTarget
-        result += poleVectorDir * jointDist;
       } else {
         // move elboDist toward target
         result += forward * jointDist;

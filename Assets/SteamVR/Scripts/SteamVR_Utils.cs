@@ -4,16 +4,115 @@
 //
 //=============================================================================
 
-using System;
-using System.Diagnostics;
-using System.IO;
 using UnityEngine;
+using System.Collections;
+using System.Runtime.InteropServices;
 using Valve.VR;
-using Debug = UnityEngine.Debug;
-using Object = UnityEngine.Object;
 
 public static class SteamVR_Utils {
-  [Serializable]
+  // this version does not clamp [0..1]
+  public static Quaternion Slerp(Quaternion A, Quaternion B, float t) {
+    var cosom = Mathf.Clamp(A.x * B.x + A.y * B.y + A.z * B.z + A.w * B.w, -1.0f, 1.0f);
+    if (cosom < 0.0f) {
+      B = new Quaternion(-B.x, -B.y, -B.z, -B.w);
+      cosom = -cosom;
+    }
+
+    float sclp, sclq;
+    if ((1.0f - cosom) > 0.0001f) {
+      var omega = Mathf.Acos(cosom);
+      var sinom = Mathf.Sin(omega);
+      sclp = Mathf.Sin((1.0f - t) * omega) / sinom;
+      sclq = Mathf.Sin(t * omega) / sinom;
+    } else {
+      // "from" and "to" very close, so do linear interp
+      sclp = 1.0f - t;
+      sclq = t;
+    }
+
+    return new Quaternion(
+      sclp * A.x + sclq * B.x,
+      sclp * A.y + sclq * B.y,
+      sclp * A.z + sclq * B.z,
+      sclp * A.w + sclq * B.w);
+  }
+
+  public static Vector3 Lerp(Vector3 A, Vector3 B, float t) {
+    return new Vector3(
+      Lerp(A.x, B.x, t),
+      Lerp(A.y, B.y, t),
+      Lerp(A.z, B.z, t));
+  }
+
+  public static float Lerp(float A, float B, float t) {
+    return A + (B - A) * t;
+  }
+
+  public static double Lerp(double A, double B, double t) {
+    return A + (B - A) * t;
+  }
+
+  public static float InverseLerp(Vector3 A, Vector3 B, Vector3 result) {
+    return Vector3.Dot(result - A, B - A);
+  }
+
+  public static float InverseLerp(float A, float B, float result) {
+    return (result - A) / (B - A);
+  }
+
+  public static double InverseLerp(double A, double B, double result) {
+    return (result - A) / (B - A);
+  }
+
+  public static float Saturate(float A) {
+    return (A < 0) ? 0 : (A > 1) ? 1 : A;
+  }
+
+  public static Vector2 Saturate(Vector2 A) {
+    return new Vector2(Saturate(A.x), Saturate(A.y));
+  }
+
+  public static float Abs(float A) {
+    return (A < 0) ? -A : A;
+  }
+
+  public static Vector2 Abs(Vector2 A) {
+    return new Vector2(Abs(A.x), Abs(A.y));
+  }
+
+  private static float _copysign(float sizeval, float signval) {
+    return Mathf.Sign(signval) == 1 ? Mathf.Abs(sizeval) : -Mathf.Abs(sizeval);
+  }
+
+  public static Quaternion GetRotation(this Matrix4x4 matrix) {
+    Quaternion q = new Quaternion();
+    q.w = Mathf.Sqrt(Mathf.Max(0, 1 + matrix.m00 + matrix.m11 + matrix.m22)) / 2;
+    q.x = Mathf.Sqrt(Mathf.Max(0, 1 + matrix.m00 - matrix.m11 - matrix.m22)) / 2;
+    q.y = Mathf.Sqrt(Mathf.Max(0, 1 - matrix.m00 + matrix.m11 - matrix.m22)) / 2;
+    q.z = Mathf.Sqrt(Mathf.Max(0, 1 - matrix.m00 - matrix.m11 + matrix.m22)) / 2;
+    q.x = _copysign(q.x, matrix.m21 - matrix.m12);
+    q.y = _copysign(q.y, matrix.m02 - matrix.m20);
+    q.z = _copysign(q.z, matrix.m10 - matrix.m01);
+    return q;
+  }
+
+  public static Vector3 GetPosition(this Matrix4x4 matrix) {
+    var x = matrix.m03;
+    var y = matrix.m13;
+    var z = matrix.m23;
+
+    return new Vector3(x, y, z);
+  }
+
+  public static Vector3 GetScale(this Matrix4x4 m) {
+    var x = Mathf.Sqrt(m.m00 * m.m00 + m.m01 * m.m01 + m.m02 * m.m02);
+    var y = Mathf.Sqrt(m.m10 * m.m10 + m.m11 * m.m11 + m.m12 * m.m12);
+    var z = Mathf.Sqrt(m.m20 * m.m20 + m.m21 * m.m21 + m.m22 * m.m22);
+
+    return new Vector3(x, y, z);
+  }
+
+  [System.Serializable]
   public struct RigidTransform {
     public Vector3 pos;
     public Quaternion rot;
@@ -32,8 +131,8 @@ public static class SteamVR_Utils {
     }
 
     public RigidTransform(Transform t) {
-      pos = t.position;
-      rot = t.rotation;
+      this.pos = t.position;
+      this.rot = t.rotation;
     }
 
     public RigidTransform(Transform from, Transform to) {
@@ -60,8 +159,8 @@ public static class SteamVR_Utils {
       m[2, 2] = pose.m10;
       m[2, 3] = -pose.m11;
 
-      pos = m.GetPosition();
-      rot = m.GetRotation();
+      this.pos = m.GetPosition();
+      this.rot = m.GetRotation();
     }
 
     public RigidTransform(HmdMatrix44_t pose) {
@@ -87,8 +186,8 @@ public static class SteamVR_Utils {
       m[3, 2] = -pose.m14;
       m[3, 3] = pose.m15;
 
-      pos = m.GetPosition();
-      rot = m.GetRotation();
+      this.pos = m.GetPosition();
+      this.rot = m.GetRotation();
     }
 
     public HmdMatrix44_t ToHmdMatrix44() {
@@ -188,7 +287,7 @@ public static class SteamVR_Utils {
     }
 
     public Vector3 TransformPoint(Vector3 point) {
-      return pos + rot * point;
+      return pos + (rot * point);
     }
 
     public static Vector3 operator *(RigidTransform t, Vector3 v) {
@@ -200,128 +299,25 @@ public static class SteamVR_Utils {
     }
 
     public void Interpolate(RigidTransform to, float t) {
-      pos = Lerp(pos, to.pos, t);
-      rot = Slerp(rot, to.rot, t);
+      pos = SteamVR_Utils.Lerp(pos, to.pos, t);
+      rot = SteamVR_Utils.Slerp(rot, to.rot, t);
     }
   }
 
   public delegate object SystemFn(CVRSystem system, params object[] args);
 
-  // this version does not clamp [0..1]
-  public static Quaternion Slerp(Quaternion A, Quaternion B, float t) {
-    var cosom = Mathf.Clamp(A.x * B.x + A.y * B.y + A.z * B.z + A.w * B.w, -1.0f, 1.0f);
-    if (cosom < 0.0f) {
-      B = new Quaternion(-B.x, -B.y, -B.z, -B.w);
-      cosom = -cosom;
-    }
-
-    float sclp, sclq;
-    if (1.0f - cosom > 0.0001f) {
-      var omega = Mathf.Acos(cosom);
-      var sinom = Mathf.Sin(omega);
-      sclp = Mathf.Sin((1.0f - t) * omega) / sinom;
-      sclq = Mathf.Sin(t * omega) / sinom;
-    } else {
-      // "from" and "to" very close, so do linear interp
-      sclp = 1.0f - t;
-      sclq = t;
-    }
-
-    return new Quaternion(
-      sclp * A.x + sclq * B.x,
-      sclp * A.y + sclq * B.y,
-      sclp * A.z + sclq * B.z,
-      sclp * A.w + sclq * B.w);
-  }
-
-  public static Vector3 Lerp(Vector3 A, Vector3 B, float t) {
-    return new Vector3(
-      Lerp(A.x, B.x, t),
-      Lerp(A.y, B.y, t),
-      Lerp(A.z, B.z, t));
-  }
-
-  public static float Lerp(float A, float B, float t) {
-    return A + (B - A) * t;
-  }
-
-  public static double Lerp(double A, double B, double t) {
-    return A + (B - A) * t;
-  }
-
-  public static float InverseLerp(Vector3 A, Vector3 B, Vector3 result) {
-    return Vector3.Dot(result - A, B - A);
-  }
-
-  public static float InverseLerp(float A, float B, float result) {
-    return (result - A) / (B - A);
-  }
-
-  public static double InverseLerp(double A, double B, double result) {
-    return (result - A) / (B - A);
-  }
-
-  public static float Saturate(float A) {
-    return A < 0 ? 0 : A > 1 ? 1 : A;
-  }
-
-  public static Vector2 Saturate(Vector2 A) {
-    return new Vector2(Saturate(A.x), Saturate(A.y));
-  }
-
-  public static float Abs(float A) {
-    return A < 0 ? -A : A;
-  }
-
-  public static Vector2 Abs(Vector2 A) {
-    return new Vector2(Abs(A.x), Abs(A.y));
-  }
-
-  private static float _copysign(float sizeval, float signval) {
-    return Mathf.Sign(signval) == 1 ? Mathf.Abs(sizeval) : -Mathf.Abs(sizeval);
-  }
-
-  public static Quaternion GetRotation(this Matrix4x4 matrix) {
-    Quaternion q = new Quaternion();
-    q.w = Mathf.Sqrt(Mathf.Max(0, 1 + matrix.m00 + matrix.m11 + matrix.m22)) / 2;
-    q.x = Mathf.Sqrt(Mathf.Max(0, 1 + matrix.m00 - matrix.m11 - matrix.m22)) / 2;
-    q.y = Mathf.Sqrt(Mathf.Max(0, 1 - matrix.m00 + matrix.m11 - matrix.m22)) / 2;
-    q.z = Mathf.Sqrt(Mathf.Max(0, 1 - matrix.m00 - matrix.m11 + matrix.m22)) / 2;
-    q.x = _copysign(q.x, matrix.m21 - matrix.m12);
-    q.y = _copysign(q.y, matrix.m02 - matrix.m20);
-    q.z = _copysign(q.z, matrix.m10 - matrix.m01);
-    return q;
-  }
-
-  public static Vector3 GetPosition(this Matrix4x4 matrix) {
-    var x = matrix.m03;
-    var y = matrix.m13;
-    var z = matrix.m23;
-
-    return new Vector3(x, y, z);
-  }
-
-  public static Vector3 GetScale(this Matrix4x4 m) {
-    var x = Mathf.Sqrt(m.m00 * m.m00 + m.m01 * m.m01 + m.m02 * m.m02);
-    var y = Mathf.Sqrt(m.m10 * m.m10 + m.m11 * m.m11 + m.m12 * m.m12);
-    var z = Mathf.Sqrt(m.m20 * m.m20 + m.m21 * m.m21 + m.m22 * m.m22);
-
-    return new Vector3(x, y, z);
-  }
-
   public static object CallSystemFn(SystemFn fn, params object[] args) {
-    var initOpenVR = !SteamVR.active && !SteamVR.usingNativeSupport;
+    var initOpenVR = (!SteamVR.active && !SteamVR.usingNativeSupport);
     if (initOpenVR) {
       var error = EVRInitError.None;
       OpenVR.Init(ref error, EVRApplicationType.VRApplication_Other);
     }
 
     var system = OpenVR.System;
-    var result = system != null ? fn(system, args) : null;
+    var result = (system != null) ? fn(system, args) : null;
 
-    if (initOpenVR) {
+    if (initOpenVR)
       OpenVR.Shutdown();
-    }
 
     return result;
   }
@@ -335,7 +331,7 @@ public static class SteamVR_Utils {
 
     var texture = new Texture2D(width, height * 2, TextureFormat.ARGB32, false);
 
-    var timer = new Stopwatch();
+    var timer = new System.Diagnostics.Stopwatch();
 
     Camera tempCamera = null;
 
@@ -343,9 +339,8 @@ public static class SteamVR_Utils {
 
     var camera = target.GetComponent<Camera>();
     if (camera == null) {
-      if (tempCamera == null) {
+      if (tempCamera == null)
         tempCamera = new GameObject().AddComponent<Camera>();
-      }
       camera = tempCamera;
     }
 
@@ -405,7 +400,7 @@ public static class SteamVR_Utils {
     // top and bottom sections, sweeping horizontally around the sphere,
     // alternating left and right eyes.
     for (int v = 0; v < vTotal; v++) {
-      var pitch = 90.0f - v * dv - dvHalf;
+      var pitch = 90.0f - (v * dv) - dvHalf;
       var uTotal = width / targetTexture.width;
       var du = 360.0f / uTotal; // horizontal degrees per segment
       var duHalf = du / 2.0f;
@@ -420,7 +415,7 @@ public static class SteamVR_Utils {
         }
 
         for (int u = 0; u < uTotal; u++) {
-          var yaw = -180.0f + u * du + duHalf;
+          var yaw = -180.0f + (u * du) + duHalf;
 
           var uTarget = u * width / uTotal;
 
@@ -444,11 +439,11 @@ public static class SteamVR_Utils {
             var N = direction * Vector3.forward;
 
             // horizontal span of this section in degrees
-            var phi0 = yaw - du / 2;
+            var phi0 = yaw - (du / 2);
             var phi1 = phi0 + du;
 
             // vertical span of this section in degrees
-            var theta0 = pitch + dv / 2;
+            var theta0 = pitch + (dv / 2);
             var theta1 = theta0 - dv;
 
             var midPhi = (phi0 + phi1) / 2;
@@ -496,8 +491,8 @@ public static class SteamVR_Utils {
           }
 
           // Update progress
-          var progress = (v * (uTotal * 2.0f) + u + i * uTotal) /
-                         (vTotal * (uTotal * 2.0f));
+          var progress = (float) (v * (uTotal * 2.0f) + u + i * uTotal) /
+                         (float) (vTotal * (uTotal * 2.0f));
           OpenVR.Screenshots.UpdateScreenshotProgress(screenshotHandle, progress);
         }
       }
@@ -513,11 +508,11 @@ public static class SteamVR_Utils {
 
     // Preview
     previewTexture.Apply();
-    File.WriteAllBytes(previewFilename, previewTexture.EncodeToPNG());
+    System.IO.File.WriteAllBytes(previewFilename, previewTexture.EncodeToPNG());
 
     // VR
     texture.Apply();
-    File.WriteAllBytes(VRFilename, texture.EncodeToPNG());
+    System.IO.File.WriteAllBytes(VRFilename, texture.EncodeToPNG());
 
     // Cleanup.
     if (camera != tempCamera) {

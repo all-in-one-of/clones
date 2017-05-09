@@ -5,6 +5,7 @@
 //=============================================================================
 
 using UnityEngine;
+using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -13,7 +14,7 @@ namespace Valve.VR.InteractionSystem {
     private ParticleSystem particles;
 
     //-------------------------------------------------
-    private void Awake() {
+    void Awake() {
       particles = GetComponent<ParticleSystem>();
 
       InvokeRepeating("CheckParticleSystem", 0.1f, 0.1f);
@@ -22,7 +23,7 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     private void CheckParticleSystem() {
       if (!particles.IsAlive()) {
-        Destroy(gameObject);
+        Destroy(this.gameObject);
       }
     }
   }

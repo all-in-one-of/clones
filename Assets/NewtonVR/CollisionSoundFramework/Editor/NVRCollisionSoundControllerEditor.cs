@@ -1,26 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
+using System.Text;
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using NewtonVR;
+using System.Net;
+using System.Net.Security;
+using System.IO;
+using System.ComponentModel;
+using System.Threading;
+using System.Security.Cryptography.X509Certificates;
+using UnityEditor.AnimatedValues;
 using UnityEditor.SceneManagement;
-using UnityEngine;
 using UnityEngine.SceneManagement;
-using Random = UnityEngine.Random;
 
 namespace NewtonVR {
   [CustomEditor(typeof(NVRCollisionSoundController))]
   public class NVRCollisionSoundControllerEditor : Editor {
     private const string FMODDefine = "NVR_FMOD";
 
-    private static bool hasReloaded;
-    private static bool waitingForReload;
+    private static bool hasReloaded = false;
+    private static bool waitingForReload = false;
     private static DateTime startedWaitingForReload;
 
-    private static bool hasFMODSDK;
+    private static bool hasFMODSDK = false;
     //private static bool hasFMODDefine = false;
 
-    private static string progressBarMessage;
+    private static string progressBarMessage = null;
 
     [DidReloadScripts]
     private static void DidReloadScripts() {
@@ -79,8 +88,8 @@ namespace NewtonVR {
         progressBarMessage = newMessage;
       }
 
-      EditorUtility.DisplayProgressBar("NewtonVR", progressBarMessage, Random.value);
-      // :D
+      EditorUtility.DisplayProgressBar("NewtonVR", progressBarMessage, UnityEngine.Random.value);
+        // :D
     }
 
     private static void ClearProgressBar() {
@@ -102,19 +111,18 @@ namespace NewtonVR {
     public override void OnInspectorGUI() {
       NVRCollisionSoundController controller = (NVRCollisionSoundController) target;
 
-      if (hasReloaded == false) {
+      if (hasReloaded == false)
         DidReloadScripts();
-      }
 
-      if (waitingForReload) {
+      if (waitingForReload)
         HasWaitedLongEnough();
-      }
 
       bool installFMOD = false;
       bool isFMODEnabled = controller.SoundEngine == NVRCollisionSoundProviders.FMOD;
       bool isUnityEnabled = controller.SoundEngine == NVRCollisionSoundProviders.Unity;
       bool enableFMOD = controller.SoundEngine == NVRCollisionSoundProviders.FMOD;
       bool enableUnity = controller.SoundEngine == NVRCollisionSoundProviders.Unity;
+
 
       EditorGUILayout.BeginHorizontal();
       if (hasFMODSDK == false) {
@@ -131,31 +139,36 @@ namespace NewtonVR {
       enableUnity = EditorGUILayout.Toggle("Use Unity Sound", enableUnity);
       EditorGUILayout.EndHorizontal();
 
+
       GUILayout.Space(10);
 
-      if (enableFMOD == false && isFMODEnabled) {
+
+      if (enableFMOD == false && isFMODEnabled == true) {
         RemoveDefine(FMODDefine);
         controller.SoundEngine = NVRCollisionSoundProviders.None;
-      } else if (enableFMOD && isFMODEnabled == false) {
+      } else if (enableFMOD == true && isFMODEnabled == false) {
         AddDefine(FMODDefine);
         controller.SoundEngine = NVRCollisionSoundProviders.FMOD;
       }
 
-      if (enableUnity == false && isUnityEnabled) {
+
+      if (enableUnity == false && isUnityEnabled == true) {
         RemoveDefine(FMODDefine);
         controller.SoundEngine = NVRCollisionSoundProviders.None;
-      } else if (enableUnity && isUnityEnabled == false) {
+      } else if (enableUnity == true && isUnityEnabled == false) {
         RemoveDefine(FMODDefine);
         controller.SoundEngine = NVRCollisionSoundProviders.Unity;
       }
 
-      if (installFMOD) {
+
+      if (installFMOD == true) {
         Application.OpenURL("http://www.fmod.org/download/");
       }
 
+
       DrawDefaultInspector();
 
-      if (waitingForReload || string.IsNullOrEmpty(progressBarMessage) == false) {
+      if (waitingForReload == true || string.IsNullOrEmpty(progressBarMessage) == false) {
         DisplayProgressBar();
       }
 

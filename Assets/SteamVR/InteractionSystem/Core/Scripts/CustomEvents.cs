@@ -4,19 +4,19 @@
 //
 //=============================================================================
 
-using System;
 using UnityEngine.Events;
+using System;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public static class CustomEvents {
     //-------------------------------------------------
-    [Serializable]
+    [System.Serializable]
     public class UnityEventSingleFloat : UnityEvent<float> {
     }
 
     //-------------------------------------------------
-    [Serializable]
+    [System.Serializable]
     public class UnityEventHand : UnityEvent<Hand> {
     }
   }

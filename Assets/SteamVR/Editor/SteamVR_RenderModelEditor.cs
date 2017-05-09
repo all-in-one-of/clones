@@ -4,18 +4,15 @@
 //
 //=============================================================================
 
-using System.Collections.Generic;
-using System.Text;
-using UnityEditor;
 using UnityEngine;
+using UnityEditor;
+using System.Text;
+using System.Collections.Generic;
+using Valve.VR;
 
-[CustomEditor(typeof(SteamVR_RenderModel))]
-[CanEditMultipleObjects]
+[CustomEditor(typeof(SteamVR_RenderModel)), CanEditMultipleObjects]
 public class SteamVR_RenderModelEditor : Editor {
-  private static string[] renderModelNames;
-  private int renderModelIndex;
-
-  private SerializedProperty script,
+  SerializedProperty script,
     index,
     modelOverride,
     shader,
@@ -23,7 +20,10 @@ public class SteamVR_RenderModelEditor : Editor {
     createComponents,
     updateDynamically;
 
-  private void OnEnable() {
+  static string[] renderModelNames;
+  int renderModelIndex;
+
+  void OnEnable() {
     script = serializedObject.FindProperty("m_Script");
     index = serializedObject.FindProperty("index");
     modelOverride = serializedObject.FindProperty("modelOverride");
@@ -39,15 +39,16 @@ public class SteamVR_RenderModelEditor : Editor {
 
     // Update renderModelIndex based on current modelOverride value.
     if (modelOverride.stringValue != "") {
-      for (int i = 0; i < renderModelNames.Length; i++)
+      for (int i = 0; i < renderModelNames.Length; i++) {
         if (modelOverride.stringValue == renderModelNames[i]) {
           renderModelIndex = i;
           break;
         }
+      }
     }
   }
 
-  private static string[] LoadRenderModelNames() {
+  static string[] LoadRenderModelNames() {
     var results = new List<string>();
     results.Add("None");
 
@@ -58,9 +59,8 @@ public class SteamVR_RenderModelEditor : Editor {
         for (uint i = 0; i < count; i++) {
           var buffer = new StringBuilder();
           var requiredSize = renderModels.GetRenderModelName(i, buffer, 0);
-          if (requiredSize == 0) {
+          if (requiredSize == 0)
             continue;
-          }
 
           buffer.EnsureCapacity((int) requiredSize);
           renderModels.GetRenderModelName(i, buffer, requiredSize);
@@ -84,7 +84,7 @@ public class SteamVR_RenderModelEditor : Editor {
     var selected = EditorGUILayout.Popup(renderModelIndex, renderModelNames);
     if (selected != renderModelIndex) {
       renderModelIndex = selected;
-      modelOverride.stringValue = selected > 0 ? renderModelNames[selected] : "";
+      modelOverride.stringValue = (selected > 0) ? renderModelNames[selected] : "";
     }
     GUILayout.EndHorizontal();
 
