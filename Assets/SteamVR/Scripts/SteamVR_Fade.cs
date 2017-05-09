@@ -25,24 +25,25 @@ using Valve.VR;
 
 public class SteamVR_Fade : MonoBehaviour {
   private Color currentColor = new Color(0, 0, 0, 0);
-    // default starting color: black and fully transparent
+  // default starting color: black and fully transparent
 
   private Color targetColor = new Color(0, 0, 0, 0);
-    // default target color: black and fully transparent
+  // default target color: black and fully transparent
 
   private Color deltaColor = new Color(0, 0, 0, 0);
-    // the delta-color is basically the "speed / second" at which the current color should change
+  // the delta-color is basically the "speed / second" at which the current color should change
 
-  private bool fadeOverlay = false;
+  private readonly bool fadeOverlay = false;
 
-  static public void Start(Color newColor, float duration, bool fadeOverlay = false) {
+  public static void Start(Color newColor, float duration, bool fadeOverlay = false) {
     SteamVR_Events.Fade.Send(newColor, duration, fadeOverlay);
   }
 
-  static public void View(Color newColor, float duration) {
+  public static void View(Color newColor, float duration) {
     var compositor = OpenVR.Compositor;
-    if (compositor != null)
+    if (compositor != null) {
       compositor.FadeToColor(duration, newColor.r, newColor.g, newColor.b, newColor.a, false);
+    }
   }
 
 #if TEST_FADE_VIEW
@@ -65,10 +66,10 @@ public class SteamVR_Fade : MonoBehaviour {
     }
   }
 
-  static Material fadeMaterial = null;
-  static int fadeMaterialColorID = -1;
+  private static Material fadeMaterial;
+  private static int fadeMaterialColorID = -1;
 
-  void OnEnable() {
+  private void OnEnable() {
     if (fadeMaterial == null) {
       fadeMaterial = new Material(Shader.Find("Custom/SteamVR_Fade"));
       fadeMaterialColorID = Shader.PropertyToID("fadeColor");
@@ -78,11 +79,11 @@ public class SteamVR_Fade : MonoBehaviour {
     SteamVR_Events.FadeReady.Send();
   }
 
-  void OnDisable() {
+  private void OnDisable() {
     SteamVR_Events.Fade.Remove(OnStartFade);
   }
 
-  void OnPostRender() {
+  private void OnPostRender() {
     if (currentColor != targetColor) {
       // if the difference between the current alpha and the desired alpha is smaller than delta-alpha * deltaTime, then we're pretty much done fading:
       if (Mathf.Abs(currentColor.a - targetColor.a) < Mathf.Abs(deltaColor.a) * Time.deltaTime) {

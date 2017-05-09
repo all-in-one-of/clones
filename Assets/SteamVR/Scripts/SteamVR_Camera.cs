@@ -4,14 +4,17 @@
 //
 //=============================================================================
 
-using UnityEngine;
 using System.Collections;
 using System.Reflection;
-using Valve.VR;
+using UnityEngine;
+using UnityEngine.VR;
 
 [RequireComponent(typeof(Camera))]
 public class SteamVR_Camera : MonoBehaviour {
+  [SerializeField] private Transform _ears;
   [SerializeField] private Transform _head;
+
+  public bool wireframe = false;
 
   public Transform head {
     get { return _head; }
@@ -27,30 +30,26 @@ public class SteamVR_Camera : MonoBehaviour {
 
   public new Camera camera { get; private set; }
 
-  [SerializeField] private Transform _ears;
-
   public Transform ears {
     get { return _ears; }
+  }
+
+  public static float sceneResolutionScale {
+    get { return VRSettings.renderScale; }
+    set { VRSettings.renderScale = value; }
   }
 
   public Ray GetRay() {
     return new Ray(_head.position, _head.forward);
   }
 
-  public bool wireframe = false;
-
-  static public float sceneResolutionScale {
-    get { return UnityEngine.VR.VRSettings.renderScale; }
-    set { UnityEngine.VR.VRSettings.renderScale = value; }
-  }
-
   #region Enable / Disable
 
-  void OnDisable() {
+  private void OnDisable() {
     SteamVR_Render.Remove(this);
   }
 
-  void OnEnable() {
+  private void OnEnable() {
     // Bail if no hmd is connected
     var vr = SteamVR.instance;
     if (vr == null) {
@@ -85,12 +84,14 @@ public class SteamVR_Camera : MonoBehaviour {
 
     if (ears == null) {
       var e = transform.GetComponentInChildren<SteamVR_Ears>();
-      if (e != null)
+      if (e != null) {
         _ears = e.transform;
+      }
     }
 
-    if (ears != null)
+    if (ears != null) {
       ears.GetComponent<SteamVR_Ears>().vrcam = this;
+    }
 
     SteamVR_Render.Add(this);
   }
@@ -99,12 +100,12 @@ public class SteamVR_Camera : MonoBehaviour {
 
   #region Functionality to ensure SteamVR_Camera component is always the last component on an object
 
-  void Awake() {
+  private void Awake() {
     camera = GetComponent<Camera>(); // cached to avoid runtime lookup
     ForceLast();
   }
 
-  static Hashtable values;
+  private static Hashtable values;
 
   public void ForceLast() {
     if (values != null) {
@@ -134,8 +135,9 @@ public class SteamVR_Camera : MonoBehaviour {
         var fields =
           GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
         foreach (var f in fields)
-          if (f.IsPublic || f.IsDefined(typeof(SerializeField), true))
+          if (f.IsPublic || f.IsDefined(typeof(SerializeField), true)) {
             values[f] = f.GetValue(this);
+          }
 
         var go = gameObject;
         DestroyImmediate(this);
@@ -153,15 +155,13 @@ public class SteamVR_Camera : MonoBehaviour {
     get { return head != null && transform.parent == head; }
   }
 #endif
-  const string eyeSuffix = " (eye)";
-  const string earsSuffix = " (ears)";
-  const string headSuffix = " (head)";
-  const string originSuffix = " (origin)";
+  private const string eyeSuffix = " (eye)";
+  private const string earsSuffix = " (ears)";
+  private const string headSuffix = " (head)";
+  private const string originSuffix = " (origin)";
 
   public string baseName {
-    get {
-      return name.EndsWith(eyeSuffix) ? name.Substring(0, name.Length - eyeSuffix.Length) : name;
-    }
+    get { return name.EndsWith(eyeSuffix) ? name.Substring(0, name.Length - eyeSuffix.Length) : name; }
   }
 
   // Object hierarchy creation to make it easy to parent other objects appropriately,
@@ -211,8 +211,9 @@ public class SteamVR_Camera : MonoBehaviour {
       }
     }
 
-    if (!name.EndsWith(eyeSuffix))
+    if (!name.EndsWith(eyeSuffix)) {
       name += eyeSuffix;
+    }
   }
 
   public void Collapse() {
@@ -255,8 +256,9 @@ public class SteamVR_Camera : MonoBehaviour {
     DestroyImmediate(head.gameObject);
     _head = null;
 
-    if (name.EndsWith(eyeSuffix))
+    if (name.EndsWith(eyeSuffix)) {
       name = name.Substring(0, name.Length - eyeSuffix.Length);
+    }
   }
 
   #endregion

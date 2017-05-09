@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 #if NVR_FMOD
 using FMOD.Studio;
@@ -85,7 +83,6 @@ namespace NewtonVR {
 
     public override void Play(NVRCollisionSoundMaterials material, Vector3 position,
                               float impactVolume) {
-      return;
     }
   }
 }

@@ -4,9 +4,9 @@
 //
 //=============================================================================
 
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -16,93 +16,100 @@ namespace Valve.VR.InteractionSystem {
       XAxis,
       YAxis,
       ZAxis
-    };
+    }
 
     [Tooltip("The axis around which the circular drive will rotate in local space")] public Axis_t
       axisOfRotation = Axis_t.XAxis;
 
     [Tooltip(
       "Child GameObject which has the Collider component to initiate interaction, only needs to be set if there is more than one Collider child"
-    )] public Collider childCollider = null;
+    )] public Collider childCollider;
+
+    private GameObject[] dbgHandObjects;
+    private int dbgObjectCount;
+    private int dbgObjectIndex;
+    private GameObject dbgObjectsParent;
 
     [Tooltip(
-      "A LinearMapping component to drive, if not specified one will be dynamically added to this GameObject"
-    )] public LinearMapping linearMapping;
+      "If debugPath is true, this is the maximum number of GameObjects to create to draw the path")] public int
+      dbgPathLimit = 50;
 
-    [Tooltip(
-      "If true, the drive will stay manipulating as long as the button is held down, if false, it will stop if the controller moves out of the collider"
-    )] public bool hoverLock = false;
+    private GameObject[] dbgProjObjects;
 
-    [HeaderAttribute("Limited Rotation")] [Tooltip(
-      "If true, the rotation will be limited to [minAngle, maxAngle], if false, the rotation is unlimited"
-    )] public bool limited = false;
-
-    public Vector2 frozenDistanceMinMaxThreshold = new Vector2(0.1f, 0.2f);
-    public UnityEvent onFrozenDistanceThreshold;
-
-    [HeaderAttribute("Limited Rotation Min")] [Tooltip("If limited is true, the specifies the lower limit, otherwise value is unused")] public
-      float minAngle = -45.0f;
-
-    [Tooltip("If limited, set whether drive will freeze its angle when the min angle is reached")] public bool freezeOnMin = false;
-    [Tooltip("If limited, event invoked when minAngle is reached")] public UnityEvent onMinAngle;
-
-    [HeaderAttribute("Limited Rotation Max")] [Tooltip("If limited is true, the specifies the upper limit, otherwise value is unused")] public
-      float maxAngle = 45.0f;
-
-    [Tooltip("If limited, set whether drive will freeze its angle when the max angle is reached")] public bool freezeOnMax = false;
-    [Tooltip("If limited, event invoked when maxAngle is reached")] public UnityEvent onMaxAngle;
-
-    [Tooltip(
-      "If limited is true, this forces the starting angle to be startAngle, clamped to [minAngle, maxAngle]"
-    )] public bool forceStart = false;
-
-    [Tooltip(
-      "If limited is true and forceStart is true, the starting angle will be this, clamped to [minAngle, maxAngle]"
-    )] public float startAngle = 0.0f;
-
-    [Tooltip(
-      "If true, the transform of the GameObject this component is on will be rotated accordingly")] public bool rotateGameObject = true;
-
-    [Tooltip("If true, the path of the Hand (red) and the projected value (green) will be drawn")] public bool debugPath = false;
-
-    [Tooltip(
-      "If debugPath is true, this is the maximum number of GameObjects to create to draw the path")] public int dbgPathLimit = 50;
+    [Tooltip("If true, the path of the Hand (red) and the projected value (green) will be drawn")] public bool debugPath
+      = false;
 
     [Tooltip(
       "If not null, the TextMesh will display the linear value and the angular value of this circular drive"
     )] public TextMesh debugText = null;
 
+    private bool driving;
+
+    [Tooltip(
+      "If limited is true, this forces the starting angle to be startAngle, clamped to [minAngle, maxAngle]"
+    )] public bool forceStart = false;
+
+    [Tooltip("If limited, set whether drive will freeze its angle when the max angle is reached")] public bool
+      freezeOnMax = false;
+
+    [Tooltip("If limited, set whether drive will freeze its angle when the min angle is reached")] public bool
+      freezeOnMin = false;
+
+    private bool frozen;
+    private float frozenAngle;
+
+    public Vector2 frozenDistanceMinMaxThreshold = new Vector2(0.1f, 0.2f);
+    private Vector3 frozenHandWorldPos = new Vector3(0.0f, 0.0f, 0.0f);
+    private Vector2 frozenSqDistanceMinMaxThreshold = new Vector2(0.0f, 0.0f);
+    private Color green = new Color(0.0f, 1.0f, 0.0f);
+
+    private Hand handHoverLocked;
+
+    [Tooltip(
+      "If true, the drive will stay manipulating as long as the button is held down, if false, it will stop if the controller moves out of the collider"
+    )] public bool hoverLock = false;
+
+    private Vector3 lastHandProjected;
+
+    [Header("Limited Rotation")] [Tooltip(
+      "If true, the rotation will be limited to [minAngle, maxAngle], if false, the rotation is unlimited"
+    )] public bool limited = false;
+
+    [Tooltip(
+      "A LinearMapping component to drive, if not specified one will be dynamically added to this GameObject"
+    )] public LinearMapping linearMapping;
+
+    private Vector3 localPlaneNormal = new Vector3(1.0f, 0.0f, 0.0f);
+
+    [Header("Limited Rotation Max")] [Tooltip("If limited is true, the specifies the upper limit, otherwise value is unused")] public
+      float maxAngle = 45.0f;
+
+    [Header("Limited Rotation Min")] [Tooltip("If limited is true, the specifies the lower limit, otherwise value is unused")] public
+      float minAngle = -45.0f;
+
+    // If the drive is limited as is at min/max, angles greater than this are ignored 
+    private readonly float minMaxAngularThreshold = 1.0f;
+    public UnityEvent onFrozenDistanceThreshold;
+    [Tooltip("If limited, event invoked when maxAngle is reached")] public UnityEvent onMaxAngle;
+    [Tooltip("If limited, event invoked when minAngle is reached")] public UnityEvent onMinAngle;
+
     [Tooltip(
       "The output angle value of the drive in degrees, unlimited will increase or decrease without bound, take the 360 modulus to find number of rotations"
     )] public float outAngle;
 
+    private Color red = new Color(1.0f, 0.0f, 0.0f);
+
+    [Tooltip(
+      "If true, the transform of the GameObject this component is on will be rotated accordingly")] public bool
+      rotateGameObject = true;
+
     private Quaternion start;
 
+    [Tooltip(
+      "If limited is true and forceStart is true, the starting angle will be this, clamped to [minAngle, maxAngle]"
+    )] public float startAngle = 0.0f;
+
     private Vector3 worldPlaneNormal = new Vector3(1.0f, 0.0f, 0.0f);
-    private Vector3 localPlaneNormal = new Vector3(1.0f, 0.0f, 0.0f);
-
-    private Vector3 lastHandProjected;
-
-    private Color red = new Color(1.0f, 0.0f, 0.0f);
-    private Color green = new Color(0.0f, 1.0f, 0.0f);
-
-    private GameObject[] dbgHandObjects;
-    private GameObject[] dbgProjObjects;
-    private GameObject dbgObjectsParent;
-    private int dbgObjectCount = 0;
-    private int dbgObjectIndex = 0;
-
-    private bool driving = false;
-
-    // If the drive is limited as is at min/max, angles greater than this are ignored 
-    private float minMaxAngularThreshold = 1.0f;
-
-    private bool frozen = false;
-    private float frozenAngle = 0.0f;
-    private Vector3 frozenHandWorldPos = new Vector3(0.0f, 0.0f, 0.0f);
-    private Vector2 frozenSqDistanceMinMaxThreshold = new Vector2(0.0f, 0.0f);
-
-    Hand handHoverLocked = null;
 
     //-------------------------------------------------
     private void Freeze(Hand hand) {
@@ -122,7 +129,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       if (childCollider == null) {
         childCollider = GetComponentInChildren<Collider>();
       }
@@ -167,10 +174,10 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnDisable() {
+    private void OnDisable() {
       if (handHoverLocked) {
         ControllerButtonHints.HideButtonHint(handHoverLocked,
-          Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+          EVRButtonId.k_EButton_SteamVR_Trigger);
         handHoverLocked.HoverUnlock(GetComponent<Interactable>());
         handHoverLocked = null;
       }
@@ -193,12 +200,12 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     private void OnHandHoverBegin(Hand hand) {
-      ControllerButtonHints.ShowButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+      ControllerButtonHints.ShowButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
     }
 
     //-------------------------------------------------
     private void OnHandHoverEnd(Hand hand) {
-      ControllerButtonHints.HideButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+      ControllerButtonHints.HideButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
 
       if (driving && hand.GetStandardInteractionButton()) {
         StartCoroutine(HapticPulses(hand.controller, 1.0f, 10));
@@ -224,7 +231,7 @@ namespace Valve.VR.InteractionSystem {
         ComputeAngle(hand);
         UpdateAll();
 
-        ControllerButtonHints.HideButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+        ControllerButtonHints.HideButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
       } else if (hand.GetStandardInteractionButtonUp()) {
         // Trigger was just released
         if (hoverLock) {
@@ -253,7 +260,7 @@ namespace Valve.VR.InteractionSystem {
         Debug.Assert(false,
           string.Format(
             "The collider needs to be a minimum distance away from the CircularDrive GameObject {0}",
-            gameObject.ToString()));
+            gameObject));
       }
 
       if (debugPath && dbgPathLimit > 0) {

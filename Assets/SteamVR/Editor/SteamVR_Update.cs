@@ -4,38 +4,44 @@
 //
 //=============================================================================
 
-using UnityEngine;
-using UnityEditor;
 using System.IO;
 using System.Text.RegularExpressions;
+using UnityEditor;
+using UnityEngine;
 
 [InitializeOnLoad]
 public class SteamVR_Update : EditorWindow {
-  const string currentVersion = "1.2.1";
-  const string versionUrl = "http://media.steampowered.com/apps/steamvr/unitypluginversion.txt";
-  const string notesUrl = "http://media.steampowered.com/apps/steamvr/unityplugin-v{0}.txt";
-  const string pluginUrl = "http://u3d.as/content/valve-corporation/steam-vr-plugin";
-  const string doNotShowKey = "SteamVR.DoNotShow.v{0}";
+  private const string currentVersion = "1.2.1";
+  private const string versionUrl = "http://media.steampowered.com/apps/steamvr/unitypluginversion.txt";
+  private const string notesUrl = "http://media.steampowered.com/apps/steamvr/unityplugin-v{0}.txt";
+  private const string pluginUrl = "http://u3d.as/content/valve-corporation/steam-vr-plugin";
+  private const string doNotShowKey = "SteamVR.DoNotShow.v{0}";
 
-  static bool gotVersion = false;
-  static WWW wwwVersion, wwwNotes;
-  static string version, notes;
-  static SteamVR_Update window;
+  private static bool gotVersion;
+  private static WWW wwwVersion, wwwNotes;
+  private static string version, notes;
+  private static SteamVR_Update window;
+
+  private Vector2 scrollPosition;
+  private bool toggleState;
 
   static SteamVR_Update() {
     EditorApplication.update += Update;
   }
 
-  static void Update() {
+  private static void Update() {
     if (!gotVersion) {
-      if (wwwVersion == null)
+      if (wwwVersion == null) {
         wwwVersion = new WWW(versionUrl);
+      }
 
-      if (!wwwVersion.isDone)
+      if (!wwwVersion.isDone) {
         return;
+      }
 
-      if (UrlSuccess(wwwVersion))
+      if (UrlSuccess(wwwVersion)) {
         version = wwwVersion.text;
+      }
 
       wwwVersion = null;
       gotVersion = true;
@@ -51,36 +57,44 @@ public class SteamVR_Update : EditorWindow {
     }
 
     if (wwwNotes != null) {
-      if (!wwwNotes.isDone)
+      if (!wwwNotes.isDone) {
         return;
+      }
 
-      if (UrlSuccess(wwwNotes))
+      if (UrlSuccess(wwwNotes)) {
         notes = wwwNotes.text;
+      }
 
       wwwNotes = null;
 
-      if (notes != "")
+      if (notes != "") {
         window.Repaint();
+      }
     }
 
     EditorApplication.update -= Update;
   }
 
-  static bool UrlSuccess(WWW www) {
-    if (!string.IsNullOrEmpty(www.error))
+  private static bool UrlSuccess(WWW www) {
+    if (!string.IsNullOrEmpty(www.error)) {
       return false;
-    if (Regex.IsMatch(www.text, "404 not found", RegexOptions.IgnoreCase))
+    }
+    if (Regex.IsMatch(www.text, "404 not found", RegexOptions.IgnoreCase)) {
       return false;
+    }
     return true;
   }
 
-  static bool ShouldDisplay() {
-    if (string.IsNullOrEmpty(version))
+  private static bool ShouldDisplay() {
+    if (string.IsNullOrEmpty(version)) {
       return false;
-    if (version == currentVersion)
+    }
+    if (version == currentVersion) {
       return false;
-    if (EditorPrefs.HasKey(string.Format(doNotShowKey, version)))
+    }
+    if (EditorPrefs.HasKey(string.Format(doNotShowKey, version))) {
       return false;
+    }
 
     // parse to see if newer (e.g. 1.0.4 vs 1.0.3)
     var versionSplit = version.Split('.');
@@ -89,24 +103,24 @@ public class SteamVR_Update : EditorWindow {
       int versionValue, currentVersionValue;
       if (int.TryParse(versionSplit[i], out versionValue) &&
           int.TryParse(currentVersionSplit[i], out currentVersionValue)) {
-        if (versionValue > currentVersionValue)
+        if (versionValue > currentVersionValue) {
           return true;
-        if (versionValue < currentVersionValue)
+        }
+        if (versionValue < currentVersionValue) {
           return false;
+        }
       }
     }
 
     // same up to this point, now differentiate based on number of sub values (e.g. 1.0.4.1 vs 1.0.4)
-    if (versionSplit.Length <= currentVersionSplit.Length)
+    if (versionSplit.Length <= currentVersionSplit.Length) {
       return false;
+    }
 
     return true;
   }
 
-  Vector2 scrollPosition;
-  bool toggleState;
-
-  string GetResourcePath() {
+  private string GetResourcePath() {
     var ms = MonoScript.FromScriptableObject(this);
     var path = AssetDatabase.GetAssetPath(ms);
     path = Path.GetDirectoryName(path);
@@ -119,8 +133,9 @@ public class SteamVR_Update : EditorWindow {
     var resourcePath = GetResourcePath();
     var logo = AssetDatabase.LoadAssetAtPath<Texture2D>(resourcePath + "logo.png");
     var rect = GUILayoutUtility.GetRect(position.width, 150, GUI.skin.box);
-    if (logo)
+    if (logo) {
       GUI.DrawTexture(rect, logo, ScaleMode.ScaleToFit);
+    }
 
     scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
@@ -145,10 +160,11 @@ public class SteamVR_Update : EditorWindow {
     if (EditorGUI.EndChangeCheck()) {
       toggleState = doNotShow;
       var key = string.Format(doNotShowKey, version);
-      if (doNotShow)
+      if (doNotShow) {
         EditorPrefs.SetBool(key, true);
-      else
+      } else {
         EditorPrefs.DeleteKey(key);
+      }
     }
   }
 }

@@ -5,92 +5,99 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   [RequireComponent(typeof(AudioSource))]
   public class PlaySound : MonoBehaviour {
-    [Tooltip("List of audio clips to play.")] public AudioClip[] waveFile;
+    private AudioSource audioSource;
+    private AudioClip clip;
 
-    [Tooltip(
-      "Stops the currently playing clip in the audioSource. Otherwise clips will overlap/mix.")] public bool stopOnPlay;
+    [Header("Delay Time")] [Tooltip("Time to offset playback of sound")] public float
+      delayOffsetTime = 0.0f;
 
-    [Tooltip("After the audio clip finishes playing, disable the game object the sound is on.")] public bool disableOnEnd;
+    [Tooltip("After the audio clip finishes playing, disable the game object the sound is on.")] public bool
+      disableOnEnd;
+
     [Tooltip("Loop the sound after the wave file variation has been chosen.")] public bool looping;
+
+    [Tooltip("Percent chance that the wave file will not play")] [Range(0.0f, 1.0f)] public float
+      percentToNotPlay = 0.0f;
+
+    [Tooltip("Maximum pitch that will be used when randomly set.")] [Range(-3.0f, 3.0f)] public
+      float pitchMax = 1.0f;
+
+    [Tooltip("Minimum pitch that will be used when randomly set.")] [Range(-3.0f, 3.0f)] public
+      float pitchMin = 1.0f;
+
+    [Tooltip("Start a wave file playing on awake, but after a delay.")] public bool
+      playOnAwakeWithDelay;
 
     [Tooltip(
       "If the sound is looping and updating it's position every frame, stop the sound at the end of the wav/clip length. "
     )] public bool stopOnEnd;
 
-    [Tooltip("Start a wave file playing on awake, but after a delay.")] public bool
-      playOnAwakeWithDelay;
-
-    [Header("Random Volume")] public bool useRandomVolume = true;
-
-    [Tooltip("Minimum volume that will be used when randomly set.")] [Range(0.0f, 1.0f)] public
-      float volMin = 1.0f;
-
-    [Tooltip("Maximum volume that will be used when randomly set.")] [Range(0.0f, 1.0f)] public
-      float volMax = 1.0f;
-
-    [Header("Random Pitch")] [Tooltip("Use min and max random pitch levels when playing sounds.")] public bool useRandomPitch = true;
-
-    [Tooltip("Minimum pitch that will be used when randomly set.")] [Range(-3.0f, 3.0f)] public
-      float pitchMin = 1.0f;
-
-    [Tooltip("Maximum pitch that will be used when randomly set.")] [Range(-3.0f, 3.0f)] public
-      float pitchMax = 1.0f;
-
-    [Header("Random Time")] [Tooltip("Use Retrigger Time to repeat the sound within a time range")] public bool useRetriggerTime = false;
+    [Tooltip(
+      "Stops the currently playing clip in the audioSource. Otherwise clips will overlap/mix.")] public bool stopOnPlay;
 
     [Tooltip("Inital time before the first repetion starts")] [Range(0.0f, 360.0f)] public float
       timeInitial = 0.0f;
 
-    [Tooltip("Minimum time that will pass before the sound is retriggered")] [Range(0.0f, 360.0f)] public float timeMin = 0.0f;
-
     [Tooltip("Maximum pitch that will be used when randomly set.")] [Range(0.0f, 360.0f)] public
       float timeMax = 0.0f;
+
+    [Tooltip("Minimum time that will pass before the sound is retriggered")] [Range(0.0f, 360.0f)] public float timeMin
+      = 0.0f;
+
+    [Header("Random Pitch")] [Tooltip("Use min and max random pitch levels when playing sounds.")] public bool
+      useRandomPitch = true;
 
     [Header("Random Silence")] [Tooltip("Use Retrigger Time to repeat the sound within a time range")] public bool
       useRandomSilence = false;
 
-    [Tooltip("Percent chance that the wave file will not play")] [Range(0.0f, 1.0f)] public float
-      percentToNotPlay = 0.0f;
+    [Header("Random Volume")] public bool useRandomVolume = true;
 
-    [Header("Delay Time")] [Tooltip("Time to offset playback of sound")] public float
-      delayOffsetTime = 0.0f;
+    [Header("Random Time")] [Tooltip("Use Retrigger Time to repeat the sound within a time range")] public bool
+      useRetriggerTime = false;
 
-    private AudioSource audioSource;
-    private AudioClip clip;
+    [Tooltip("Maximum volume that will be used when randomly set.")] [Range(0.0f, 1.0f)] public
+      float volMax = 1.0f;
+
+    [Tooltip("Minimum volume that will be used when randomly set.")] [Range(0.0f, 1.0f)] public
+      float volMin = 1.0f;
+
+    [Tooltip("List of audio clips to play.")] public AudioClip[] waveFile;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       audioSource = GetComponent<AudioSource>();
       clip = audioSource.clip;
 
       // audio source play on awake is true, just play the PlaySound immediately
       if (audioSource.playOnAwake) {
-        if (useRetriggerTime)
+        if (useRetriggerTime) {
           InvokeRepeating("Play", timeInitial, Random.Range(timeMin, timeMax));
-        else
+        } else {
           Play();
+        }
       }
 
       // if playOnAwake is false, but the playOnAwakeWithDelay on the PlaySound is true, play the sound on away but with a delay
       else if (!audioSource.playOnAwake && playOnAwakeWithDelay) {
         PlayWithDelay(delayOffsetTime);
 
-        if (useRetriggerTime)
+        if (useRetriggerTime) {
           InvokeRepeating("Play", timeInitial, Random.Range(timeMin, timeMax));
+        }
       }
 
       // in the case where both playOnAwake and playOnAwakeWithDelay are both set to true, just to the same as above, play the sound but with a delay
       else if (audioSource.playOnAwake && playOnAwakeWithDelay) {
         PlayWithDelay(delayOffsetTime);
 
-        if (useRetriggerTime)
+        if (useRetriggerTime) {
           InvokeRepeating("Play", timeInitial, Random.Range(timeMin, timeMax));
+        }
       }
     }
 
@@ -100,31 +107,37 @@ namespace Valve.VR.InteractionSystem {
     public void Play() {
       if (looping) {
         PlayLooping();
-      } else PlayOneShotSound();
+      } else {
+        PlayOneShotSound();
+      }
     }
 
     //-------------------------------------------------
     public void PlayWithDelay(float delayTime) {
-      if (looping)
+      if (looping) {
         Invoke("PlayLooping", delayTime);
-      else
+      } else {
         Invoke("PlayOneShotSound", delayTime);
+      }
     }
 
     //-------------------------------------------------
     // Play random wave clip on audiosource as a one shot
     //-------------------------------------------------
     public AudioClip PlayOneShotSound() {
-      if (!this.audioSource.isActiveAndEnabled)
+      if (!audioSource.isActiveAndEnabled) {
         return null;
+      }
 
       SetAudioSource();
-      if (this.stopOnPlay)
+      if (stopOnPlay) {
         audioSource.Stop();
-      if (this.disableOnEnd)
+      }
+      if (disableOnEnd) {
         Invoke("Disable", clip.length);
-      this.audioSource.PlayOneShot(this.clip);
-      return this.clip;
+      }
+      audioSource.PlayOneShot(clip);
+      return clip;
     }
 
     //-------------------------------------------------
@@ -133,16 +146,18 @@ namespace Valve.VR.InteractionSystem {
       SetAudioSource();
 
       // if the audio source has forgotten to be set to looping, set it to looping
-      if (!audioSource.loop)
+      if (!audioSource.loop) {
         audioSource.loop = true;
+      }
 
       // play the clip in the audio source, all the meanwhile updating it's location
-      this.audioSource.Play();
+      audioSource.Play();
 
       // if disable on end is checked, stop playing the wave file after the first loop has finished.
-      if (stopOnEnd)
+      if (stopOnEnd) {
         Invoke("Stop", audioSource.clip.length);
-      return this.clip;
+      }
+      return clip;
     }
 
     //-------------------------------------------------
@@ -157,23 +172,23 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     private void SetAudioSource() {
-      if (this.useRandomVolume) {
+      if (useRandomVolume) {
         //randomly apply a volume between the volume min max
-        this.audioSource.volume = Random.Range(this.volMin, this.volMax);
+        audioSource.volume = Random.Range(volMin, volMax);
 
-        if (useRandomSilence && (Random.Range(0, 1) < percentToNotPlay)) {
-          this.audioSource.volume = 0;
+        if (useRandomSilence && Random.Range(0, 1) < percentToNotPlay) {
+          audioSource.volume = 0;
         }
       }
 
-      if (this.useRandomPitch) {
+      if (useRandomPitch) {
         //randomly apply a pitch between the pitch min max
-        this.audioSource.pitch = Random.Range(this.pitchMin, this.pitchMax);
+        audioSource.pitch = Random.Range(pitchMin, pitchMax);
       }
 
-      if (this.waveFile.Length > 0) {
+      if (waveFile.Length > 0) {
         // randomly assign a wave file from the array into the audioSource clip property
-        audioSource.clip = this.waveFile[Random.Range(0, waveFile.Length)];
+        audioSource.clip = waveFile[Random.Range(0, waveFile.Length)];
         clip = audioSource.clip;
       }
     }

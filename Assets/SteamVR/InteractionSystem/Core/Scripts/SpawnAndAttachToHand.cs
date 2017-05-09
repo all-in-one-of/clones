@@ -5,7 +5,6 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -24,7 +23,7 @@ namespace Valve.VR.InteractionSystem {
         return;
       }
 
-      GameObject prefabObject = Instantiate(prefab) as GameObject;
+      GameObject prefabObject = Instantiate(prefab);
       handToUse.AttachObject(prefabObject);
     }
   }

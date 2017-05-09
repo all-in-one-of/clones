@@ -4,9 +4,9 @@
 //
 //=============================================================================
 
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -14,6 +14,11 @@ namespace Valve.VR.InteractionSystem {
   [RequireComponent(typeof(Rigidbody))]
   [RequireComponent(typeof(VelocityEstimator))]
   public class Throwable : MonoBehaviour {
+    public bool attachEaseIn = false;
+    public string[] attachEaseInAttachmentNames;
+    private Transform attachEaseInTransform;
+    private bool attached;
+
     [EnumFlags] [Tooltip("The flags used to attach this object to the hand.")] public
       Hand.AttachmentFlags attachmentFlags = Hand.AttachmentFlags.ParentToHand |
                                              Hand.AttachmentFlags.DetachFromOtherHand;
@@ -22,32 +27,29 @@ namespace Valve.VR.InteractionSystem {
       "Name of the attachment transform under in the hand's hierarchy which the object should should snap to."
     )] public string attachmentPoint;
 
+    private Vector3 attachPosition;
+    private Quaternion attachRotation;
+    private float attachTime;
+
     [Tooltip(
       "How fast must this object be moving to attach due to a trigger hold instead of a trigger press?"
     )] public float catchSpeedThreshold = 0.0f;
 
+    public UnityEvent onDetachFromHand;
+
+    public UnityEvent onPickUp;
+
     [Tooltip("When detaching the object, should it return to its original parent?")] public bool
       restoreOriginalParent = false;
 
-    public bool attachEaseIn = false;
+    public bool snapAttachEaseInCompleted;
     public AnimationCurve snapAttachEaseInCurve = AnimationCurve.EaseInOut(0.0f, 0.0f, 1.0f, 1.0f);
     public float snapAttachEaseInTime = 0.15f;
-    public string[] attachEaseInAttachmentNames;
 
     private VelocityEstimator velocityEstimator;
-    private bool attached = false;
-    private float attachTime;
-    private Vector3 attachPosition;
-    private Quaternion attachRotation;
-    private Transform attachEaseInTransform;
-
-    public UnityEvent onPickUp;
-    public UnityEvent onDetachFromHand;
-
-    public bool snapAttachEaseInCompleted = false;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       velocityEstimator = GetComponent<VelocityEstimator>();
 
       if (attachEaseIn) {
@@ -76,13 +78,13 @@ namespace Valve.VR.InteractionSystem {
       }
 
       if (showHint) {
-        ControllerButtonHints.ShowButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+        ControllerButtonHints.ShowButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
       }
     }
 
     //-------------------------------------------------
     private void OnHandHoverEnd(Hand hand) {
-      ControllerButtonHints.HideButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+      ControllerButtonHints.HideButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
     }
 
     //-------------------------------------------------
@@ -90,7 +92,7 @@ namespace Valve.VR.InteractionSystem {
       //Trigger got pressed
       if (hand.GetStandardInteractionButtonDown()) {
         hand.AttachObject(gameObject, attachmentFlags, attachmentPoint);
-        ControllerButtonHints.HideButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+        ControllerButtonHints.HideButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
       }
     }
 
@@ -166,7 +168,7 @@ namespace Valve.VR.InteractionSystem {
       // Make the object travel at the release velocity for the amount
       // of time it will take until the next fixed update, at which
       // point Unity physics will take over
-      float timeUntilFixedUpdate = (Time.fixedDeltaTime + Time.fixedTime) - Time.time;
+      float timeUntilFixedUpdate = Time.fixedDeltaTime + Time.fixedTime - Time.time;
       transform.position += timeUntilFixedUpdate * velocity;
       float angle = Mathf.Rad2Deg * angularVelocity.magnitude;
       Vector3 axis = angularVelocity.normalized;

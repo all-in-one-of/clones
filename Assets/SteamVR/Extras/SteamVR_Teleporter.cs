@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class SteamVR_Teleporter : MonoBehaviour {
   public enum TeleportType {
@@ -11,36 +10,38 @@ public class SteamVR_Teleporter : MonoBehaviour {
   public bool teleportOnClick = false;
   public TeleportType teleportType = TeleportType.TeleportTypeUseZeroY;
 
-  Transform reference {
+  private Transform reference {
     get {
       var top = SteamVR_Render.Top();
-      return (top != null) ? top.origin : null;
+      return top != null ? top.origin : null;
     }
   }
 
-  void Start() {
+  private void Start() {
     var trackedController = GetComponent<SteamVR_TrackedController>();
     if (trackedController == null) {
       trackedController = gameObject.AddComponent<SteamVR_TrackedController>();
     }
 
-    trackedController.TriggerClicked += new ClickedEventHandler(DoClick);
+    trackedController.TriggerClicked += DoClick;
 
     if (teleportType == TeleportType.TeleportTypeUseTerrain) {
       // Start the player at the level of the terrain
       var t = reference;
-      if (t != null)
+      if (t != null) {
         t.position = new Vector3(t.position.x, Terrain.activeTerrain.SampleHeight(t.position),
           t.position.z);
+      }
     }
   }
 
-  void DoClick(object sender, ClickedEventArgs e) {
+  private void DoClick(object sender, ClickedEventArgs e) {
     if (teleportOnClick) {
       // First get the current Transform of the the reference space (i.e. the Play Area, e.g. CameraRig prefab)
       var t = reference;
-      if (t == null)
+      if (t == null) {
         return;
+      }
 
       // Get the current Y position of the reference space
       float refY = t.position.y;
@@ -48,7 +49,7 @@ public class SteamVR_Teleporter : MonoBehaviour {
       // Create a plane at the Y position of the Play Area
       // Then create a Ray from the origin of the controller in the direction that the controller is pointing
       Plane plane = new Plane(Vector3.up, -refY);
-      Ray ray = new Ray(this.transform.position, transform.forward);
+      Ray ray = new Ray(transform.position, transform.forward);
 
       // Set defaults
       bool hasGroundTarget = false;
@@ -80,7 +81,7 @@ public class SteamVR_Teleporter : MonoBehaviour {
         // that is between the head's position on the ground and the intersection point on the ground
         // i.e. intersectionPoint - headPosOnGround = translateVector
         // currentReferencePosition + translateVector = finalPosition
-        t.position = t.position + (ray.origin + (ray.direction * dist)) - headPosOnGround;
+        t.position = t.position + (ray.origin + ray.direction * dist) - headPosOnGround;
       }
     }
   }

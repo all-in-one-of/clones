@@ -4,34 +4,42 @@
 //
 //=============================================================================
 
-using UnityEngine;
+using System;
 using System.Collections;
-using Valve.VR;
 using System.IO;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using Valve.VR;
 
 public class SteamVR_LoadLevel : MonoBehaviour {
-  private static SteamVR_LoadLevel _active = null;
+  private static SteamVR_LoadLevel _active;
+  private float alpha;
 
-  public static bool loading {
-    get { return _active != null; }
-  }
+  private AsyncOperation async; // used to track level load progress
 
-  public static float progress {
-    get { return (_active != null && _active.async != null) ? _active.async.progress : 0.0f; }
-  }
+  public bool autoTriggerOnEnable = false;
 
-  public static Texture progressTexture {
-    get { return (_active != null) ? _active.renderTexture : null; }
-  }
+  // Colors to use when dropping to the compositor between levels if no skybox is set.
+  public Color backgroundColor = Color.black;
+  public float fadeInTime = 0.5f;
 
-  // Name of level to load.
-  public string levelName;
+  // Time to fade from current scene to the compositor and back.
+  public float fadeOutTime = 0.5f;
+
+  private float fadeRate = 1.0f;
+
+  // Optional skybox override textures.
+  public Texture front, back, left, right, top, bottom;
+
+  // The command-line args for the internal process to launch.
+  public string internalProcessArgs;
 
   // Name of internal process to launch (instead of levelName).
   public string internalProcessPath;
 
-  // The command-line args for the internal process to launch.
-  public string internalProcessArgs;
+  // Name of level to load.
+  public string levelName;
 
   // If true, call LoadLevelAdditiveAsync instead of LoadLevelAsync.
   public bool loadAdditive;
@@ -42,62 +50,59 @@ public class SteamVR_LoadLevel : MonoBehaviour {
   // Optional logo texture.
   public Texture loadingScreen;
 
-  // Optional progress bar textures.
-  public Texture progressBarEmpty, progressBarFull;
-
-  // Sizes of overlays.
-  public float loadingScreenWidthInMeters = 6.0f;
-  public float progressBarWidthInMeters = 3.0f;
-
   // If specified, the loading screen will be positioned in the player's view this far away.
   public float loadingScreenDistance = 0.0f;
+
+  // Time to fade loading screen in and out (also used for progress bar).
+  public float loadingScreenFadeInTime = 1.0f;
+  public float loadingScreenFadeOutTime = 0.25f;
+
+  private ulong loadingScreenOverlayHandle = OpenVR.k_ulOverlayHandleInvalid;
 
   // Optional overrides for where to display loading screen and progress bar overlays.
   // Otherwise defaults to using this object's transform.
   public Transform loadingScreenTransform, progressBarTransform;
 
-  // Optional skybox override textures.
-  public Texture front, back, left, right, top, bottom;
-
-  // Colors to use when dropping to the compositor between levels if no skybox is set.
-  public Color backgroundColor = Color.black;
-
-  // If false, the background color above gets applied as the foreground color in the compositor.
-  // This does not have any effect when using a skybox instead.
-  public bool showGrid = false;
-
-  // Time to fade from current scene to the compositor and back.
-  public float fadeOutTime = 0.5f;
-  public float fadeInTime = 0.5f;
+  // Sizes of overlays.
+  public float loadingScreenWidthInMeters = 6.0f;
 
   // Additional time to wait after finished loading before we start fading the new scene back in.
   // This is to cover up any initial hitching that takes place right at the start of levels.
   // Most scenes should hopefully not require this.
   public float postLoadSettleTime = 0.0f;
 
-  // Time to fade loading screen in and out (also used for progress bar).
-  public float loadingScreenFadeInTime = 1.0f;
-  public float loadingScreenFadeOutTime = 0.25f;
+  // Optional progress bar textures.
+  public Texture progressBarEmpty, progressBarFull;
+  private ulong progressBarOverlayHandle = OpenVR.k_ulOverlayHandleInvalid;
+  public float progressBarWidthInMeters = 3.0f;
+  private RenderTexture renderTexture; // used to render progress bar
 
-  float fadeRate = 1.0f;
-  float alpha = 0.0f;
+  // If false, the background color above gets applied as the foreground color in the compositor.
+  // This does not have any effect when using a skybox instead.
+  public bool showGrid;
 
-  AsyncOperation async; // used to track level load progress
-  RenderTexture renderTexture; // used to render progress bar
+  public static bool loading {
+    get { return _active != null; }
+  }
 
-  ulong loadingScreenOverlayHandle = OpenVR.k_ulOverlayHandleInvalid;
-  ulong progressBarOverlayHandle = OpenVR.k_ulOverlayHandleInvalid;
+  public static float progress {
+    get { return _active != null && _active.async != null ? _active.async.progress : 0.0f; }
+  }
 
-  public bool autoTriggerOnEnable = false;
+  public static Texture progressTexture {
+    get { return _active != null ? _active.renderTexture : null; }
+  }
 
-  void OnEnable() {
-    if (autoTriggerOnEnable)
+  private void OnEnable() {
+    if (autoTriggerOnEnable) {
       Trigger();
+    }
   }
 
   public void Trigger() {
-    if (!loading && !string.IsNullOrEmpty(levelName))
+    if (!loading && !string.IsNullOrEmpty(levelName)) {
       StartCoroutine("LoadLevel");
+    }
   }
 
   // Helper function to quickly and simply load a level from script.
@@ -113,18 +118,20 @@ public class SteamVR_LoadLevel : MonoBehaviour {
   }
 
   // Updates progress bar.
-  void OnGUI() {
-    if (_active != this)
+  private void OnGUI() {
+    if (_active != this) {
       return;
+    }
 
     // Optionally create an overlay for our progress bar to use, separate from the loading screen.
     if (progressBarEmpty != null && progressBarFull != null) {
-      if (progressBarOverlayHandle == OpenVR.k_ulOverlayHandleInvalid)
+      if (progressBarOverlayHandle == OpenVR.k_ulOverlayHandleInvalid) {
         progressBarOverlayHandle = GetOverlayHandle("progressBar",
           progressBarTransform != null ? progressBarTransform : transform, progressBarWidthInMeters);
+      }
 
       if (progressBarOverlayHandle != OpenVR.k_ulOverlayHandleInvalid) {
-        var progress = (async != null) ? async.progress : 0.0f;
+        var progress = async != null ? async.progress : 0.0f;
 
         // Use the full bar size for everything.
         var w = progressBarFull.width;
@@ -139,8 +146,9 @@ public class SteamVR_LoadLevel : MonoBehaviour {
         var prevActive = RenderTexture.active;
         RenderTexture.active = renderTexture;
 
-        if (Event.current.type == EventType.Repaint)
+        if (Event.current.type == EventType.Repaint) {
           GL.Clear(false, true, Color.clear);
+        }
 
         GUILayout.BeginArea(new Rect(0, 0, w, h));
 
@@ -206,24 +214,27 @@ public class SteamVR_LoadLevel : MonoBehaviour {
   }
 
   // Fade our overlays in/out over time.
-  void Update() {
-    if (_active != this)
+  private void Update() {
+    if (_active != this) {
       return;
+    }
 
     alpha = Mathf.Clamp01(alpha + fadeRate * Time.deltaTime);
 
     var overlay = OpenVR.Overlay;
     if (overlay != null) {
-      if (loadingScreenOverlayHandle != OpenVR.k_ulOverlayHandleInvalid)
+      if (loadingScreenOverlayHandle != OpenVR.k_ulOverlayHandleInvalid) {
         overlay.SetOverlayAlpha(loadingScreenOverlayHandle, alpha);
+      }
 
-      if (progressBarOverlayHandle != OpenVR.k_ulOverlayHandleInvalid)
+      if (progressBarOverlayHandle != OpenVR.k_ulOverlayHandleInvalid) {
         overlay.SetOverlayAlpha(progressBarOverlayHandle, alpha);
+      }
     }
   }
 
   // Corourtine to handle all the steps across loading boundaries.
-  IEnumerator LoadLevel() {
+  private IEnumerator LoadLevel() {
     // Optionally rotate loading screen transform around the camera into view.
     // We assume here that the loading screen is already facing toward the origin,
     // and that the progress bar transform (if any) is a child and will follow along.
@@ -330,32 +341,30 @@ public class SteamVR_LoadLevel : MonoBehaviour {
           workingDirectory);
         Debug.Log("LaunchInternalProcessError: " + error);
 #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
+        EditorApplication.isPlaying = false;
 #else
 				System.Diagnostics.Process.GetCurrentProcess().Kill();
 #endif
       }
     } else {
       var mode = loadAdditive
-        ? UnityEngine.SceneManagement.LoadSceneMode.Additive
-        : UnityEngine.SceneManagement.LoadSceneMode.Single;
+        ? LoadSceneMode.Additive
+        : LoadSceneMode.Single;
       if (loadAsync) {
         Application.backgroundLoadingPriority = ThreadPriority.Low;
-        async = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(levelName, mode);
+        async = SceneManager.LoadSceneAsync(levelName, mode);
 
         // Performing this in a while loop instead seems to help smooth things out.
         //yield return async;
-        while (!async.isDone) {
-          yield return null;
-        }
+        while (!async.isDone) yield return null;
       } else {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(levelName, mode);
+        SceneManager.LoadScene(levelName, mode);
       }
     }
 
     yield return null;
 
-    System.GC.Collect();
+    GC.Collect();
 
     yield return null;
 
@@ -399,10 +408,12 @@ public class SteamVR_LoadLevel : MonoBehaviour {
       yield return null;
 
     if (overlay != null) {
-      if (progressBarOverlayHandle != OpenVR.k_ulOverlayHandleInvalid)
+      if (progressBarOverlayHandle != OpenVR.k_ulOverlayHandleInvalid) {
         overlay.HideOverlay(progressBarOverlayHandle);
-      if (loadingScreenOverlayHandle != OpenVR.k_ulOverlayHandleInvalid)
+      }
+      if (loadingScreenOverlayHandle != OpenVR.k_ulOverlayHandleInvalid) {
         overlay.HideOverlay(loadingScreenOverlayHandle);
+      }
     }
 
     Destroy(gameObject);
@@ -413,18 +424,20 @@ public class SteamVR_LoadLevel : MonoBehaviour {
   }
 
   // Helper to create (or reuse if possible) each of our different overlay types.
-  ulong GetOverlayHandle(string overlayName, Transform transform, float widthInMeters = 1.0f) {
+  private ulong GetOverlayHandle(string overlayName, Transform transform, float widthInMeters = 1.0f) {
     ulong handle = OpenVR.k_ulOverlayHandleInvalid;
 
     var overlay = OpenVR.Overlay;
-    if (overlay == null)
+    if (overlay == null) {
       return handle;
+    }
 
     var key = SteamVR_Overlay.key + "." + overlayName;
 
     var error = overlay.FindOverlay(key, ref handle);
-    if (error != EVROverlayError.None)
+    if (error != EVROverlayError.None) {
       error = overlay.CreateOverlay(key, overlayName, ref handle);
+    }
     if (error == EVROverlayError.None) {
       overlay.ShowOverlay(handle);
       overlay.SetOverlayAlpha(handle, alpha);
@@ -441,7 +454,7 @@ public class SteamVR_LoadLevel : MonoBehaviour {
       }
 
       // Convert from world space to tracking space using the top-most camera.
-      var vrcam = (loadingScreenDistance == 0.0f) ? SteamVR_Render.Top() : null;
+      var vrcam = loadingScreenDistance == 0.0f ? SteamVR_Render.Top() : null;
       if (vrcam != null && vrcam.origin != null) {
         var offset = new SteamVR_Utils.RigidTransform(vrcam.origin, transform);
         offset.pos.x /= vrcam.origin.localScale.x;

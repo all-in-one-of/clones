@@ -1,36 +1,33 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System;
+using UnityEngine;
 
 namespace NewtonVR {
   public class NVRPhysicalController : MonoBehaviour {
+    protected float AttachedPositionMagic = 3000f;
+
+    protected float AttachedRotationMagic = 20f;
+
+    protected Vector3 ClosestHeldPoint;
+    private Collider[] Colliders;
     private NVRHand Hand;
-    public bool State = false;
-    private Rigidbody Rigidbody;
+
+    private readonly Type[] KeepTypes = {typeof(MeshFilter), typeof(Renderer), typeof(Transform), typeof(Rigidbody)};
 
     [HideInInspector] public GameObject PhysicalController;
-    private Collider[] Colliders;
+    private Rigidbody Rigidbody;
+    public bool State;
 
     protected float DropDistance {
       get { return 1f; }
     }
-
-    protected Vector3 ClosestHeldPoint;
-
-    protected float AttachedRotationMagic = 20f;
-    protected float AttachedPositionMagic = 3000f;
-
-    private Type[] KeepTypes = new Type[]
-      {typeof(MeshFilter), typeof(Renderer), typeof(Transform), typeof(Rigidbody)};
 
     public void Initialize(NVRHand trackingHand, bool initialState) {
       Hand = trackingHand;
 
       Hand.gameObject.SetActive(false);
 
-      PhysicalController = GameObject.Instantiate(Hand.gameObject);
+      PhysicalController = Instantiate(Hand.gameObject);
       PhysicalController.name = PhysicalController.name.Replace("(Clone)", " [Physical]");
 
       Hand.gameObject.SetActive(true);
@@ -70,9 +67,7 @@ namespace NewtonVR {
 
       if (trackingHand.Player.AutomaticallySetControllerTransparency) {
         Renderer[] renderers = PhysicalController.GetComponentsInChildren<Renderer>();
-        for (int index = 0; index < renderers.Length; index++) {
-          NVRHelpers.SetOpaque(renderers[index].material);
-        }
+        for (int index = 0; index < renderers.Length; index++) NVRHelpers.SetOpaque(renderers[index].material);
       }
 
       if (initialState == false) {
@@ -88,7 +83,7 @@ namespace NewtonVR {
     }
 
     private bool CheckForDrop() {
-      float distance = Vector3.Distance(Hand.transform.position, this.transform.position);
+      float distance = Vector3.Distance(Hand.transform.position, transform.position);
 
       if (distance > DropDistance) {
         DroppedBecauseOfDistance();
@@ -110,24 +105,25 @@ namespace NewtonVR {
 
       rotationDelta = Hand.transform.rotation *
                       Quaternion.Inverse(PhysicalController.transform.rotation);
-      positionDelta = (Hand.transform.position - PhysicalController.transform.position);
+      positionDelta = Hand.transform.position - PhysicalController.transform.position;
 
       rotationDelta.ToAngleAxis(out angle, out axis);
 
-      if (angle > 180)
+      if (angle > 180) {
         angle -= 360;
+      }
 
       if (angle != 0) {
         Vector3 angularTarget = angle * axis;
-        this.Rigidbody.angularVelocity = angularTarget;
+        Rigidbody.angularVelocity = angularTarget;
       }
 
       Vector3 velocityTarget = positionDelta / Time.deltaTime;
-      this.Rigidbody.velocity = velocityTarget;
+      Rigidbody.velocity = velocityTarget;
     }
 
     protected virtual void FixedUpdate() {
-      if (State == true) {
+      if (State) {
         bool dropped = CheckForDrop();
 
         if (dropped == false) {
@@ -158,7 +154,7 @@ namespace NewtonVR {
     protected void SetupCustomModel() {
       Transform customCollidersTransform = null;
       if (Hand.CustomPhysicalColliders == null) {
-        GameObject customColliders = GameObject.Instantiate(Hand.CustomModel);
+        GameObject customColliders = Instantiate(Hand.CustomModel);
         customColliders.name = "CustomColliders";
         customCollidersTransform = customColliders.transform;
 
@@ -167,13 +163,11 @@ namespace NewtonVR {
         customCollidersTransform.localRotation = Quaternion.identity;
         customCollidersTransform.localScale = Vector3.one;
 
-        foreach (Collider col in customColliders.GetComponentsInChildren<Collider>()) {
-          col.isTrigger = false;
-        }
+        foreach (Collider col in customColliders.GetComponentsInChildren<Collider>()) col.isTrigger = false;
 
         Colliders = customCollidersTransform.GetComponentsInChildren<Collider>();
       } else {
-        GameObject customColliders = GameObject.Instantiate(Hand.CustomPhysicalColliders);
+        GameObject customColliders = Instantiate(Hand.CustomPhysicalColliders);
         customColliders.name = "CustomColliders";
         customCollidersTransform = customColliders.transform;
 

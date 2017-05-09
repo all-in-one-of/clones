@@ -1,30 +1,29 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace NewtonVR {
   public abstract class NVRInteractable : MonoBehaviour {
-    public Rigidbody Rigidbody;
+    public NVRHand AttachedHand;
 
     public bool CanAttach = true;
+    protected Vector3 ClosestHeldPoint;
+
+    protected Collider[] Colliders;
 
     public bool DisableKinematicOnAttach = true;
-    public bool EnableKinematicOnDetach = false;
     public float DropDistance = 1;
 
     public bool EnableGravityOnDetach = true;
-
-    public NVRHand AttachedHand = null;
-
-    protected Collider[] Colliders;
-    protected Vector3 ClosestHeldPoint;
+    public bool EnableKinematicOnDetach = false;
+    public Rigidbody Rigidbody;
 
     public virtual bool IsAttached {
       get { return AttachedHand != null; }
     }
 
     protected virtual void Awake() {
-      if (Rigidbody == null)
-        Rigidbody = this.GetComponent<Rigidbody>();
+      if (Rigidbody == null) {
+        Rigidbody = GetComponent<Rigidbody>();
+      }
 
       if (Rigidbody == null) {
         Debug.LogError("There is no rigidbody attached to this interactable.");
@@ -42,7 +41,7 @@ namespace NewtonVR {
     }
 
     public virtual void UpdateColliders() {
-      Colliders = this.GetComponentsInChildren<Collider>();
+      Colliders = GetComponentsInChildren<Collider>();
       NVRInteractables.Register(this, Colliders);
     }
 
@@ -71,28 +70,29 @@ namespace NewtonVR {
 
     //Remove items that go too high or too low.
     protected virtual void Update() {
-      if (this.transform.position.y > 10000 || this.transform.position.y < -10000) {
-        if (AttachedHand != null)
+      if (transform.position.y > 10000 || transform.position.y < -10000) {
+        if (AttachedHand != null) {
           AttachedHand.EndInteraction(this);
+        }
 
-        Destroy(this.gameObject);
+        Destroy(gameObject);
       }
     }
 
     public virtual void BeginInteraction(NVRHand hand) {
       AttachedHand = hand;
 
-      if (DisableKinematicOnAttach == true) {
+      if (DisableKinematicOnAttach) {
         Rigidbody.isKinematic = false;
       }
     }
 
     public virtual void InteractingUpdate(NVRHand hand) {
-      if (hand.UseButtonUp == true) {
+      if (hand.UseButtonUp) {
         UseButtonUp();
       }
 
-      if (hand.UseButtonDown == true) {
+      if (hand.UseButtonDown) {
         UseButtonDown();
       }
     }
@@ -101,22 +101,24 @@ namespace NewtonVR {
     }
 
     public void ForceDetach() {
-      if (AttachedHand != null)
+      if (AttachedHand != null) {
         AttachedHand.EndInteraction(this);
+      }
 
-      if (AttachedHand != null)
+      if (AttachedHand != null) {
         EndInteraction();
+      }
     }
 
     public virtual void EndInteraction() {
       AttachedHand = null;
       ClosestHeldPoint = Vector3.zero;
 
-      if (EnableKinematicOnDetach == true) {
+      if (EnableKinematicOnDetach) {
         Rigidbody.isKinematic = true;
       }
 
-      if (EnableGravityOnDetach == true) {
+      if (EnableGravityOnDetach) {
         Rigidbody.useGravity = true;
       }
     }

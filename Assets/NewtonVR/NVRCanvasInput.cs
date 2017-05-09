@@ -1,47 +1,45 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace NewtonVR {
   public class NVRCanvasInput : BaseInputModule {
-    public bool GeometryBlocksLaser = true;
-    public LayerMask LayersThatBlockLaser = Physics.AllLayers;
-
-    public Sprite CursorSprite;
-    public Material CursorMaterial;
-    public float NormalCursorScale = 0.05f;
-
-    public bool LaserEnabled = true;
-    public Color LaserColor = Color.blue;
-    public float LaserStartWidth = 0.02f;
-    public float LaserEndWidth = 0.001f;
-
-    public bool OnCanvas;
     public bool CanvasUsed;
 
-    private RectTransform[] Cursors;
-
-    private LineRenderer[] Lasers;
+    private Camera ControllerCamera;
+    private GameObject[] CurrentDragging;
 
     private GameObject[] CurrentPoint;
     private GameObject[] CurrentPressed;
-    private GameObject[] CurrentDragging;
+    public Material CursorMaterial;
 
-    private PointerEventData[] PointEvents;
+    private RectTransform[] Cursors;
 
-    private bool Initialized = false;
+    public Sprite CursorSprite;
+    public bool GeometryBlocksLaser = true;
 
-    private Camera ControllerCamera;
+    private bool Initialized;
+    public Color LaserColor = Color.blue;
+
+    public bool LaserEnabled = true;
+    public float LaserEndWidth = 0.001f;
+
+    private LineRenderer[] Lasers;
+    public float LaserStartWidth = 0.02f;
+    public LayerMask LayersThatBlockLaser = Physics.AllLayers;
+    public float NormalCursorScale = 0.05f;
+
+    public bool OnCanvas;
 
     private NVRPlayer Player;
+
+    private PointerEventData[] PointEvents;
 
     protected override void Start() {
       base.Start();
 
       if (Initialized == false) {
-        Player = this.GetComponent<NVRPlayer>();
+        Player = GetComponent<NVRPlayer>();
 
         ControllerCamera = new GameObject("Controller UI Camera").AddComponent<Camera>();
         ControllerCamera.transform.parent = Player.transform;
@@ -55,7 +53,7 @@ namespace NewtonVR {
 
         for (int index = 0; index < Cursors.Length; index++) {
           GameObject cursor = new GameObject("Cursor for " + Player.Hands[index].gameObject.name);
-          cursor.transform.parent = this.transform;
+          cursor.transform.parent = transform;
           cursor.transform.localPosition = Vector3.zero;
           cursor.transform.localRotation = Quaternion.identity;
 
@@ -72,7 +70,7 @@ namespace NewtonVR {
           image.sprite = CursorSprite;
           image.material = CursorMaterial;
 
-          if (LaserEnabled == true) {
+          if (LaserEnabled) {
             Lasers[index] = cursor.AddComponent<LineRenderer>();
             Lasers[index].material = new Material(Shader.Find("Standard"));
             Lasers[index].material.color = LaserColor;
@@ -82,10 +80,11 @@ namespace NewtonVR {
             Lasers[index].enabled = false;
           }
 
-          if (CursorSprite == null)
+          if (CursorSprite == null) {
             Debug.LogError(
-              "Set CursorSprite on " + this.gameObject.name +
-              " to the sprite you want to use as your cursor.", this.gameObject);
+              "Set CursorSprite on " + gameObject.name +
+              " to the sprite you want to use as your cursor.", gameObject);
+          }
 
           Cursors[index] = cursor.GetComponent<RectTransform>();
         }
@@ -95,10 +94,8 @@ namespace NewtonVR {
         CurrentDragging = new GameObject[Cursors.Length];
         PointEvents = new PointerEventData[Cursors.Length];
 
-        Canvas[] canvases = GameObject.FindObjectsOfType<Canvas>();
-        foreach (Canvas canvas in canvases) {
-          canvas.worldCamera = ControllerCamera;
-        }
+        Canvas[] canvases = FindObjectsOfType<Canvas>();
+        foreach (Canvas canvas in canvases) canvas.worldCamera = ControllerCamera;
 
         Initialized = true;
       }
@@ -107,7 +104,7 @@ namespace NewtonVR {
     // use screen midpoint as locked pointer location, enabling look location to be the "mouse"
     private bool GetLookPointerEventData(int index) {
       if (PointEvents[index] == null) {
-        PointEvents[index] = new PointerEventData(base.eventSystem);
+        PointEvents[index] = new PointerEventData(eventSystem);
       } else {
         PointEvents[index].Reset();
       }
@@ -117,7 +114,7 @@ namespace NewtonVR {
         ControllerCamera.pixelHeight * 0.5f);
       PointEvents[index].scrollDelta = Vector2.zero;
 
-      base.eventSystem.RaycastAll(PointEvents[index], m_RaycastResultCache);
+      eventSystem.RaycastAll(PointEvents[index], m_RaycastResultCache);
       PointEvents[index].pointerCurrentRaycast = FindFirstRaycast(m_RaycastResultCache);
 
       if (PointEvents[index].pointerCurrentRaycast.gameObject != null) {
@@ -148,7 +145,7 @@ namespace NewtonVR {
 
           bool blockedByGeometry = false;
 
-          if (GeometryBlocksLaser == true) {
+          if (GeometryBlocksLaser) {
             blockedByGeometry = Physics.Raycast(origin, direction, distance, LayersThatBlockLaser);
           }
 
@@ -159,9 +156,9 @@ namespace NewtonVR {
             Cursors[index].rotation = draggingPlane.rotation;
             Cursors[index].localScale = Vector3.one * (NormalCursorScale / 100);
 
-            if (LaserEnabled == true) {
+            if (LaserEnabled) {
               Lasers[index].enabled = true;
-              Lasers[index].SetPositions(new Vector3[] {origin, endPoint});
+              Lasers[index].SetPositions(new[] {origin, endPoint});
             }
           }
         }
@@ -172,8 +169,8 @@ namespace NewtonVR {
     }
 
     public void ClearSelection() {
-      if (base.eventSystem.currentSelectedGameObject) {
-        base.eventSystem.SetSelectedGameObject(null);
+      if (eventSystem.currentSelectedGameObject) {
+        eventSystem.SetSelectedGameObject(null);
       }
     }
 
@@ -181,17 +178,18 @@ namespace NewtonVR {
       ClearSelection();
 
       if (ExecuteEvents.GetEventHandler<ISelectHandler>(go)) {
-        base.eventSystem.SetSelectedGameObject(go);
+        eventSystem.SetSelectedGameObject(go);
       }
     }
 
     private bool SendUpdateEventToSelectedObject() {
-      if (base.eventSystem.currentSelectedGameObject == null)
+      if (eventSystem.currentSelectedGameObject == null) {
         return false;
+      }
 
       BaseEventData data = GetBaseEventData();
 
-      ExecuteEvents.Execute(base.eventSystem.currentSelectedGameObject, data,
+      ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data,
         ExecuteEvents.updateSelectedHandler);
 
       return data.used;
@@ -217,7 +215,7 @@ namespace NewtonVR {
       for (int index = 0; index < Cursors.Length; index++) {
         if (Player.Hands[index].gameObject.activeInHierarchy == false ||
             Player.Hands[index].IsCurrentlyTracked == false) {
-          if (Cursors[index].gameObject.activeInHierarchy == true) {
+          if (Cursors[index].gameObject.activeInHierarchy) {
             Cursors[index].gameObject.SetActive(false);
           }
           continue;
@@ -226,18 +224,19 @@ namespace NewtonVR {
         UpdateCameraPosition(index);
 
         bool hit = GetLookPointerEventData(index);
-        if (hit == false)
+        if (hit == false) {
           continue;
+        }
 
         CurrentPoint[index] = PointEvents[index].pointerCurrentRaycast.gameObject;
 
         // handle enter and exit events (highlight)
-        base.HandlePointerExitAndEnter(PointEvents[index], CurrentPoint[index]);
+        HandlePointerExitAndEnter(PointEvents[index], CurrentPoint[index]);
 
         // update cursor
         bool cursorActive = UpdateCursor(index, PointEvents[index]);
 
-        if (Player.Hands[index] != null && cursorActive == true) {
+        if (Player.Hands[index] != null && cursorActive) {
           if (ButtonDown(index)) {
             ClearSelection();
 

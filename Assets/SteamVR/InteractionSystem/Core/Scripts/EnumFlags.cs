@@ -13,8 +13,6 @@ using UnityEditor;
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class EnumFlags : PropertyAttribute {
-    public EnumFlags() {
-    }
   }
 
 #if UNITY_EDITOR

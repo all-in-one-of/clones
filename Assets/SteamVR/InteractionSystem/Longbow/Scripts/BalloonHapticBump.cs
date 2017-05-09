@@ -5,7 +5,6 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -13,7 +12,7 @@ namespace Valve.VR.InteractionSystem {
     public GameObject physParent;
 
     //-------------------------------------------------
-    void OnCollisionEnter(Collision other) {
+    private void OnCollisionEnter(Collision other) {
       Balloon contactBalloon = other.collider.GetComponentInParent<Balloon>();
       if (contactBalloon != null) {
         Hand hand = physParent.GetComponentInParent<Hand>();

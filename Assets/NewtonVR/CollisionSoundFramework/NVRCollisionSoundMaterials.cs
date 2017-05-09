@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 
 namespace NewtonVR {
@@ -13,14 +12,16 @@ namespace NewtonVR {
     glass,
     plastic,
     cardboard,
-    EndNewtonVRMaterials = 50,
+    EndNewtonVRMaterials = 50
     //your custom collision sound materials go below here. That way if NewtonVR adds more we don't overwrite yours.
   }
 
   public class NVRCollisionSoundMaterialsList {
-    public static System.Type typeCache;
+    public static Type typeCache;
 
-    public static System.Type TypeCache {
+    private static NVRCollisionSoundMaterials[] list;
+
+    public static Type TypeCache {
       get {
         if (typeCache == null) {
           typeCache = typeof(NVRCollisionSoundMaterials);
@@ -29,15 +30,13 @@ namespace NewtonVR {
       }
     }
 
-    private static NVRCollisionSoundMaterials[] list;
-
     public static NVRCollisionSoundMaterials[] List {
       get {
         if (list == null) {
           List<NVRCollisionSoundMaterials> temp = new List<NVRCollisionSoundMaterials>();
           foreach (
             NVRCollisionSoundMaterials mat in
-            System.Enum.GetValues(typeof(NVRCollisionSoundMaterials)))
+            Enum.GetValues(typeof(NVRCollisionSoundMaterials)))
             temp.Add(mat);
           list = temp.ToArray();
         }
@@ -47,12 +46,12 @@ namespace NewtonVR {
 
     public static NVRCollisionSoundMaterials? Parse(string materialString) {
       materialString = materialString.ToLower();
-      bool defined = System.Enum.IsDefined(TypeCache, materialString);
+      bool defined = Enum.IsDefined(TypeCache, materialString);
 
-      if (defined == true)
-        return (NVRCollisionSoundMaterials) System.Enum.Parse(TypeCache, materialString);
-      else
-        return null;
+      if (defined) {
+        return (NVRCollisionSoundMaterials) Enum.Parse(TypeCache, materialString);
+      }
+      return null;
     }
   }
 }

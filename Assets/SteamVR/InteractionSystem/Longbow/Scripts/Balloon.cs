@@ -5,7 +5,6 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -26,43 +25,43 @@ namespace Valve.VR.InteractionSystem {
       LightGray,
       DarkGray,
       Random
-    };
+    }
+
+    private static float s_flLastDeathSound;
+
+    private Rigidbody balloonRigidbody;
+
+    private bool bParticlesSpawned;
+    public bool burstOnLifetimeEnd = false;
+
+    public SoundPlayOneshot collisionSound;
+
+    private float destructTime;
 
     private Hand hand;
-
-    public GameObject popPrefab;
-
-    public float maxVelocity = 5f;
+    private float lastSoundTime;
 
     public float lifetime = 15f;
-    public bool burstOnLifetimeEnd = false;
 
     public GameObject lifetimeEndParticlePrefab;
     public SoundPlayOneshot lifetimeEndSound;
 
-    private float destructTime = 0f;
-    private float releaseTime = 99999f;
+    public float maxVelocity = 5f;
 
-    public SoundPlayOneshot collisionSound;
-    private float lastSoundTime = 0f;
-    private float soundDelay = 0.2f;
-
-    private Rigidbody balloonRigidbody;
-
-    private bool bParticlesSpawned = false;
-
-    private static float s_flLastDeathSound = 0f;
+    public GameObject popPrefab;
+    private readonly float releaseTime = 99999f;
+    private readonly float soundDelay = 0.2f;
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       destructTime = Time.time + lifetime + Random.value;
       hand = GetComponentInParent<Hand>();
       balloonRigidbody = GetComponent<Rigidbody>();
     }
 
     //-------------------------------------------------
-    void Update() {
-      if ((destructTime != 0) && (Time.time > destructTime)) {
+    private void Update() {
+      if (destructTime != 0 && Time.time > destructTime) {
         if (burstOnLifetimeEnd) {
           SpawnParticles(lifetimeEndParticlePrefab, lifetimeEndSound);
         }
@@ -82,7 +81,7 @@ namespace Valve.VR.InteractionSystem {
 
       if (particlePrefab != null) {
         GameObject particleObject =
-          Instantiate(particlePrefab, transform.position, transform.rotation) as GameObject;
+          Instantiate(particlePrefab, transform.position, transform.rotation);
         particleObject.GetComponent<ParticleSystem>().Play();
         Destroy(particleObject, 2f);
       }
@@ -99,7 +98,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void FixedUpdate() {
+    private void FixedUpdate() {
       // Slow-clamp velocity
       if (balloonRigidbody.velocity.sqrMagnitude > maxVelocity) {
         balloonRigidbody.velocity *= 0.97f;
@@ -113,7 +112,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnCollisionEnter(Collision collision) {
+    private void OnCollisionEnter(Collision collision) {
       if (bParticlesSpawned) {
         return;
       }
@@ -127,10 +126,10 @@ namespace Valve.VR.InteractionSystem {
         collisionParentHand = balloonColliderScript.physParent.GetComponentInParent<Hand>();
       }
 
-      if (Time.time > (lastSoundTime + soundDelay)) {
+      if (Time.time > lastSoundTime + soundDelay) {
         if (collisionParentHand != null) // If the collision was with a controller
         {
-          if (Time.time > (releaseTime + soundDelay))
+          if (Time.time > releaseTime + soundDelay)
             // Only play sound if it's not immediately after release
           {
             collisionSound.Play();
@@ -149,7 +148,7 @@ namespace Valve.VR.InteractionSystem {
         return;
       }
 
-      if (balloonRigidbody.velocity.magnitude > (maxVelocity * 10)) {
+      if (balloonRigidbody.velocity.magnitude > maxVelocity * 10) {
         balloonRigidbody.velocity = balloonRigidbody.velocity.normalized * maxVelocity;
       }
 

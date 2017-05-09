@@ -5,24 +5,24 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class Unparent : MonoBehaviour {
-    Transform oldParent;
+    private Transform oldParent;
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       oldParent = transform.parent;
       transform.parent = null;
       gameObject.name = oldParent.gameObject.name + "." + gameObject.name;
     }
 
     //-------------------------------------------------
-    void Update() {
-      if (oldParent == null)
-        Object.Destroy(gameObject);
+    private void Update() {
+      if (oldParent == null) {
+        Destroy(gameObject);
+      }
     }
 
     //-------------------------------------------------

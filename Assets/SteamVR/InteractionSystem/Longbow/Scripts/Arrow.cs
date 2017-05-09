@@ -5,43 +5,42 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class Arrow : MonoBehaviour {
-    public ParticleSystem glintParticle;
+    public SoundPlayOneshot airReleaseSound;
     public Rigidbody arrowHeadRB;
-    public Rigidbody shaftRB;
 
-    public PhysicMaterial targetPhysMaterial;
+    public SoundPlayOneshot fireReleaseSound;
+    public ParticleSystem glintParticle;
+    private bool hasSpreadFire;
+
+    public PlaySound hitGroundSound;
+    public SoundPlayOneshot hitTargetSound;
+
+    private bool inFlight;
+    private Vector3 prevHeadPosition;
 
     private Vector3 prevPosition;
     private Quaternion prevRotation;
     private Vector3 prevVelocity;
-    private Vector3 prevHeadPosition;
-
-    public SoundPlayOneshot fireReleaseSound;
-    public SoundPlayOneshot airReleaseSound;
-    public SoundPlayOneshot hitTargetSound;
-
-    public PlaySound hitGroundSound;
-
-    private bool inFlight;
     private bool released;
-    private bool hasSpreadFire = false;
 
-    private int travelledFrames = 0;
+    private GameObject scaleParentObject;
+    public Rigidbody shaftRB;
 
-    private GameObject scaleParentObject = null;
+    public PhysicMaterial targetPhysMaterial;
+
+    private int travelledFrames;
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       Physics.IgnoreCollision(shaftRB.GetComponent<Collider>(), Player.instance.headCollider);
     }
 
     //-------------------------------------------------
-    void FixedUpdate() {
+    private void FixedUpdate() {
       if (released && inFlight) {
         prevPosition = transform.position;
         prevRotation = transform.rotation;
@@ -69,14 +68,13 @@ namespace Valve.VR.InteractionSystem {
       // Check if arrow is shot inside or too close to an object
       RaycastHit[] hits = Physics.SphereCastAll(transform.position, 0.01f, transform.forward, 0.80f,
         Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
-      foreach (RaycastHit hit in hits) {
+      foreach (RaycastHit hit in hits)
         if (hit.collider.gameObject != gameObject &&
             hit.collider.gameObject != arrowHeadRB.gameObject &&
             hit.collider != Player.instance.headCollider) {
           Destroy(gameObject);
           return;
         }
-      }
 
       travelledFrames = 0;
       prevPosition = transform.position;
@@ -88,12 +86,12 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnCollisionEnter(Collision collision) {
+    private void OnCollisionEnter(Collision collision) {
       if (inFlight) {
         Rigidbody rb = GetComponent<Rigidbody>();
         float rbSpeed = rb.velocity.sqrMagnitude;
-        bool canStick = (targetPhysMaterial != null &&
-                         collision.collider.sharedMaterial == targetPhysMaterial && rbSpeed > 0.2f);
+        bool canStick = targetPhysMaterial != null &&
+                        collision.collider.sharedMaterial == targetPhysMaterial && rbSpeed > 0.2f;
         bool hitBalloon = collision.collider.gameObject.GetComponent<Balloon>() != null;
 
         if (travelledFrames < 2 && !canStick) {
@@ -121,7 +119,7 @@ namespace Valve.VR.InteractionSystem {
         FireSource arrowFire = gameObject.GetComponentInChildren<FireSource>();
         FireSource fireSourceOnTarget = collision.collider.GetComponentInParent<FireSource>();
 
-        if (arrowFire != null && arrowFire.isBurning && (fireSourceOnTarget != null)) {
+        if (arrowFire != null && arrowFire.isBurning && fireSourceOnTarget != null) {
           if (!hasSpreadFire) {
             collision.collider.gameObject.SendMessageUpwards("FireExposure", gameObject,
               SendMessageOptions.DontRequireReceiver);
@@ -226,7 +224,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnDestroy() {
+    private void OnDestroy() {
       if (scaleParentObject != null) {
         Destroy(scaleParentObject);
       }

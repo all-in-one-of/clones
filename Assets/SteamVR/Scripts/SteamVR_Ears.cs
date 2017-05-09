@@ -9,10 +9,10 @@ using Valve.VR;
 
 [RequireComponent(typeof(AudioListener))]
 public class SteamVR_Ears : MonoBehaviour {
-  public SteamVR_Camera vrcam;
+  private Quaternion offset;
 
-  bool usingSpeakers;
-  Quaternion offset;
+  private bool usingSpeakers;
+  public SteamVR_Camera vrcam;
 
   private void OnNewPosesApplied() {
     var origin = vrcam.origin;
@@ -20,7 +20,7 @@ public class SteamVR_Ears : MonoBehaviour {
     transform.rotation = baseRotation * offset;
   }
 
-  void OnEnable() {
+  private void OnEnable() {
     usingSpeakers = false;
 
     var settings = OpenVR.Settings;
@@ -36,12 +36,14 @@ public class SteamVR_Ears : MonoBehaviour {
       }
     }
 
-    if (usingSpeakers)
+    if (usingSpeakers) {
       SteamVR_Events.NewPosesApplied.Listen(OnNewPosesApplied);
+    }
   }
 
-  void OnDisable() {
-    if (usingSpeakers)
+  private void OnDisable() {
+    if (usingSpeakers) {
       SteamVR_Events.NewPosesApplied.Remove(OnNewPosesApplied);
+    }
   }
 }

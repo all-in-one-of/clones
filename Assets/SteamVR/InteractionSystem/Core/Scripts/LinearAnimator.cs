@@ -5,19 +5,18 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class LinearAnimator : MonoBehaviour {
-    public LinearMapping linearMapping;
     public Animator animator;
 
     private float currentLinearMapping = float.NaN;
-    private int framesUnchanged = 0;
+    private int framesUnchanged;
+    public LinearMapping linearMapping;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       if (animator == null) {
         animator = GetComponent<Animator>();
       }
@@ -30,7 +29,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       if (currentLinearMapping != linearMapping.value) {
         currentLinearMapping = linearMapping.value;
         animator.enabled = true;

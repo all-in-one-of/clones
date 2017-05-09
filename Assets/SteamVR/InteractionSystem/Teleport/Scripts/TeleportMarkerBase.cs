@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public abstract class TeleportMarkerBase : MonoBehaviour {
-    public bool locked = false;
+    public bool locked;
     public bool markerActive = true;
 
     //-------------------------------------------------

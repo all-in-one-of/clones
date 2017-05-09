@@ -5,8 +5,6 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -14,32 +12,33 @@ namespace Valve.VR.InteractionSystem {
   // the player's hands, head, tracking origin, and guesses for various properties.
   //-------------------------------------------------------------------------
   public class Player : MonoBehaviour {
-    [Tooltip(
-      "Virtual transform corresponding to the meatspace tracking origin. Devices are tracked relative to this."
-    )] public Transform trackingOriginTransform;
+    //-------------------------------------------------
+    // Singleton instance of the Player. Only one can exist at a time.
+    //-------------------------------------------------
+    private static Player _instance;
 
-    [Tooltip(
-      "List of possible transforms for the head/HMD, including the no-SteamVR fallback camera.")] public Transform[] hmdTransforms;
+    public bool allowToggleTo2D = true;
+
+    [Tooltip("The audio listener for this player")] public Transform audioListener;
 
     [Tooltip("List of possible Hands, including no-SteamVR fallback Hands.")] public Hand[] hands;
 
     [Tooltip("Reference to the physics collider that follows the player's HMD position.")] public
       Collider headCollider;
 
-    [Tooltip("These objects are enabled when SteamVR is available")] public GameObject rigSteamVR;
+    [Tooltip(
+      "List of possible transforms for the head/HMD, including the no-SteamVR fallback camera.")] public Transform[]
+      hmdTransforms;
 
     [Tooltip(
         "These objects are enabled when SteamVR is not available, or when the user toggles out of VR")
     ] public GameObject rig2DFallback;
 
-    [Tooltip("The audio listener for this player")] public Transform audioListener;
+    [Tooltip("These objects are enabled when SteamVR is available")] public GameObject rigSteamVR;
 
-    public bool allowToggleTo2D = true;
-
-    //-------------------------------------------------
-    // Singleton instance of the Player. Only one can exist at a time.
-    //-------------------------------------------------
-    private static Player _instance;
+    [Tooltip(
+      "Virtual transform corresponding to the meatspace tracking origin. Devices are tracked relative to this."
+    )] public Transform trackingOriginTransform;
 
     public static Player instance {
       get {
@@ -56,35 +55,12 @@ namespace Valve.VR.InteractionSystem {
     public int handCount {
       get {
         int count = 0;
-        for (int i = 0; i < hands.Length; i++) {
+        for (int i = 0; i < hands.Length; i++)
           if (hands[i].gameObject.activeInHierarchy) {
             count++;
           }
-        }
         return count;
       }
-    }
-
-    //-------------------------------------------------
-    // Get the i-th active Hand.
-    //
-    // i - Zero-based index of the active Hand to get
-    //-------------------------------------------------
-    public Hand GetHand(int i) {
-      for (int j = 0; j < hands.Length; j++) {
-        if (!hands[j].gameObject.activeInHierarchy) {
-          continue;
-        }
-
-        if (i > 0) {
-          i--;
-          continue;
-        }
-
-        return hands[j];
-      }
-
-      return null;
     }
 
     //-------------------------------------------------
@@ -152,10 +128,10 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     public Transform hmdTransform {
       get {
-        for (int i = 0; i < hmdTransforms.Length; i++) {
-          if (hmdTransforms[i].gameObject.activeInHierarchy)
+        for (int i = 0; i < hmdTransforms.Length; i++)
+          if (hmdTransforms[i].gameObject.activeInHierarchy) {
             return hmdTransforms[i];
-        }
+          }
         return null;
       }
     }
@@ -211,14 +187,36 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Awake() {
+    // Get the i-th active Hand.
+    //
+    // i - Zero-based index of the active Hand to get
+    //-------------------------------------------------
+    public Hand GetHand(int i) {
+      for (int j = 0; j < hands.Length; j++) {
+        if (!hands[j].gameObject.activeInHierarchy) {
+          continue;
+        }
+
+        if (i > 0) {
+          i--;
+          continue;
+        }
+
+        return hands[j];
+      }
+
+      return null;
+    }
+
+    //-------------------------------------------------
+    private void Awake() {
       if (trackingOriginTransform == null) {
-        trackingOriginTransform = this.transform;
+        trackingOriginTransform = transform;
       }
     }
 
     //-------------------------------------------------
-    void OnEnable() {
+    private void OnEnable() {
       _instance = this;
 
       if (SteamVR.instance != null) {
@@ -231,7 +229,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnDrawGizmos() {
+    private void OnDrawGizmos() {
       if (this != instance) {
         return;
       }
@@ -281,18 +279,20 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     public void Draw2DDebug() {
-      if (!allowToggleTo2D)
+      if (!allowToggleTo2D) {
         return;
+      }
 
-      if (!SteamVR.active)
+      if (!SteamVR.active) {
         return;
+      }
 
       int width = 100;
       int height = 25;
       int left = Screen.width / 2 - width / 2;
       int top = Screen.height - height - 10;
 
-      string text = (rigSteamVR.activeSelf) ? "2D Debug" : "VR";
+      string text = rigSteamVR.activeSelf ? "2D Debug" : "VR";
 
       if (GUI.Button(new Rect(left, top, width, height), text)) {
         if (rigSteamVR.activeSelf) {

@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 
 namespace NewtonVR {
   public abstract class NVRCollisionSoundProvider : MonoBehaviour {

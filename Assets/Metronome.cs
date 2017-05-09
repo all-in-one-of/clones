@@ -1,16 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Metronome : MonoBehaviour {
   // Use this for initialization
-  void Start() {
+  private void Start() {
   }
 
   // Update is called once per frame
-  void Update() {
+  private void Update() {
     // 0..1 
-    double progress = (PlaybackActions.sequence_time() / PlaybackActions.sequence_period) % 1;
+    double progress = PlaybackActions.sequence_time() / PlaybackActions.sequence_period % 1;
 
     // Set the size
     Vector3 scale = transform.localScale;

@@ -1,13 +1,12 @@
-﻿using UnityEngine;
-using System.Collections;
-using UnityEditor;
+﻿using UnityEditor;
+using UnityEngine;
 
 namespace AClockworkBerry {
   [CustomEditor(typeof(ScreenLogger))]
   public class ScreenLoggerEditor : Editor {
     [MenuItem("GameObject/Create Other/Screen Logger")]
-    static void AddScreenLogger() {
-      if (GameObject.FindObjectOfType<ScreenLogger>() == null) {
+    private static void AddScreenLogger() {
+      if (FindObjectOfType<ScreenLogger>() == null) {
         GameObject gameObject = new GameObject();
         gameObject.name = "ScreenLogger";
         gameObject.AddComponent<ScreenLogger>();
@@ -17,7 +16,7 @@ namespace AClockworkBerry {
     }
 
     public override void OnInspectorGUI() {
-      base.DrawDefaultInspector();
+      DrawDefaultInspector();
 
       ScreenLogger.Instance.InspectorGUIUpdated();
     }

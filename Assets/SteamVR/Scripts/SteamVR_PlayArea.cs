@@ -4,18 +4,15 @@
 //
 //=============================================================================
 
+using System.Collections;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering;
-using System.Collections;
 using Valve.VR;
 
-[ExecuteInEditMode, RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
+[ExecuteInEditMode]
+[RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
 public class SteamVR_PlayArea : MonoBehaviour {
-  public float borderThickness = 0.15f;
-  public float wireframeHeight = 2.0f;
-  public bool drawWireframeWhenSelectedOnly = false;
-  public bool drawInGame = true;
-
   public enum Size {
     Calibrated,
     _400x300,
@@ -23,57 +20,63 @@ public class SteamVR_PlayArea : MonoBehaviour {
     _200x150
   }
 
-  public Size size;
+  public float borderThickness = 0.15f;
   public Color color = Color.cyan;
+  public bool drawInGame = true;
+  public bool drawWireframeWhenSelectedOnly = false;
+
+  public Size size;
 
   [HideInInspector] public Vector3[] vertices;
+  public float wireframeHeight = 2.0f;
 
   public static bool GetBounds(Size size, ref HmdQuad_t pRect) {
     if (size == Size.Calibrated) {
-      var initOpenVR = (!SteamVR.active && !SteamVR.usingNativeSupport);
+      var initOpenVR = !SteamVR.active && !SteamVR.usingNativeSupport;
       if (initOpenVR) {
         var error = EVRInitError.None;
         OpenVR.Init(ref error, EVRApplicationType.VRApplication_Other);
       }
 
       var chaperone = OpenVR.Chaperone;
-      bool success = (chaperone != null) && chaperone.GetPlayAreaRect(ref pRect);
-      if (!success)
+      bool success = chaperone != null && chaperone.GetPlayAreaRect(ref pRect);
+      if (!success) {
         Debug.LogWarning(
           "Failed to get Calibrated Play Area bounds!  Make sure you have tracking first, and that your space is calibrated.");
+      }
 
-      if (initOpenVR)
+      if (initOpenVR) {
         OpenVR.Shutdown();
+      }
 
       return success;
-    } else {
-      try {
-        var str = size.ToString().Substring(1);
-        var arr = str.Split(new char[] {'x'}, 2);
+    }
+    try {
+      var str = size.ToString().Substring(1);
+      var arr = str.Split(new[] {'x'}, 2);
 
-        // convert to half size in meters (from cm)
-        var x = float.Parse(arr[0]) / 200;
-        var z = float.Parse(arr[1]) / 200;
+      // convert to half size in meters (from cm)
+      var x = float.Parse(arr[0]) / 200;
+      var z = float.Parse(arr[1]) / 200;
 
-        pRect.vCorners0.v0 = x;
-        pRect.vCorners0.v1 = 0;
-        pRect.vCorners0.v2 = z;
+      pRect.vCorners0.v0 = x;
+      pRect.vCorners0.v1 = 0;
+      pRect.vCorners0.v2 = z;
 
-        pRect.vCorners1.v0 = x;
-        pRect.vCorners1.v1 = 0;
-        pRect.vCorners1.v2 = -z;
+      pRect.vCorners1.v0 = x;
+      pRect.vCorners1.v1 = 0;
+      pRect.vCorners1.v2 = -z;
 
-        pRect.vCorners2.v0 = -x;
-        pRect.vCorners2.v1 = 0;
-        pRect.vCorners2.v2 = -z;
+      pRect.vCorners2.v0 = -x;
+      pRect.vCorners2.v1 = 0;
+      pRect.vCorners2.v2 = -z;
 
-        pRect.vCorners3.v0 = -x;
-        pRect.vCorners3.v1 = 0;
-        pRect.vCorners3.v2 = z;
+      pRect.vCorners3.v0 = -x;
+      pRect.vCorners3.v1 = 0;
+      pRect.vCorners3.v2 = z;
 
-        return true;
-      } catch {
-      }
+      return true;
+    } catch {
     }
 
     return false;
@@ -81,10 +84,11 @@ public class SteamVR_PlayArea : MonoBehaviour {
 
   public void BuildMesh() {
     var rect = new HmdQuad_t();
-    if (!GetBounds(size, ref rect))
+    if (!GetBounds(size, ref rect)) {
       return;
+    }
 
-    var corners = new HmdVector3_t[]
+    var corners = new[]
       {rect.vCorners0, rect.vCorners1, rect.vCorners2, rect.vCorners3};
 
     vertices = new Vector3[corners.Length * 2];
@@ -112,7 +116,7 @@ public class SteamVR_PlayArea : MonoBehaviour {
       vertices[corners.Length + i] = vert;
     }
 
-    var triangles = new int[] {
+    var triangles = new[] {
       0, 4, 1,
       1, 4, 5,
       1, 5, 2,
@@ -123,7 +127,7 @@ public class SteamVR_PlayArea : MonoBehaviour {
       0, 7, 4
     };
 
-    var uv = new Vector2[] {
+    var uv = new[] {
       new Vector2(0.0f, 0.0f),
       new Vector2(1.0f, 0.0f),
       new Vector2(0.0f, 0.0f),
@@ -134,7 +138,7 @@ public class SteamVR_PlayArea : MonoBehaviour {
       new Vector2(1.0f, 1.0f)
     };
 
-    var colors = new Color[] {
+    var colors = new[] {
       color,
       color,
       color,
@@ -154,59 +158,28 @@ public class SteamVR_PlayArea : MonoBehaviour {
 
     var renderer = GetComponent<MeshRenderer>();
     renderer.material = new Material(Shader.Find("Sprites/Default"));
-    renderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+    renderer.shadowCastingMode = ShadowCastingMode.Off;
     renderer.receiveShadows = false;
     renderer.lightProbeUsage = LightProbeUsage.Off;
   }
 
-#if UNITY_EDITOR
-  Hashtable values;
-
-  void Update() {
-    if (!Application.isPlaying) {
-      var fields =
-        GetType()
-          .GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-
-      bool rebuild = false;
-
-      if (values == null ||
-          (borderThickness != 0.0f && GetComponent<MeshFilter>().sharedMesh == null)) {
-        rebuild = true;
-      } else {
-        foreach (var f in fields) {
-          if (!values.Contains(f) || !f.GetValue(this).Equals(values[f])) {
-            rebuild = true;
-            break;
-          }
-        }
-      }
-
-      if (rebuild) {
-        BuildMesh();
-
-        values = new Hashtable();
-        foreach (var f in fields)
-          values[f] = f.GetValue(this);
-      }
+  private void OnDrawGizmos() {
+    if (!drawWireframeWhenSelectedOnly) {
+      DrawWireframe();
     }
   }
-#endif
 
-  void OnDrawGizmos() {
-    if (!drawWireframeWhenSelectedOnly)
+  private void OnDrawGizmosSelected() {
+    if (drawWireframeWhenSelectedOnly) {
       DrawWireframe();
-  }
-
-  void OnDrawGizmosSelected() {
-    if (drawWireframeWhenSelectedOnly)
-      DrawWireframe();
+    }
   }
 
   public void DrawWireframe() {
-    if (vertices == null || vertices.Length == 0)
+    if (vertices == null || vertices.Length == 0) {
       return;
+    }
 
     var offset = transform.TransformVector(Vector3.up * wireframeHeight);
     for (int i = 0; i < 4; i++) {
@@ -233,21 +206,56 @@ public class SteamVR_PlayArea : MonoBehaviour {
 
       // If we want the configured bounds of the user,
       // we need to wait for tracking.
-      if (drawInGame && size == Size.Calibrated)
+      if (drawInGame && size == Size.Calibrated) {
         StartCoroutine("UpdateBounds");
+      }
     }
   }
 
-  IEnumerator UpdateBounds() {
+  private IEnumerator UpdateBounds() {
     GetComponent<MeshFilter>().mesh = null; // clear existing
 
     var chaperone = OpenVR.Chaperone;
-    if (chaperone == null)
+    if (chaperone == null) {
       yield break;
+    }
 
     while (chaperone.GetCalibrationState() != ChaperoneCalibrationState.OK)
       yield return null;
 
     BuildMesh();
   }
+
+#if UNITY_EDITOR
+  private Hashtable values;
+
+  private void Update() {
+    if (!Application.isPlaying) {
+      var fields =
+        GetType()
+          .GetFields(BindingFlags.Instance | BindingFlags.Public);
+
+      bool rebuild = false;
+
+      if (values == null ||
+          borderThickness != 0.0f && GetComponent<MeshFilter>().sharedMesh == null) {
+        rebuild = true;
+      } else {
+        foreach (var f in fields)
+          if (!values.Contains(f) || !f.GetValue(this).Equals(values[f])) {
+            rebuild = true;
+            break;
+          }
+      }
+
+      if (rebuild) {
+        BuildMesh();
+
+        values = new Hashtable();
+        foreach (var f in fields)
+          values[f] = f.GetValue(this);
+      }
+    }
+  }
+#endif
 }

@@ -4,49 +4,138 @@
 //
 //=============================================================================
 
+using System;
+using System.Text;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.VR;
 using Valve.VR;
 
-public class SteamVR : System.IDisposable {
+public class SteamVR : IDisposable {
+  // Set this to false to keep from auto-initializing when calling SteamVR.instance.
+  private static bool _enabled = true;
+
+  private static SteamVR _instance;
+
+  public static bool[] connected = new bool[OpenVR.k_unMaxTrackedDeviceCount];
+  public ETextureType textureType;
+
+  private SteamVR() {
+    hmd = OpenVR.System;
+    Debug.Log("Connected to " + hmd_TrackingSystemName + ":" + hmd_SerialNumber);
+
+    compositor = OpenVR.Compositor;
+    overlay = OpenVR.Overlay;
+
+    // Setup render values
+    uint w = 0, h = 0;
+    hmd.GetRecommendedRenderTargetSize(ref w, ref h);
+    sceneWidth = w;
+    sceneHeight = h;
+
+    float l_left = 0.0f, l_right = 0.0f, l_top = 0.0f, l_bottom = 0.0f;
+    hmd.GetProjectionRaw(EVREye.Eye_Left, ref l_left, ref l_right, ref l_top, ref l_bottom);
+
+    float r_left = 0.0f, r_right = 0.0f, r_top = 0.0f, r_bottom = 0.0f;
+    hmd.GetProjectionRaw(EVREye.Eye_Right, ref r_left, ref r_right, ref r_top, ref r_bottom);
+
+    tanHalfFov = new Vector2(
+      Mathf.Max(-l_left, l_right, -r_left, r_right),
+      Mathf.Max(-l_top, l_bottom, -r_top, r_bottom));
+
+    textureBounds = new VRTextureBounds_t[2];
+
+    textureBounds[0].uMin = 0.5f + 0.5f * l_left / tanHalfFov.x;
+    textureBounds[0].uMax = 0.5f + 0.5f * l_right / tanHalfFov.x;
+    textureBounds[0].vMin = 0.5f - 0.5f * l_bottom / tanHalfFov.y;
+    textureBounds[0].vMax = 0.5f - 0.5f * l_top / tanHalfFov.y;
+
+    textureBounds[1].uMin = 0.5f + 0.5f * r_left / tanHalfFov.x;
+    textureBounds[1].uMax = 0.5f + 0.5f * r_right / tanHalfFov.x;
+    textureBounds[1].vMin = 0.5f - 0.5f * r_bottom / tanHalfFov.y;
+    textureBounds[1].vMax = 0.5f - 0.5f * r_top / tanHalfFov.y;
+
+    // Grow the recommended size to account for the overlapping fov
+    sceneWidth = sceneWidth /
+                 Mathf.Max(textureBounds[0].uMax - textureBounds[0].uMin,
+                   textureBounds[1].uMax - textureBounds[1].uMin);
+    sceneHeight = sceneHeight /
+                  Mathf.Max(textureBounds[0].vMax - textureBounds[0].vMin,
+                    textureBounds[1].vMax - textureBounds[1].vMin);
+
+    aspect = tanHalfFov.x / tanHalfFov.y;
+    fieldOfView = 2.0f * Mathf.Atan(tanHalfFov.y) * Mathf.Rad2Deg;
+
+    eyes = new[] {
+      new SteamVR_Utils.RigidTransform(hmd.GetEyeToHeadTransform(EVREye.Eye_Left)),
+      new SteamVR_Utils.RigidTransform(hmd.GetEyeToHeadTransform(EVREye.Eye_Right))
+    };
+
+    switch (SystemInfo.graphicsDeviceType) {
+#if (UNITY_5_4)
+			case UnityEngine.Rendering.GraphicsDeviceType.OpenGL2:
+#endif
+      case GraphicsDeviceType.OpenGLCore:
+      case GraphicsDeviceType.OpenGLES2:
+      case GraphicsDeviceType.OpenGLES3:
+        textureType = ETextureType.OpenGL;
+        break;
+#if !(UNITY_5_4)
+      case GraphicsDeviceType.Vulkan:
+        textureType = ETextureType.Vulkan;
+        break;
+#endif
+      default:
+        textureType = ETextureType.DirectX;
+        break;
+    }
+
+    SteamVR_Events.Initializing.Listen(OnInitializing);
+    SteamVR_Events.Calibrating.Listen(OnCalibrating);
+    SteamVR_Events.OutOfRange.Listen(OnOutOfRange);
+    SteamVR_Events.DeviceConnected.Listen(OnDeviceConnected);
+    SteamVR_Events.NewPoses.Listen(OnNewPoses);
+  }
+
   // Use this to check if SteamVR is currently active without attempting
   // to activate it in the process.
   public static bool active {
     get { return _instance != null; }
   }
 
-  // Set this to false to keep from auto-initializing when calling SteamVR.instance.
-  private static bool _enabled = true;
-
   public static bool enabled {
     get {
-      if (!UnityEngine.VR.VRSettings.enabled)
+      if (!VRSettings.enabled) {
         enabled = false;
+      }
       return _enabled;
     }
     set {
       _enabled = value;
-      if (!_enabled)
+      if (!_enabled) {
         SafeDispose();
+      }
     }
   }
-
-  private static SteamVR _instance;
 
   public static SteamVR instance {
     get {
 #if UNITY_EDITOR
-      if (!Application.isPlaying)
+      if (!Application.isPlaying) {
         return null;
+      }
 #endif
-      if (!enabled)
+      if (!enabled) {
         return null;
+      }
 
       if (_instance == null) {
         _instance = CreateInstance();
 
         // If init failed, then auto-disable so scripts don't continue trying to re-initialize things.
-        if (_instance == null)
+        if (_instance == null) {
           _enabled = false;
+        }
       }
 
       return _instance;
@@ -54,58 +143,7 @@ public class SteamVR : System.IDisposable {
   }
 
   public static bool usingNativeSupport {
-    get { return UnityEngine.VR.VRDevice.GetNativePtr() != System.IntPtr.Zero; }
-  }
-
-  static SteamVR CreateInstance() {
-    try {
-      var error = EVRInitError.None;
-      if (!SteamVR.usingNativeSupport) {
-        Debug.Log(
-          "OpenVR initialization failed.  Ensure 'Virtual Reality Supported' is checked in Player Settings, and OpenVR is added to the list of Virtual Reality SDKs.");
-        return null;
-      }
-
-      // Verify common interfaces are valid.
-
-      OpenVR.GetGenericInterface(OpenVR.IVRCompositor_Version, ref error);
-      if (error != EVRInitError.None) {
-        ReportError(error);
-        return null;
-      }
-
-      OpenVR.GetGenericInterface(OpenVR.IVROverlay_Version, ref error);
-      if (error != EVRInitError.None) {
-        ReportError(error);
-        return null;
-      }
-    } catch (System.Exception e) {
-      Debug.LogError(e);
-      return null;
-    }
-
-    return new SteamVR();
-  }
-
-  static void ReportError(EVRInitError error) {
-    switch (error) {
-      case EVRInitError.None:
-        break;
-      case EVRInitError.VendorSpecific_UnableToConnectToOculusRuntime:
-        Debug.Log(
-          "SteamVR Initialization Failed!  Make sure device is on, Oculus runtime is installed, and OVRService_*.exe is running.");
-        break;
-      case EVRInitError.Init_VRClientDLLNotFound:
-        Debug.Log(
-          "SteamVR drivers not found!  They can be installed via Steam under Library > Tools.  Visit http://steampowered.com to install Steam.");
-        break;
-      case EVRInitError.Driver_RuntimeOutOfDate:
-        Debug.Log("SteamVR Initialization Failed!  Make sure device's runtime is up to date.");
-        break;
-      default:
-        Debug.Log(OpenVR.GetStringForHmdError(error));
-        break;
-    }
+    get { return VRDevice.GetNativePtr() != IntPtr.Zero; }
   }
 
   // native interfaces
@@ -114,11 +152,9 @@ public class SteamVR : System.IDisposable {
   public CVROverlay overlay { get; private set; }
 
   // tracking status
-  static public bool initializing { get; private set; }
-  static public bool calibrating { get; private set; }
-  static public bool outOfRange { get; private set; }
-
-  static public bool[] connected = new bool[OpenVR.k_unMaxTrackedDeviceCount];
+  public static bool initializing { get; private set; }
+  public static bool calibrating { get; private set; }
+  public static bool outOfRange { get; private set; }
 
   // render values
   public float sceneWidth { get; private set; }
@@ -128,7 +164,6 @@ public class SteamVR : System.IDisposable {
   public Vector2 tanHalfFov { get; private set; }
   public VRTextureBounds_t[] textureBounds { get; private set; }
   public SteamVR_Utils.RigidTransform[] eyes { get; private set; }
-  public ETextureType textureType;
 
   // hmd properties
   public string hmd_TrackingSystemName {
@@ -151,12 +186,68 @@ public class SteamVR : System.IDisposable {
     get { return GetFloatProperty(ETrackedDeviceProperty.Prop_DisplayFrequency_Float); }
   }
 
+  public void Dispose() {
+    Dispose(true);
+    GC.SuppressFinalize(this);
+  }
+
+  private static SteamVR CreateInstance() {
+    try {
+      var error = EVRInitError.None;
+      if (!usingNativeSupport) {
+        Debug.Log(
+          "OpenVR initialization failed.  Ensure 'Virtual Reality Supported' is checked in Player Settings, and OpenVR is added to the list of Virtual Reality SDKs.");
+        return null;
+      }
+
+      // Verify common interfaces are valid.
+
+      OpenVR.GetGenericInterface(OpenVR.IVRCompositor_Version, ref error);
+      if (error != EVRInitError.None) {
+        ReportError(error);
+        return null;
+      }
+
+      OpenVR.GetGenericInterface(OpenVR.IVROverlay_Version, ref error);
+      if (error != EVRInitError.None) {
+        ReportError(error);
+        return null;
+      }
+    } catch (Exception e) {
+      Debug.LogError(e);
+      return null;
+    }
+
+    return new SteamVR();
+  }
+
+  private static void ReportError(EVRInitError error) {
+    switch (error) {
+      case EVRInitError.None:
+        break;
+      case EVRInitError.VendorSpecific_UnableToConnectToOculusRuntime:
+        Debug.Log(
+          "SteamVR Initialization Failed!  Make sure device is on, Oculus runtime is installed, and OVRService_*.exe is running.");
+        break;
+      case EVRInitError.Init_VRClientDLLNotFound:
+        Debug.Log(
+          "SteamVR drivers not found!  They can be installed via Steam under Library > Tools.  Visit http://steampowered.com to install Steam.");
+        break;
+      case EVRInitError.Driver_RuntimeOutOfDate:
+        Debug.Log("SteamVR Initialization Failed!  Make sure device's runtime is up to date.");
+        break;
+      default:
+        Debug.Log(OpenVR.GetStringForHmdError(error));
+        break;
+    }
+  }
+
   public string GetTrackedDeviceString(uint deviceId) {
     var error = ETrackedPropertyError.TrackedProp_Success;
     var capacity = hmd.GetStringTrackedDeviceProperty(deviceId,
       ETrackedDeviceProperty.Prop_AttachedDeviceId_String, null, 0, ref error);
     if (capacity > 1) {
-      var result = new System.Text.StringBuilder((int) capacity);
+      var result = new StringBuilder((int) capacity);
       hmd.GetStringTrackedDeviceProperty(deviceId,
         ETrackedDeviceProperty.Prop_AttachedDeviceId_String, result, capacity, ref error);
       return result.ToString();
@@ -164,22 +255,43 @@ public class SteamVR : System.IDisposable {
     return null;
   }
 
-  string GetStringProperty(ETrackedDeviceProperty prop) {
+  private string GetStringProperty(ETrackedDeviceProperty prop) {
     var error = ETrackedPropertyError.TrackedProp_Success;
     var capactiy = hmd.GetStringTrackedDeviceProperty(OpenVR.k_unTrackedDeviceIndex_Hmd, prop, null,
       0, ref error);
     if (capactiy > 1) {
-      var result = new System.Text.StringBuilder((int) capactiy);
+      var result = new StringBuilder((int) capactiy);
       hmd.GetStringTrackedDeviceProperty(OpenVR.k_unTrackedDeviceIndex_Hmd, prop, result, capactiy,
         ref error);
       return result.ToString();
     }
-    return (error != ETrackedPropertyError.TrackedProp_Success) ? error.ToString() : "<unknown>";
+    return error != ETrackedPropertyError.TrackedProp_Success ? error.ToString() : "<unknown>";
   }
 
-  float GetFloatProperty(ETrackedDeviceProperty prop) {
+  private float GetFloatProperty(ETrackedDeviceProperty prop) {
     var error = ETrackedPropertyError.TrackedProp_Success;
     return hmd.GetFloatTrackedDeviceProperty(OpenVR.k_unTrackedDeviceIndex_Hmd, prop, ref error);
+  }
+
+  ~SteamVR() {
+    Dispose(false);
+  }
+
+  private void Dispose(bool disposing) {
+    SteamVR_Events.Initializing.Remove(OnInitializing);
+    SteamVR_Events.Calibrating.Remove(OnCalibrating);
+    SteamVR_Events.OutOfRange.Remove(OnOutOfRange);
+    SteamVR_Events.DeviceConnected.Remove(OnDeviceConnected);
+    SteamVR_Events.NewPoses.Remove(OnNewPoses);
+
+    _instance = null;
+  }
+
+  // Use this interface to avoid accidentally creating the instance in the process of attempting to dispose of it.
+  public static void SafeDispose() {
+    if (_instance != null) {
+      _instance.Dispose();
+    }
   }
 
   #region Event callbacks
@@ -237,106 +349,4 @@ public class SteamVR : System.IDisposable {
   }
 
   #endregion
-
-  private SteamVR() {
-    hmd = OpenVR.System;
-    Debug.Log("Connected to " + hmd_TrackingSystemName + ":" + hmd_SerialNumber);
-
-    compositor = OpenVR.Compositor;
-    overlay = OpenVR.Overlay;
-
-    // Setup render values
-    uint w = 0, h = 0;
-    hmd.GetRecommendedRenderTargetSize(ref w, ref h);
-    sceneWidth = (float) w;
-    sceneHeight = (float) h;
-
-    float l_left = 0.0f, l_right = 0.0f, l_top = 0.0f, l_bottom = 0.0f;
-    hmd.GetProjectionRaw(EVREye.Eye_Left, ref l_left, ref l_right, ref l_top, ref l_bottom);
-
-    float r_left = 0.0f, r_right = 0.0f, r_top = 0.0f, r_bottom = 0.0f;
-    hmd.GetProjectionRaw(EVREye.Eye_Right, ref r_left, ref r_right, ref r_top, ref r_bottom);
-
-    tanHalfFov = new Vector2(
-      Mathf.Max(-l_left, l_right, -r_left, r_right),
-      Mathf.Max(-l_top, l_bottom, -r_top, r_bottom));
-
-    textureBounds = new VRTextureBounds_t[2];
-
-    textureBounds[0].uMin = 0.5f + 0.5f * l_left / tanHalfFov.x;
-    textureBounds[0].uMax = 0.5f + 0.5f * l_right / tanHalfFov.x;
-    textureBounds[0].vMin = 0.5f - 0.5f * l_bottom / tanHalfFov.y;
-    textureBounds[0].vMax = 0.5f - 0.5f * l_top / tanHalfFov.y;
-
-    textureBounds[1].uMin = 0.5f + 0.5f * r_left / tanHalfFov.x;
-    textureBounds[1].uMax = 0.5f + 0.5f * r_right / tanHalfFov.x;
-    textureBounds[1].vMin = 0.5f - 0.5f * r_bottom / tanHalfFov.y;
-    textureBounds[1].vMax = 0.5f - 0.5f * r_top / tanHalfFov.y;
-
-    // Grow the recommended size to account for the overlapping fov
-    sceneWidth = sceneWidth /
-                 Mathf.Max(textureBounds[0].uMax - textureBounds[0].uMin,
-                   textureBounds[1].uMax - textureBounds[1].uMin);
-    sceneHeight = sceneHeight /
-                  Mathf.Max(textureBounds[0].vMax - textureBounds[0].vMin,
-                    textureBounds[1].vMax - textureBounds[1].vMin);
-
-    aspect = tanHalfFov.x / tanHalfFov.y;
-    fieldOfView = 2.0f * Mathf.Atan(tanHalfFov.y) * Mathf.Rad2Deg;
-
-    eyes = new SteamVR_Utils.RigidTransform[] {
-      new SteamVR_Utils.RigidTransform(hmd.GetEyeToHeadTransform(EVREye.Eye_Left)),
-      new SteamVR_Utils.RigidTransform(hmd.GetEyeToHeadTransform(EVREye.Eye_Right))
-    };
-
-    switch (SystemInfo.graphicsDeviceType) {
-#if (UNITY_5_4)
-			case UnityEngine.Rendering.GraphicsDeviceType.OpenGL2:
-#endif
-      case UnityEngine.Rendering.GraphicsDeviceType.OpenGLCore:
-      case UnityEngine.Rendering.GraphicsDeviceType.OpenGLES2:
-      case UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3:
-        textureType = ETextureType.OpenGL;
-        break;
-#if !(UNITY_5_4)
-      case UnityEngine.Rendering.GraphicsDeviceType.Vulkan:
-        textureType = ETextureType.Vulkan;
-        break;
-#endif
-      default:
-        textureType = ETextureType.DirectX;
-        break;
-    }
-
-    SteamVR_Events.Initializing.Listen(OnInitializing);
-    SteamVR_Events.Calibrating.Listen(OnCalibrating);
-    SteamVR_Events.OutOfRange.Listen(OnOutOfRange);
-    SteamVR_Events.DeviceConnected.Listen(OnDeviceConnected);
-    SteamVR_Events.NewPoses.Listen(OnNewPoses);
-  }
-
-  ~SteamVR() {
-    Dispose(false);
-  }
-
-  public void Dispose() {
-    Dispose(true);
-    System.GC.SuppressFinalize(this);
-  }
-
-  private void Dispose(bool disposing) {
-    SteamVR_Events.Initializing.Remove(OnInitializing);
-    SteamVR_Events.Calibrating.Remove(OnCalibrating);
-    SteamVR_Events.OutOfRange.Remove(OnOutOfRange);
-    SteamVR_Events.DeviceConnected.Remove(OnDeviceConnected);
-    SteamVR_Events.NewPoses.Remove(OnNewPoses);
-
-    _instance = null;
-  }
-
-  // Use this interface to avoid accidentally creating the instance in the process of attempting to dispose of it.
-  public static void SafeDispose() {
-    if (_instance != null)
-      _instance.Dispose();
-  }
 }

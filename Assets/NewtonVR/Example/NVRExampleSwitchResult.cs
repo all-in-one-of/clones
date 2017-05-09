@@ -1,14 +1,12 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace NewtonVR.Example {
   public class NVRExampleSwitchResult : MonoBehaviour {
+    private Light SpotLight;
     public NVRSwitch Switch;
 
-    private Light SpotLight;
-
     private void Awake() {
-      SpotLight = this.GetComponent<Light>();
+      SpotLight = GetComponent<Light>();
     }
 
     private void Update() {
