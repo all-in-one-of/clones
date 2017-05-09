@@ -37,6 +37,15 @@ public class RecordActions : MonoBehaviour {
     return outputs;
   }
 
+  public void FixedUpdate() {
+    /*if (record_toggle) {
+      NVRHand hand = GetComponent<NVRHand>();
+      SaveNewRecordingSnapshot(hand);
+    }*/
+    NVRHand hand = GetComponent<NVRHand>();
+    Debug.Log(hand.Inputs[NVRButtons.Touchpad].Axis.x);
+  }
+
   public void Update() {
     NVRHand hand = GetComponent<NVRHand>();
     if (hand.CurrentHandState == HandState.Uninitialized) {
@@ -44,7 +53,6 @@ public class RecordActions : MonoBehaviour {
     }
 
     if (Input.GetKeyUp(KeyCode.Space) || hand.Inputs[NVRButtons.ApplicationMenu].PressDown) {
-      Debug.Log(record_toggle);
       if (!record_toggle) {
         record_toggle = true;
       } else {
@@ -55,33 +63,7 @@ public class RecordActions : MonoBehaviour {
     }
 
     if (record_toggle) {
-      Snapshot snap = new Snapshot() {
-        position = transform.position,
-        rotation = transform.rotation,
-        timestamp = Time.realtimeSinceStartup,
-        pressed =
-          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
-            (inputs_dict, button) => inputs_dict[button].IsPressed),
-        press_down =
-          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
-            (inputs_dict, button) => inputs_dict[button].PressDown),
-        press_up =
-          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
-            (inputs_dict, button) => inputs_dict[button].PressUp),
-        touched =
-          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
-            (inputs_dict, button) => inputs_dict[button].IsTouched),
-        touch_down =
-          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
-            (inputs_dict, button) => inputs_dict[button].TouchDown),
-        touch_up =
-          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
-            (inputs_dict, button) => inputs_dict[button].TouchUp),
-        axis =
-          RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, Vector2>(),
-            (inputs_dict, button) => inputs_dict[button].Axis)
-      };
-      snapshots.Add(snap);
+      SaveNewRecordingSnapshot(hand);
     }
 
     // Display path
@@ -89,6 +71,32 @@ public class RecordActions : MonoBehaviour {
       line_renderer.numPositions = snapshots.Count;
       line_renderer.SetPositions(snapshots.Select(s => s.position).ToArray());
     }
+  }
+
+  /// <summary>
+  /// Saves a new snapshot of the inputs values for the current recording.
+  /// </summary>
+  private void SaveNewRecordingSnapshot(NVRHand hand) {
+    Snapshot snap = new Snapshot {
+      position = transform.position,
+      rotation = transform.rotation,
+      timestamp = Time.realtimeSinceStartup,
+      pressed = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+        (inputs_dict, button) => inputs_dict[button].IsPressed),
+      press_down = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+        (inputs_dict, button) => inputs_dict[button].PressDown),
+      press_up = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+        (inputs_dict, button) => inputs_dict[button].PressUp),
+      touched = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+        (inputs_dict, button) => inputs_dict[button].IsTouched),
+      touch_down = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+        (inputs_dict, button) => inputs_dict[button].TouchDown),
+      touch_up = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, bool>(),
+        (inputs_dict, button) => inputs_dict[button].TouchUp),
+      axis = RecordButtonsForInputState(hand.Inputs, new Dictionary<NVRButtons, Vector2>(),
+        (inputs_dict, button) => inputs_dict[button].Axis)
+    };
+    snapshots.Add(snap);
   }
 
   private GameObject CreateFake(NVRHand real_hand, List<Snapshot> recording) {
@@ -137,45 +145,45 @@ public class RecordActions : MonoBehaviour {
   /// Creates a puppet hand as a clone of the current state of the hand.
   /// Doesn't yet have a recording set to it.
   /// </summary>
-//  private GameObject CreateFake(NVRHand real_hand, List<Snapshot> recording) {
-//    // Disable the hand before cloning anything:
-//    GameObject fake_hand_obj = new GameObject();
-//
-//    fake_hand_obj.name = fake_hand_obj.name = real_hand.name + " [Puppet]";
-//    fake_hand_obj.transform.SetParent(real_hand.Player.transform);
-//
-//    var fake_hand = fake_hand_obj.AddComponent<NVRHand>();
-//    var device = fake_hand_obj.AddComponent<FakeInputDevice>();
-//    var playback = fake_hand_obj.AddComponent<PlaybackActions>();
-//    playback.recording = recording;
-//
-//    fake_hand_obj.AddComponent<HandControls>();
-//
-//    // Duplicate children (render models, associated objects).
-//    foreach (Transform child in real_hand.transform) {
-//      child.gameObject.SetActive(false);
-//      var child_clone = Instantiate(child.gameObject, fake_hand_obj.transform, false);
-//      child_clone.name = child_clone.name.Replace("(Clone)", "");
-//      child.gameObject.SetActive(true);
-//    }
-//
-//    // Remove bad components from children. (anything with a global reference, essentially)
-//    Component[] components = fake_hand_obj.GetComponentsInChildren<Component>(true);
-//    foreach (var component in components) {
-//      if (component.GetType() == typeof(SteamVR_RenderModel)) {
-//        DestroyImmediate(component);
-//      }
-//    }
-//
-//    // Enable children
-//    foreach (Transform child in fake_hand_obj.transform) {
-//      child.gameObject.SetActive(true);
-//    }
-//
-//    fake_hand.PreInitialize(real_hand.Player);
-//    fake_hand.SetupInputDevice(device);
-//    real_hand.Player.Hands.Add(fake_hand);
-//
-//    return fake_hand_obj;
-//  }
+  //  private GameObject CreateFake(NVRHand real_hand, List<Snapshot> recording) {
+  //    // Disable the hand before cloning anything:
+  //    GameObject fake_hand_obj = new GameObject();
+  //
+  //    fake_hand_obj.name = fake_hand_obj.name = real_hand.name + " [Puppet]";
+  //    fake_hand_obj.transform.SetParent(real_hand.Player.transform);
+  //
+  //    var fake_hand = fake_hand_obj.AddComponent<NVRHand>();
+  //    var device = fake_hand_obj.AddComponent<FakeInputDevice>();
+  //    var playback = fake_hand_obj.AddComponent<PlaybackActions>();
+  //    playback.recording = recording;
+  //
+  //    fake_hand_obj.AddComponent<HandControls>();
+  //
+  //    // Duplicate children (render models, associated objects).
+  //    foreach (Transform child in real_hand.transform) {
+  //      child.gameObject.SetActive(false);
+  //      var child_clone = Instantiate(child.gameObject, fake_hand_obj.transform, false);
+  //      child_clone.name = child_clone.name.Replace("(Clone)", "");
+  //      child.gameObject.SetActive(true);
+  //    }
+  //
+  //    // Remove bad components from children. (anything with a global reference, essentially)
+  //    Component[] components = fake_hand_obj.GetComponentsInChildren<Component>(true);
+  //    foreach (var component in components) {
+  //      if (component.GetType() == typeof(SteamVR_RenderModel)) {
+  //        DestroyImmediate(component);
+  //      }
+  //    }
+  //
+  //    // Enable children
+  //    foreach (Transform child in fake_hand_obj.transform) {
+  //      child.gameObject.SetActive(true);
+  //    }
+  //
+  //    fake_hand.PreInitialize(real_hand.Player);
+  //    fake_hand.SetupInputDevice(device);
+  //    real_hand.Player.Hands.Add(fake_hand);
+  //
+  //    return fake_hand_obj;
+  //  }
 }
