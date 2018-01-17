@@ -4,18 +4,28 @@
 //
 //=============================================================================
 
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 using Valve.VR;
 
 public class SteamVR_TestController : MonoBehaviour {
-  List<int> controllerIndices = new List<int>();
+  public Transform point, pointer;
+
+  private readonly EVRButtonId[] axisIds = {
+    EVRButtonId.k_EButton_SteamVR_Touchpad,
+    EVRButtonId.k_EButton_SteamVR_Trigger
+  };
+
+  private readonly EVRButtonId[] buttonIds = {
+    EVRButtonId.k_EButton_ApplicationMenu, EVRButtonId.k_EButton_Grip,
+    EVRButtonId.k_EButton_SteamVR_Touchpad, EVRButtonId.k_EButton_SteamVR_Trigger
+  };
+
+  private readonly List<int> controllerIndices = new List<int>();
 
   private void OnDeviceConnected(int index, bool connected) {
     var system = OpenVR.System;
-    if (system == null ||
-        system.GetTrackedDeviceClass((uint) index) != ETrackedDeviceClass.Controller)
-      return;
+    if (system == null || system.GetTrackedDeviceClass((uint) index) != ETrackedDeviceClass.Controller) return;
 
     if (connected) {
       Debug.Log(string.Format("Controller {0} connected.", index));
@@ -28,15 +38,15 @@ public class SteamVR_TestController : MonoBehaviour {
     }
   }
 
-  void OnEnable() {
+  private void OnEnable() {
     SteamVR_Events.DeviceConnected.Listen(OnDeviceConnected);
   }
 
-  void OnDisable() {
+  private void OnDisable() {
     SteamVR_Events.DeviceConnected.Remove(OnDeviceConnected);
   }
 
-  void PrintControllerStatus(int index) {
+  private void PrintControllerStatus(int index) {
     var device = SteamVR_Controller.Input(index);
     Debug.Log("index: " + device.index);
     Debug.Log("connected: " + device.connected);
@@ -54,21 +64,7 @@ public class SteamVR_TestController : MonoBehaviour {
     Debug.Log((l == r) ? "first" : (l == index) ? "left" : "right");
   }
 
-  EVRButtonId[] buttonIds = new EVRButtonId[] {
-    EVRButtonId.k_EButton_ApplicationMenu,
-    EVRButtonId.k_EButton_Grip,
-    EVRButtonId.k_EButton_SteamVR_Touchpad,
-    EVRButtonId.k_EButton_SteamVR_Trigger
-  };
-
-  EVRButtonId[] axisIds = new EVRButtonId[] {
-    EVRButtonId.k_EButton_SteamVR_Touchpad,
-    EVRButtonId.k_EButton_SteamVR_Trigger
-  };
-
-  public Transform point, pointer;
-
-  void Update() {
+  private void Update() {
     foreach (var index in controllerIndices) {
       var overlay = SteamVR_Overlay.instance;
       if (overlay && point && pointer) {
@@ -87,8 +83,7 @@ public class SteamVR_TestController : MonoBehaviour {
       }
 
       foreach (var buttonId in buttonIds) {
-        if (SteamVR_Controller.Input(index).GetPressDown(buttonId))
-          Debug.Log(buttonId + " press down");
+        if (SteamVR_Controller.Input(index).GetPressDown(buttonId)) Debug.Log(buttonId + " press down");
         if (SteamVR_Controller.Input(index).GetPressUp(buttonId)) {
           Debug.Log(buttonId + " press up");
           if (buttonId == EVRButtonId.k_EButton_SteamVR_Trigger) {
@@ -96,15 +91,12 @@ public class SteamVR_TestController : MonoBehaviour {
             PrintControllerStatus(index);
           }
         }
-        if (SteamVR_Controller.Input(index).GetPress(buttonId))
-          Debug.Log(buttonId);
+        if (SteamVR_Controller.Input(index).GetPress(buttonId)) Debug.Log(buttonId);
       }
 
       foreach (var buttonId in axisIds) {
-        if (SteamVR_Controller.Input(index).GetTouchDown(buttonId))
-          Debug.Log(buttonId + " touch down");
-        if (SteamVR_Controller.Input(index).GetTouchUp(buttonId))
-          Debug.Log(buttonId + " touch up");
+        if (SteamVR_Controller.Input(index).GetTouchDown(buttonId)) Debug.Log(buttonId + " touch down");
+        if (SteamVR_Controller.Input(index).GetTouchUp(buttonId)) Debug.Log(buttonId + " touch up");
         if (SteamVR_Controller.Input(index).GetTouch(buttonId)) {
           var axis = SteamVR_Controller.Input(index).GetAxis(buttonId);
           Debug.Log("axis: " + axis);

@@ -4,28 +4,14 @@
 //
 //=============================================================================
 
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class ControllerButtonHints : MonoBehaviour {
-    public Material controllerMaterial;
-    public Color flashColor = new Color(1.0f, 0.557f, 0.0f);
-    public GameObject textHintPrefab;
-
-    [Header("Debug")] public bool debugHints = false;
-
-    private SteamVR_RenderModel renderModel;
-    private Player player;
-
-    private List<MeshRenderer> renderers = new List<MeshRenderer>();
-    private List<MeshRenderer> flashingRenderers = new List<MeshRenderer>();
-    private float startTime;
-    private float tickCount;
-
     private enum OffsetType {
       Up,
       Right,
@@ -35,47 +21,61 @@ namespace Valve.VR.InteractionSystem {
 
     //Info for each of the buttons
     private class ButtonHintInfo {
+      public Transform canvasOffset;
       public string componentName;
-      public List<MeshRenderer> renderers;
+
+      public float distanceFromCenter;
+      public LineRenderer line;
       public Transform localTransform;
+      public List<MeshRenderer> renderers;
+
+      public Text text;
+      public Canvas textCanvas;
+      public Transform textEndAnchor;
+      public Vector3 textEndOffsetDir;
+      public bool textHintActive;
 
       //Text hint
       public GameObject textHintObject;
-      public Transform textStartAnchor;
-      public Transform textEndAnchor;
-      public Vector3 textEndOffsetDir;
-      public Transform canvasOffset;
-
-      public Text text;
       public TextMesh textMesh;
-      public Canvas textCanvas;
-      public LineRenderer line;
-
-      public float distanceFromCenter;
-      public bool textHintActive = false;
+      public Transform textStartAnchor;
     }
 
-    private Dictionary<EVRButtonId, ButtonHintInfo> buttonHintInfos;
-    private Transform textHintParent;
+    public Material controllerMaterial;
 
-    private List<KeyValuePair<string, ulong>> componentButtonMasks =
-      new List<KeyValuePair<string, ulong>>();
+    [Header("Debug")] public bool debugHints = false;
+    public Color flashColor = new Color(1.0f, 0.557f, 0.0f);
+    public GameObject textHintPrefab;
+
+    private Dictionary<EVRButtonId, ButtonHintInfo> buttonHintInfos;
+    private Vector3 centerPosition = Vector3.zero;
 
     private int colorID;
 
-    public bool initialized { get; private set; }
-    private Vector3 centerPosition = Vector3.zero;
+    private readonly List<KeyValuePair<string, ulong>> componentButtonMasks = new List<KeyValuePair<string, ulong>>();
 
-    SteamVR_Events.Action renderModelLoadedAction;
+    private readonly List<MeshRenderer> flashingRenderers = new List<MeshRenderer>();
+    private Player player;
+
+    private readonly List<MeshRenderer> renderers = new List<MeshRenderer>();
+
+    private SteamVR_RenderModel renderModel;
+
+    private SteamVR_Events.Action renderModelLoadedAction;
+    private float startTime;
+    private Transform textHintParent;
+    private float tickCount;
+
+    public bool initialized { get; private set; }
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       renderModelLoadedAction = SteamVR_Events.RenderModelLoadedAction(OnRenderModelLoaded);
       colorID = Shader.PropertyToID("_Color");
     }
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       player = Player.instance;
     }
 
@@ -87,12 +87,12 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnEnable() {
+    private void OnEnable() {
       renderModelLoadedAction.enabled = true;
     }
 
     //-------------------------------------------------
-    void OnDisable() {
+    private void OnDisable() {
       renderModelLoadedAction.enabled = false;
       Clear();
     }
@@ -123,11 +123,11 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnRenderModelLoaded(SteamVR_RenderModel renderModel, bool succeess) {
+    private void OnRenderModelLoaded(SteamVR_RenderModel renderModel, bool succeess) {
       //Only initialize when the render model for the controller hints has been loaded
       if (renderModel == this.renderModel) {
         textHintParent = new GameObject("Text Hints").transform;
-        textHintParent.SetParent(this.transform);
+        textHintParent.SetParent(transform);
         textHintParent.localPosition = Vector3.zero;
         textHintParent.localRotation = Quaternion.identity;
         textHintParent.localScale = Vector3.one;
@@ -138,8 +138,7 @@ namespace Valve.VR.InteractionSystem {
           if (renderModels != null) {
             string renderModelDebug = "Components for render model " + renderModel.index;
             foreach (Transform child in renderModel.transform) {
-              ulong buttonMask = renderModels.GetComponentButtonMask(renderModel.renderModelName,
-                child.name);
+              ulong buttonMask = renderModels.GetComponentButtonMask(renderModel.renderModelName, child.name);
 
               componentButtonMasks.Add(new KeyValuePair<string, ulong>(child.name, buttonMask));
 
@@ -185,14 +184,12 @@ namespace Valve.VR.InteractionSystem {
 
       foreach (KeyValuePair<string, ulong> componentButtonMask in componentButtonMasks) {
         if ((componentButtonMask.Value & buttonMaskForID) == buttonMaskForID) {
-          buttonDebug += "\nFound component: " + componentButtonMask.Key + " " +
-                         componentButtonMask.Value;
+          buttonDebug += "\nFound component: " + componentButtonMask.Key + " " + componentButtonMask.Value;
           Transform componentTransform = renderModel.FindComponent(componentButtonMask.Key);
 
           buttonTransform = componentTransform;
 
-          buttonDebug += "\nFound componentTransform: " + componentTransform + " buttonTransform: " +
-                         buttonTransform;
+          buttonDebug += "\nFound componentTransform: " + componentTransform + " buttonTransform: " + buttonTransform;
 
           buttonRenderers.AddRange(componentTransform.GetComponentsInChildren<MeshRenderer>());
         }
@@ -233,11 +230,11 @@ namespace Valve.VR.InteractionSystem {
           offsetType = OffsetType.Right;
         }
           break;
-        case Valve.VR.EVRButtonId.k_EButton_Grip: {
+        case EVRButtonId.k_EButton_Grip: {
           offsetType = OffsetType.Forward;
         }
           break;
-        case Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad: {
+        case EVRButtonId.k_EButton_SteamVR_Touchpad: {
           offsetType = OffsetType.Up;
         }
           break;
@@ -260,10 +257,8 @@ namespace Valve.VR.InteractionSystem {
       }
 
       //Create the text hint object
-      Vector3 hintStartPos = hintInfo.localTransform.position +
-                             (hintInfo.localTransform.forward * 0.01f);
-      hintInfo.textHintObject =
-        GameObject.Instantiate(textHintPrefab, hintStartPos, Quaternion.identity) as GameObject;
+      Vector3 hintStartPos = hintInfo.localTransform.position + (hintInfo.localTransform.forward * 0.01f);
+      hintInfo.textHintObject = Instantiate(textHintPrefab, hintStartPos, Quaternion.identity);
       hintInfo.textHintObject.name = "Hint_" + hintInfo.componentName + "_Start";
       hintInfo.textHintObject.transform.SetParent(textHintParent);
 
@@ -291,14 +286,13 @@ namespace Valve.VR.InteractionSystem {
       centerPosition += hintInfo.textStartAnchor.position;
 
       // Scale hint components to match player size
-      hintInfo.textCanvas.transform.localScale =
-        Vector3.Scale(hintInfo.textCanvas.transform.localScale, player.transform.localScale);
-      hintInfo.textStartAnchor.transform.localScale =
-        Vector3.Scale(hintInfo.textStartAnchor.transform.localScale, player.transform.localScale);
-      hintInfo.textEndAnchor.transform.localScale =
-        Vector3.Scale(hintInfo.textEndAnchor.transform.localScale, player.transform.localScale);
-      hintInfo.line.transform.localScale = Vector3.Scale(hintInfo.line.transform.localScale,
+      hintInfo.textCanvas.transform.localScale = Vector3.Scale(hintInfo.textCanvas.transform.localScale,
         player.transform.localScale);
+      hintInfo.textStartAnchor.transform.localScale = Vector3.Scale(hintInfo.textStartAnchor.transform.localScale,
+        player.transform.localScale);
+      hintInfo.textEndAnchor.transform.localScale = Vector3.Scale(hintInfo.textEndAnchor.transform.localScale,
+        player.transform.localScale);
+      hintInfo.line.transform.localScale = Vector3.Scale(hintInfo.line.transform.localScale, player.transform.localScale);
     }
 
     //-------------------------------------------------
@@ -310,8 +304,7 @@ namespace Valve.VR.InteractionSystem {
       float maxDistanceFromCenter = 0.0f;
 
       foreach (var hintInfo in buttonHintInfos) {
-        hintInfo.Value.distanceFromCenter = Vector3.Distance(
-          hintInfo.Value.textStartAnchor.position, centerPosition);
+        hintInfo.Value.distanceFromCenter = Vector3.Distance(hintInfo.Value.textStartAnchor.position, centerPosition);
 
         if (hintInfo.Value.distanceFromCenter > maxDistanceFromCenter) {
           maxDistanceFromCenter = hintInfo.Value.distanceFromCenter;
@@ -331,8 +324,7 @@ namespace Valve.VR.InteractionSystem {
         //Flip the direction of the end pos based on which hand this is
         float endPosOffset = 0.1f;
 
-        Vector3 hintEndPos = hintInfo.Value.textStartAnchor.position +
-                             (hintInfo.Value.textEndOffsetDir * endPosOffset) +
+        Vector3 hintEndPos = hintInfo.Value.textStartAnchor.position + (hintInfo.Value.textEndOffsetDir * endPosOffset) +
                              (centerToButton * scale * 0.1f);
         hintInfo.Value.textEndAnchor.position = hintEndPos;
 
@@ -345,7 +337,7 @@ namespace Valve.VR.InteractionSystem {
     private void ShowButtonHint(params EVRButtonId[] buttons) {
       renderModel.gameObject.SetActive(true);
 
-      renderModel.GetComponentsInChildren<MeshRenderer>(renderers);
+      renderModel.GetComponentsInChildren(renderers);
       for (int i = 0; i < renderers.Count; i++) {
         Texture mainTexture = renderers[i].material.mainTexture;
         renderers[i].sharedMaterial = controllerMaterial;
@@ -445,9 +437,8 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Update() {
-      if (renderModel != null && renderModel.gameObject.activeInHierarchy &&
-          flashingRenderers.Count > 0) {
+    private void Update() {
+      if (renderModel != null && renderModel.gameObject.activeInHierarchy && flashingRenderers.Count > 0) {
         Color baseColor = controllerMaterial.GetColor(colorID);
 
         float flash = (Time.realtimeSinceStartup - startTime) * Mathf.PI * 2.0f;
@@ -498,10 +489,8 @@ namespace Valve.VR.InteractionSystem {
       Transform lineTransform = hintInfo.line.transform;
 
       hintInfo.line.useWorldSpace = false;
-      hintInfo.line.SetPosition(0,
-        lineTransform.InverseTransformPoint(hintInfo.textStartAnchor.position));
-      hintInfo.line.SetPosition(1,
-        lineTransform.InverseTransformPoint(hintInfo.textEndAnchor.position));
+      hintInfo.line.SetPosition(0, lineTransform.InverseTransformPoint(hintInfo.textStartAnchor.position));
+      hintInfo.line.SetPosition(1, lineTransform.InverseTransformPoint(hintInfo.textEndAnchor.position));
     }
 
     //-------------------------------------------------
@@ -618,8 +607,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    public static void ShowTextHint(Hand hand, EVRButtonId button, string text,
-                                    bool highlightButton = true) {
+    public static void ShowTextHint(Hand hand, EVRButtonId button, string text, bool highlightButton = true) {
       ControllerButtonHints hints = GetControllerButtonHints(hand);
       if (hints != null) {
         hints.ShowText(button, text, highlightButton);

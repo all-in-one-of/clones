@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace NewtonVR.Example {
   public class NVRExampleDegreeResult : MonoBehaviour {
@@ -8,7 +7,7 @@ namespace NewtonVR.Example {
     private TextMesh Text;
 
     private void Awake() {
-      Text = this.GetComponent<TextMesh>();
+      Text = GetComponent<TextMesh>();
     }
 
     private void Update() {

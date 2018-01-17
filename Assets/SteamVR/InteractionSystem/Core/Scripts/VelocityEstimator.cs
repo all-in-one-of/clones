@@ -4,24 +4,24 @@
 //
 //=============================================================================
 
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class VelocityEstimator : MonoBehaviour {
-    [Tooltip("How many frames to average over for computing velocity")] public int
-      velocityAverageFrames = 5;
-
-    [Tooltip("How many frames to average over for computing angular velocity")] public int
-      angularVelocityAverageFrames = 11;
+    [Tooltip("How many frames to average over for computing angular velocity")] public int angularVelocityAverageFrames
+      = 11;
 
     public bool estimateOnAwake = false;
+
+    [Tooltip("How many frames to average over for computing velocity")] public int velocityAverageFrames = 5;
+
+    private Vector3[] angularVelocitySamples;
 
     private Coroutine routine;
     private int sampleCount;
     private Vector3[] velocitySamples;
-    private Vector3[] angularVelocitySamples;
 
     //-------------------------------------------------
     public void BeginEstimatingVelocity() {
@@ -72,8 +72,7 @@ namespace Valve.VR.InteractionSystem {
     public Vector3 GetAccelerationEstimate() {
       Vector3 average = Vector3.zero;
       for (int i = 2 + sampleCount - velocitySamples.Length; i < sampleCount; i++) {
-        if (i < 2)
-          continue;
+        if (i < 2) continue;
 
         int first = i - 2;
         int second = i - 1;
@@ -87,7 +86,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       velocitySamples = new Vector3[velocityAverageFrames];
       angularVelocitySamples = new Vector3[angularVelocityAverageFrames];
 

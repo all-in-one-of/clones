@@ -1,5 +1,6 @@
 ﻿//======= Copyright (c) Valve Corporation, All rights reserved. ===============
 
+using System.Runtime.InteropServices;
 using UnityEngine;
 using Valve.VR;
 
@@ -14,12 +15,12 @@ public delegate void ClickedEventHandler(object sender, ClickedEventArgs e);
 public class SteamVR_TrackedController : MonoBehaviour {
   public uint controllerIndex;
   public VRControllerState_t controllerState;
-  public bool triggerPressed = false;
+  public bool gripped;
+  public bool menuPressed;
+  public bool padPressed;
+  public bool padTouched;
   public bool steamPressed = false;
-  public bool menuPressed = false;
-  public bool padPressed = false;
-  public bool padTouched = false;
-  public bool gripped = false;
+  public bool triggerPressed;
 
   public event ClickedEventHandler MenuButtonClicked;
   public event ClickedEventHandler MenuButtonUnclicked;
@@ -34,90 +35,76 @@ public class SteamVR_TrackedController : MonoBehaviour {
   public event ClickedEventHandler Ungripped;
 
   // Use this for initialization
-  void Start() {
-    if (this.GetComponent<SteamVR_TrackedObject>() == null) {
+  private void Start() {
+    if (GetComponent<SteamVR_TrackedObject>() == null) {
       gameObject.AddComponent<SteamVR_TrackedObject>();
     }
 
     if (controllerIndex != 0) {
-      this.GetComponent<SteamVR_TrackedObject>().index =
-        (SteamVR_TrackedObject.EIndex) controllerIndex;
-      if (this.GetComponent<SteamVR_RenderModel>() != null) {
-        this.GetComponent<SteamVR_RenderModel>().index =
-          (SteamVR_TrackedObject.EIndex) controllerIndex;
+      GetComponent<SteamVR_TrackedObject>().index = (SteamVR_TrackedObject.EIndex) controllerIndex;
+      if (GetComponent<SteamVR_RenderModel>() != null) {
+        GetComponent<SteamVR_RenderModel>().index = (SteamVR_TrackedObject.EIndex) controllerIndex;
       }
     } else {
-      controllerIndex = (uint) this.GetComponent<SteamVR_TrackedObject>().index;
+      controllerIndex = (uint) GetComponent<SteamVR_TrackedObject>().index;
     }
   }
 
   public void SetDeviceIndex(int index) {
-    this.controllerIndex = (uint) index;
+    controllerIndex = (uint) index;
   }
 
   public virtual void OnTriggerClicked(ClickedEventArgs e) {
-    if (TriggerClicked != null)
-      TriggerClicked(this, e);
+    if (TriggerClicked != null) TriggerClicked(this, e);
   }
 
   public virtual void OnTriggerUnclicked(ClickedEventArgs e) {
-    if (TriggerUnclicked != null)
-      TriggerUnclicked(this, e);
+    if (TriggerUnclicked != null) TriggerUnclicked(this, e);
   }
 
   public virtual void OnMenuClicked(ClickedEventArgs e) {
-    if (MenuButtonClicked != null)
-      MenuButtonClicked(this, e);
+    if (MenuButtonClicked != null) MenuButtonClicked(this, e);
   }
 
   public virtual void OnMenuUnclicked(ClickedEventArgs e) {
-    if (MenuButtonUnclicked != null)
-      MenuButtonUnclicked(this, e);
+    if (MenuButtonUnclicked != null) MenuButtonUnclicked(this, e);
   }
 
   public virtual void OnSteamClicked(ClickedEventArgs e) {
-    if (SteamClicked != null)
-      SteamClicked(this, e);
+    if (SteamClicked != null) SteamClicked(this, e);
   }
 
   public virtual void OnPadClicked(ClickedEventArgs e) {
-    if (PadClicked != null)
-      PadClicked(this, e);
+    if (PadClicked != null) PadClicked(this, e);
   }
 
   public virtual void OnPadUnclicked(ClickedEventArgs e) {
-    if (PadUnclicked != null)
-      PadUnclicked(this, e);
+    if (PadUnclicked != null) PadUnclicked(this, e);
   }
 
   public virtual void OnPadTouched(ClickedEventArgs e) {
-    if (PadTouched != null)
-      PadTouched(this, e);
+    if (PadTouched != null) PadTouched(this, e);
   }
 
   public virtual void OnPadUntouched(ClickedEventArgs e) {
-    if (PadUntouched != null)
-      PadUntouched(this, e);
+    if (PadUntouched != null) PadUntouched(this, e);
   }
 
   public virtual void OnGripped(ClickedEventArgs e) {
-    if (Gripped != null)
-      Gripped(this, e);
+    if (Gripped != null) Gripped(this, e);
   }
 
   public virtual void OnUngripped(ClickedEventArgs e) {
-    if (Ungripped != null)
-      Ungripped(this, e);
+    if (Ungripped != null) Ungripped(this, e);
   }
 
   // Update is called once per frame
-  void Update() {
+  private void Update() {
     var system = OpenVR.System;
     if (system != null &&
         system.GetControllerState(controllerIndex, ref controllerState,
-          (uint) System.Runtime.InteropServices.Marshal.SizeOf(typeof(VRControllerState_t)))) {
-      ulong trigger = controllerState.ulButtonPressed &
-                      (1UL << ((int) EVRButtonId.k_EButton_SteamVR_Trigger));
+          (uint) Marshal.SizeOf(typeof(VRControllerState_t)))) {
+      ulong trigger = controllerState.ulButtonPressed & (1UL << ((int) EVRButtonId.k_EButton_SteamVR_Trigger));
       if (trigger > 0L && !triggerPressed) {
         triggerPressed = true;
         ClickedEventArgs e;
@@ -155,8 +142,7 @@ public class SteamVR_TrackedController : MonoBehaviour {
         OnUngripped(e);
       }
 
-      ulong pad = controllerState.ulButtonPressed &
-                  (1UL << ((int) EVRButtonId.k_EButton_SteamVR_Touchpad));
+      ulong pad = controllerState.ulButtonPressed & (1UL << ((int) EVRButtonId.k_EButton_SteamVR_Touchpad));
       if (pad > 0L && !padPressed) {
         padPressed = true;
         ClickedEventArgs e;
@@ -175,8 +161,7 @@ public class SteamVR_TrackedController : MonoBehaviour {
         OnPadUnclicked(e);
       }
 
-      ulong menu = controllerState.ulButtonPressed &
-                   (1UL << ((int) EVRButtonId.k_EButton_ApplicationMenu));
+      ulong menu = controllerState.ulButtonPressed & (1UL << ((int) EVRButtonId.k_EButton_ApplicationMenu));
       if (menu > 0L && !menuPressed) {
         menuPressed = true;
         ClickedEventArgs e;
@@ -195,8 +180,7 @@ public class SteamVR_TrackedController : MonoBehaviour {
         OnMenuUnclicked(e);
       }
 
-      pad = controllerState.ulButtonTouched &
-            (1UL << ((int) EVRButtonId.k_EButton_SteamVR_Touchpad));
+      pad = controllerState.ulButtonTouched & (1UL << ((int) EVRButtonId.k_EButton_SteamVR_Touchpad));
       if (pad > 0L && !padTouched) {
         padTouched = true;
         ClickedEventArgs e;

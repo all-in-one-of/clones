@@ -5,7 +5,6 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -16,7 +15,7 @@ namespace Valve.VR.InteractionSystem {
     private float lastValue;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       if (skinnedMesh == null) {
         skinnedMesh = GetComponent<SkinnedMeshRenderer>();
       }
@@ -27,7 +26,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       float value = linearMapping.value;
 
       //No need to set the blend if our value hasn't changed.

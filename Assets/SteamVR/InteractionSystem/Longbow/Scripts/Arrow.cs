@@ -5,43 +5,42 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class Arrow : MonoBehaviour {
-    public ParticleSystem glintParticle;
+    public SoundPlayOneshot airReleaseSound;
     public Rigidbody arrowHeadRB;
+
+    public SoundPlayOneshot fireReleaseSound;
+    public ParticleSystem glintParticle;
+
+    public PlaySound hitGroundSound;
+    public SoundPlayOneshot hitTargetSound;
     public Rigidbody shaftRB;
 
     public PhysicMaterial targetPhysMaterial;
+    private bool hasSpreadFire;
+
+    private bool inFlight;
+    private Vector3 prevHeadPosition;
 
     private Vector3 prevPosition;
     private Quaternion prevRotation;
     private Vector3 prevVelocity;
-    private Vector3 prevHeadPosition;
-
-    public SoundPlayOneshot fireReleaseSound;
-    public SoundPlayOneshot airReleaseSound;
-    public SoundPlayOneshot hitTargetSound;
-
-    public PlaySound hitGroundSound;
-
-    private bool inFlight;
     private bool released;
-    private bool hasSpreadFire = false;
 
-    private int travelledFrames = 0;
+    private GameObject scaleParentObject;
 
-    private GameObject scaleParentObject = null;
+    private int travelledFrames;
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       Physics.IgnoreCollision(shaftRB.GetComponent<Collider>(), Player.instance.headCollider);
     }
 
     //-------------------------------------------------
-    void FixedUpdate() {
+    private void FixedUpdate() {
       if (released && inFlight) {
         prevPosition = transform.position;
         prevRotation = transform.rotation;
@@ -70,8 +69,7 @@ namespace Valve.VR.InteractionSystem {
       RaycastHit[] hits = Physics.SphereCastAll(transform.position, 0.01f, transform.forward, 0.80f,
         Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
       foreach (RaycastHit hit in hits) {
-        if (hit.collider.gameObject != gameObject &&
-            hit.collider.gameObject != arrowHeadRB.gameObject &&
+        if (hit.collider.gameObject != gameObject && hit.collider.gameObject != arrowHeadRB.gameObject &&
             hit.collider != Player.instance.headCollider) {
           Destroy(gameObject);
           return;
@@ -88,12 +86,12 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnCollisionEnter(Collision collision) {
+    private void OnCollisionEnter(Collision collision) {
       if (inFlight) {
         Rigidbody rb = GetComponent<Rigidbody>();
         float rbSpeed = rb.velocity.sqrMagnitude;
-        bool canStick = (targetPhysMaterial != null &&
-                         collision.collider.sharedMaterial == targetPhysMaterial && rbSpeed > 0.2f);
+        bool canStick = (targetPhysMaterial != null && collision.collider.sharedMaterial == targetPhysMaterial &&
+                         rbSpeed > 0.2f);
         bool hitBalloon = collision.collider.gameObject.GetComponent<Balloon>() != null;
 
         if (travelledFrames < 2 && !canStick) {
@@ -131,8 +129,7 @@ namespace Valve.VR.InteractionSystem {
           // Only count collisions with good speed so that arrows on the ground can't deal damage
           // always pop balloons
           if (rbSpeed > 0.1f || hitBalloon) {
-            collision.collider.gameObject.SendMessageUpwards("ApplyDamage",
-              SendMessageOptions.DontRequireReceiver);
+            collision.collider.gameObject.SendMessageUpwards("ApplyDamage", SendMessageOptions.DontRequireReceiver);
             gameObject.SendMessage("HasAppliedDamage", SendMessageOptions.DontRequireReceiver);
           }
         }
@@ -226,7 +223,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnDestroy() {
+    private void OnDestroy() {
       if (scaleParentObject != null) {
         Destroy(scaleParentObject);
       }

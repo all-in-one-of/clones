@@ -4,26 +4,20 @@
 //
 //=============================================================================
 
-using UnityEngine;
-using UnityEditor;
-using System.Text;
 using System.Collections.Generic;
-using Valve.VR;
+using System.Text;
+using UnityEditor;
+using UnityEngine;
 
-[CustomEditor(typeof(SteamVR_RenderModel)), CanEditMultipleObjects]
+[CustomEditor(typeof(SteamVR_RenderModel))]
+[CanEditMultipleObjects]
 public class SteamVR_RenderModelEditor : Editor {
-  SerializedProperty script,
-    index,
-    modelOverride,
-    shader,
-    verbose,
-    createComponents,
-    updateDynamically;
+  private static string[] renderModelNames;
+  private int renderModelIndex;
 
-  static string[] renderModelNames;
-  int renderModelIndex;
+  private SerializedProperty script, index, modelOverride, shader, verbose, createComponents, updateDynamically;
 
-  void OnEnable() {
+  private void OnEnable() {
     script = serializedObject.FindProperty("m_Script");
     index = serializedObject.FindProperty("index");
     modelOverride = serializedObject.FindProperty("modelOverride");
@@ -48,7 +42,7 @@ public class SteamVR_RenderModelEditor : Editor {
     }
   }
 
-  static string[] LoadRenderModelNames() {
+  private static string[] LoadRenderModelNames() {
     var results = new List<string>();
     results.Add("None");
 
@@ -59,8 +53,7 @@ public class SteamVR_RenderModelEditor : Editor {
         for (uint i = 0; i < count; i++) {
           var buffer = new StringBuilder();
           var requiredSize = renderModels.GetRenderModelName(i, buffer, 0);
-          if (requiredSize == 0)
-            continue;
+          if (requiredSize == 0) continue;
 
           buffer.EnsureCapacity((int) requiredSize);
           renderModels.GetRenderModelName(i, buffer, requiredSize);

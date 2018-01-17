@@ -1,10 +1,9 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace NewtonVR {
   public class NVRCollisionSoundObject : MonoBehaviour {
-    private static Dictionary<Collider, NVRCollisionSoundObject> SoundObjects =
+    private static readonly Dictionary<Collider, NVRCollisionSoundObject> SoundObjects =
       new Dictionary<Collider, NVRCollisionSoundObject>();
 
     public NVRCollisionSoundMaterials Material;
@@ -12,7 +11,7 @@ namespace NewtonVR {
     private Collider[] Colliders;
 
     protected virtual void Awake() {
-      Colliders = this.GetComponentsInChildren<Collider>(true);
+      Colliders = GetComponentsInChildren<Collider>(true);
 
       for (int index = 0; index < Colliders.Length; index++) {
         SoundObjects[Colliders[index]] = this;
@@ -20,7 +19,7 @@ namespace NewtonVR {
     }
 
     protected virtual void OnDestroy() {
-      Colliders = this.GetComponentsInChildren<Collider>(true);
+      Colliders = GetComponentsInChildren<Collider>(true);
 
       for (int index = 0; index < Colliders.Length; index++) {
         SoundObjects.Remove(Colliders[index]);
@@ -38,9 +37,8 @@ namespace NewtonVR {
           return;
         }
 
-        NVRCollisionSoundController.Play(this.Material, collision.contacts[0].point, volume);
-        NVRCollisionSoundController.Play(collisionSoundObject.Material, collision.contacts[0].point,
-          volume);
+        NVRCollisionSoundController.Play(Material, collision.contacts[0].point, volume);
+        NVRCollisionSoundController.Play(collisionSoundObject.Material, collision.contacts[0].point, volume);
       }
     }
 
@@ -52,19 +50,18 @@ namespace NewtonVR {
     }
 
     /// <summary>
-    /// Easing equation function for a cubic (t^3) easing out: 
-    /// decelerating from zero velocity.
+    ///   Easing equation function for a cubic (t^3) easing out:
+    ///   decelerating from zero velocity.
     /// </summary>
     /// <param name="velocity">Current time in seconds.</param>
     /// <param name="startingValue">Starting value.</param>
     /// <param name="changeInValue">Change in value.</param>
     /// <param name="maxCollisionVelocity">Duration of animation.</param>
     /// <returns>The correct value.</returns>
-    public static float CubicEaseOut(float velocity, float startingValue = 0,
-                                     float changeInValue = 1) {
+    public static float CubicEaseOut(float velocity, float startingValue = 0, float changeInValue = 1) {
       return changeInValue *
-             ((velocity = velocity / NVRCollisionSoundController.Instance.MaxCollisionVelocity - 1) *
-              velocity * velocity + 1) + startingValue;
+             ((velocity = velocity / NVRCollisionSoundController.Instance.MaxCollisionVelocity - 1) * velocity *
+              velocity + 1) + startingValue;
     }
   }
 }

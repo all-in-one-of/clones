@@ -4,30 +4,31 @@
 //
 //=============================================================================
 
-using UnityEngine;
-using UnityEditor;
-using System.Text;
-using System.Collections.Generic;
-using Valve.VR;
+using System.Diagnostics;
 using System.IO;
+using UnityEditor;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
 
-[CustomEditor(typeof(SteamVR_Skybox)), CanEditMultipleObjects]
+[CustomEditor(typeof(SteamVR_Skybox))]
+[CanEditMultipleObjects]
 public class SteamVR_SkyboxEditor : Editor {
   private const string nameFormat = "{0}/{1}-{2}.png";
 
-  private const string helpText = "Take snapshot will use the current " +
-                                  "position and rotation to capture six directional screenshots to use as this " +
-                                  "skybox's textures.  Note: This skybox is only used to override what shows up " +
-                                  "in the compositor (e.g. when loading levels).  Add a Camera component to this " +
-                                  "object to override default settings like which layers to render.  Additionally, " +
-                                  "by specifying your own targetTexture, you can control the size of the textures " +
-                                  "and other properties like antialiasing.  Don't forget to disable the camera.\n\n" +
-                                  "For stereo screenshots, a panorama is render for each eye using the specified " +
-                                  "ipd (in millimeters) broken up into segments cellSize pixels square to optimize " +
-                                  "generation.\n(32x32 takes about 10 seconds depending on scene complexity, 16x16 " +
-                                  "takes around a minute, while will 8x8 take several minutes.)\n\nTo test, hit " +
-                                  "play then pause - this will activate the skybox settings, and then drop you to " +
-                                  "the compositor where the skybox is rendered.";
+  private const string helpText =
+    "Take snapshot will use the current " +
+    "position and rotation to capture six directional screenshots to use as this " +
+    "skybox's textures.  Note: This skybox is only used to override what shows up " +
+    "in the compositor (e.g. when loading levels).  Add a Camera component to this " +
+    "object to override default settings like which layers to render.  Additionally, " +
+    "by specifying your own targetTexture, you can control the size of the textures " +
+    "and other properties like antialiasing.  Don't forget to disable the camera.\n\n" +
+    "For stereo screenshots, a panorama is render for each eye using the specified " +
+    "ipd (in millimeters) broken up into segments cellSize pixels square to optimize " +
+    "generation.\n(32x32 takes about 10 seconds depending on scene complexity, 16x16 " +
+    "takes around a minute, while will 8x8 take several minutes.)\n\nTo test, hit " +
+    "play then pause - this will activate the skybox settings, and then drop you to " +
+    "the compositor where the skybox is rendered.";
 
   public override void OnInspectorGUI() {
     DrawDefaultInspector();
@@ -35,13 +36,10 @@ public class SteamVR_SkyboxEditor : Editor {
     EditorGUILayout.HelpBox(helpText, MessageType.Info);
 
     if (GUILayout.Button("Take snapshot")) {
-      var directions = new Quaternion[] {
-        Quaternion.LookRotation(Vector3.forward),
-        Quaternion.LookRotation(Vector3.back),
-        Quaternion.LookRotation(Vector3.left),
-        Quaternion.LookRotation(Vector3.right),
-        Quaternion.LookRotation(Vector3.up, Vector3.back),
-        Quaternion.LookRotation(Vector3.down, Vector3.forward)
+      var directions = new[] {
+        Quaternion.LookRotation(Vector3.forward), Quaternion.LookRotation(Vector3.back),
+        Quaternion.LookRotation(Vector3.left), Quaternion.LookRotation(Vector3.right),
+        Quaternion.LookRotation(Vector3.up, Vector3.back), Quaternion.LookRotation(Vector3.down, Vector3.forward)
       };
 
       Camera tempCamera = null;
@@ -57,8 +55,7 @@ public class SteamVR_SkyboxEditor : Editor {
 
         var camera = target.GetComponent<Camera>();
         if (camera == null) {
-          if (tempCamera == null)
-            tempCamera = new GameObject().AddComponent<Camera>();
+          if (tempCamera == null) tempCamera = new GameObject().AddComponent<Camera>();
           camera = tempCamera;
         }
 
@@ -84,14 +81,13 @@ public class SteamVR_SkyboxEditor : Editor {
 
           // Copy to texture and save to disk.
           RenderTexture.active = targetTexture;
-          var texture = new Texture2D(targetTexture.width, targetTexture.height,
-            TextureFormat.ARGB32, false);
+          var texture = new Texture2D(targetTexture.width, targetTexture.height, TextureFormat.ARGB32, false);
           texture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
           texture.Apply();
           RenderTexture.active = null;
 
           var assetName = string.Format(nameFormat, assetPath, target.name, i);
-          System.IO.File.WriteAllBytes(assetName, texture.EncodeToPNG());
+          File.WriteAllBytes(assetName, texture.EncodeToPNG());
         }
 
         if (camera != tempCamera) {
@@ -101,7 +97,7 @@ public class SteamVR_SkyboxEditor : Editor {
       }
 
       if (tempCamera != null) {
-        Object.DestroyImmediate(tempCamera.gameObject);
+        DestroyImmediate(tempCamera.gameObject);
       }
 
       // Now that everything has be written out, reload the associated assets and assign them.
@@ -133,12 +129,12 @@ public class SteamVR_SkyboxEditor : Editor {
       const int height = width / 2;
       const int halfHeight = height / 2;
 
-      var textures = new Texture2D[] {
+      var textures = new[] {
         new Texture2D(width, height, TextureFormat.ARGB32, false),
         new Texture2D(width, height, TextureFormat.ARGB32, false)
       };
 
-      var timer = new System.Diagnostics.Stopwatch();
+      var timer = new Stopwatch();
 
       Camera tempCamera = null;
       foreach (SteamVR_Skybox target in targets) {
@@ -155,8 +151,7 @@ public class SteamVR_SkyboxEditor : Editor {
 
         var camera = target.GetComponent<Camera>();
         if (camera == null) {
-          if (tempCamera == null)
-            tempCamera = new GameObject().AddComponent<Camera>();
+          if (tempCamera == null) tempCamera = new GameObject().AddComponent<Camera>();
           camera = tempCamera;
         }
 
@@ -272,16 +267,13 @@ public class SteamVR_SkyboxEditor : Editor {
                 var vAxis = P0M_P1M * vScale;
 
                 // update material constant buffer
-                fx.Set(N, phi0, phi1, theta0, theta1,
-                  uAxis, P00, uScale,
-                  vAxis, P0M, vScale);
+                fx.Set(N, phi0, phi1, theta0, theta1, uAxis, P00, uScale, vAxis, P0M, vScale);
 
                 camera.aspect = uMag / vMag;
                 camera.Render();
 
                 RenderTexture.active = targetTexture;
-                texture.ReadPixels(new Rect(0, 0, targetTexture.width, targetTexture.height),
-                  uTarget, vTarget);
+                texture.ReadPixels(new Rect(0, 0, targetTexture.width, targetTexture.height), uTarget, vTarget);
                 RenderTexture.active = null;
               }
             }

@@ -25,12 +25,12 @@ namespace NewtonVR {
   }
 
   public class NVRButtonsHelper {
-    private static NVRButtons[] array = null;
+    private static NVRButtons[] array;
 
     public static NVRButtons[] Array {
       get {
         if (array == null) {
-          array = (NVRButtons[]) System.Enum.GetValues(typeof(NVRButtons));
+          array = (NVRButtons[]) Enum.GetValues(typeof(NVRButtons));
         }
         return array;
       }

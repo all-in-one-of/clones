@@ -5,21 +5,19 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class SeeThru : MonoBehaviour {
     public Material seeThruMaterial;
+    private Renderer destRenderer;
+    private Interactable interactable;
 
     private GameObject seeThru;
-    private Interactable interactable;
     private Renderer sourceRenderer;
-    private Renderer destRenderer;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       interactable = GetComponentInParent<Interactable>();
 
       //
@@ -92,13 +90,13 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnEnable() {
+    private void OnEnable() {
       interactable.onAttachedToHand += AttachedToHand;
       interactable.onDetachedFromHand += DetachedFromHand;
     }
 
     //-------------------------------------------------
-    void OnDisable() {
+    private void OnDisable() {
       interactable.onAttachedToHand -= AttachedToHand;
       interactable.onDetachedFromHand -= DetachedFromHand;
     }
@@ -114,13 +112,12 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       if (seeThru.activeInHierarchy) {
         int materialCount = Mathf.Min(sourceRenderer.materials.Length, destRenderer.materials.Length);
         for (int i = 0; i < materialCount; i++) {
           destRenderer.materials[i].mainTexture = sourceRenderer.materials[i].mainTexture;
-          destRenderer.materials[i].color = destRenderer.materials[i].color *
-                                            sourceRenderer.materials[i].color;
+          destRenderer.materials[i].color = destRenderer.materials[i].color * sourceRenderer.materials[i].color;
         }
       }
     }

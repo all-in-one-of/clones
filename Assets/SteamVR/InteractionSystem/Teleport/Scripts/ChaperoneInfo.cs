@@ -4,26 +4,21 @@
 //
 //=============================================================================
 
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class ChaperoneInfo : MonoBehaviour {
+    public static SteamVR_Events.Event Initialized = new SteamVR_Events.Event();
+
+    //-------------------------------------------------
+    private static ChaperoneInfo _instance;
     public bool initialized { get; private set; }
     public float playAreaSizeX { get; private set; }
     public float playAreaSizeZ { get; private set; }
     public bool roomscale { get; private set; }
-
-    public static SteamVR_Events.Event Initialized = new SteamVR_Events.Event();
-
-    public static SteamVR_Events.Action InitializedAction(UnityAction action) {
-      return new SteamVR_Events.ActionNoArgs(Initialized, action);
-    }
-
-    //-------------------------------------------------
-    private static ChaperoneInfo _instance;
 
     public static ChaperoneInfo instance {
       get {
@@ -40,8 +35,12 @@ namespace Valve.VR.InteractionSystem {
       }
     }
 
+    public static SteamVR_Events.Action InitializedAction(UnityAction action) {
+      return new SteamVR_Events.ActionNoArgs(Initialized, action);
+    }
+
     //-------------------------------------------------
-    IEnumerator Start() {
+    private IEnumerator Start() {
       // Uncomment for roomscale testing
       //_instance.initialized = true;
       //_instance.playAreaSizeX = UnityEngine.Random.Range( 1.0f, 4.0f );
@@ -70,7 +69,7 @@ namespace Valve.VR.InteractionSystem {
           Debug.LogFormat("ChaperoneInfo initialized. {2} play area {0:0.00}m x {1:0.00}m", px, pz,
             roomscale ? "Roomscale" : "Standing");
 
-          ChaperoneInfo.Initialized.Send();
+          Initialized.Send();
 
           yield break;
         }

@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
 using MoreLinq;
 using NewtonVR;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Utilities;
-using Valve.VR;
 
 public class HandControls : MonoBehaviour {
   private abstract class Tool {
@@ -19,13 +15,13 @@ public class HandControls : MonoBehaviour {
     public abstract void Update(NVRHand hand);
 
     /// <summary>
-    /// Called whenever we swap away from this tool.
+    ///   Called whenever we swap away from this tool.
     /// </summary>
     public virtual void ChangeAwayFrom(NVRHand hand) {
     }
 
     /// <summary>
-    /// Called whenever we swap to this tool.
+    ///   Called whenever we swap to this tool.
     /// </summary>
     public virtual void ChangeTo(NVRHand hand) {
     }
@@ -54,10 +50,7 @@ public class HandControls : MonoBehaviour {
         // Find bounds of all colliders and subcolliders on object.
         var colliders = hand.CurrentlyInteracting.gameObject.GetComponentsInChildren<Collider>();
         var bounds = colliders.Select(c => c.bounds).Aggregate((b1, b2) => {
-          var b = new Bounds {
-            center = b1.center,
-            extents = b1.extents
-          };
+          var b = new Bounds {center = b1.center, extents = b1.extents};
 
           b.Encapsulate(b2);
           return b;
@@ -73,9 +66,9 @@ public class HandControls : MonoBehaviour {
   private class MoveRecordings : Tool {
     private readonly Color hover_color = new Color(.5f, 0, 0, 1f);
     private readonly Color nonhover_color = new Color(0, 0, 0, .2f);
+    private PlaybackActions current_hover;
 
-    private Vector3? last_position = null;
-    private PlaybackActions current_hover = null;
+    private Vector3? last_position;
 
     public MoveRecordings() {
       color = Color.green;
@@ -88,9 +81,7 @@ public class HandControls : MonoBehaviour {
         var closest_clone =
           all_playing_clones.MinBy(
             clone => {
-              return
-                clone.Recording.Min(
-                  snapshot => Vector3.Distance(snapshot.position, hand.transform.position));
+              return clone.Recording.Min(snapshot => Vector3.Distance(snapshot.position, hand.transform.position));
             });
 
         // Highlight the recording we're closest to the start point of.
@@ -155,13 +146,9 @@ public class HandControls : MonoBehaviour {
     }
   }
 
-  private Tool[] tools = {
-    new Transport(),
-    new Duplicate(),
-    new MoveRecordings(),
-  };
-
   public int tool = 2;
+
+  private readonly Tool[] tools = {new Transport(), new Duplicate(), new MoveRecordings(),};
 
   // Update is called once per frame
   public void Update() {
@@ -174,8 +161,7 @@ public class HandControls : MonoBehaviour {
     if (GetDPadPress(hand) == NVRButtons.DPad_Down) {
       var all_playing_clones = FindObjectsOfType<PlaybackActions>();
       if (all_playing_clones.Length != 0) {
-        var closest_clone =
-          all_playing_clones.MinBy(x => Vector3.Distance(x.transform.position, transform.position));
+        var closest_clone = all_playing_clones.MinBy(x => Vector3.Distance(x.transform.position, transform.position));
         DestroyImmediate(closest_clone.gameObject);
       }
     }
@@ -211,23 +197,24 @@ public class HandControls : MonoBehaviour {
 
       if (NumUtils.DistanceInModulo(angle, 0, 360) < 45) {
         return NVRButtons.DPad_Right;
-      } else if (NumUtils.DistanceInModulo(angle, 90, 360) < 45) {
-        return NVRButtons.DPad_Up;
-      } else if (NumUtils.DistanceInModulo(angle, 180, 360) < 45) {
-        return NVRButtons.DPad_Left;
-      } else if (NumUtils.DistanceInModulo(angle, 270, 360) < 45) {
-        return NVRButtons.DPad_Down;
-      } else {
-        Debug.LogError(
-          "Error: DPAD Press Math is wrong. Angle did not register with any specified direction.");
       }
+      if (NumUtils.DistanceInModulo(angle, 90, 360) < 45) {
+        return NVRButtons.DPad_Up;
+      }
+      if (NumUtils.DistanceInModulo(angle, 180, 360) < 45) {
+        return NVRButtons.DPad_Left;
+      }
+      if (NumUtils.DistanceInModulo(angle, 270, 360) < 45) {
+        return NVRButtons.DPad_Down;
+      }
+      Debug.LogError("Error: DPAD Press Math is wrong. Angle did not register with any specified direction.");
     }
 
     return null;
   }
 
   /// <summary>
-  /// Shifts the given playback by the positional shift.
+  ///   Shifts the given playback by the positional shift.
   /// </summary>
   private static void shiftRecording(PlaybackActions playback, Vector3 shift) {
     var shifted_recording = playback.Recording.Select(snapshot => {

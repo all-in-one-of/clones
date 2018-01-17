@@ -5,33 +5,32 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   [RequireComponent(typeof(Interactable))]
   public class LinearDrive : MonoBehaviour {
-    public Transform startPosition;
     public Transform endPosition;
     public LinearMapping linearMapping;
-    public bool repositionGameObject = true;
     public bool maintainMomemntum = true;
     public float momemtumDampenRate = 5.0f;
+    public bool repositionGameObject = true;
+    public Transform startPosition;
 
     private float initialMappingOffset;
-    private int numMappingChangeSamples = 5;
-    private float[] mappingChangeSamples;
-    private float prevMapping = 0.0f;
     private float mappingChangeRate;
-    private int sampleCount = 0;
+    private float[] mappingChangeSamples;
+    private readonly int numMappingChangeSamples = 5;
+    private float prevMapping;
+    private int sampleCount;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       mappingChangeSamples = new float[numMappingChangeSamples];
     }
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       if (linearMapping == null) {
         linearMapping = GetComponent<LinearMapping>();
       }
@@ -87,13 +86,11 @@ namespace Valve.VR.InteractionSystem {
       linearMapping.value = Mathf.Clamp01(initialMappingOffset + CalculateLinearMapping(tr));
 
       mappingChangeSamples[sampleCount % mappingChangeSamples.Length] = (1.0f / Time.deltaTime) *
-                                                                        (linearMapping.value -
-                                                                         prevMapping);
+                                                                        (linearMapping.value - prevMapping);
       sampleCount++;
 
       if (repositionGameObject) {
-        transform.position = Vector3.Lerp(startPosition.position, endPosition.position,
-          linearMapping.value);
+        transform.position = Vector3.Lerp(startPosition.position, endPosition.position, linearMapping.value);
       }
     }
 
@@ -109,16 +106,14 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       if (maintainMomemntum && mappingChangeRate != 0.0f) {
         //Dampen the mapping change rate and apply it to the mapping
         mappingChangeRate = Mathf.Lerp(mappingChangeRate, 0.0f, momemtumDampenRate * Time.deltaTime);
-        linearMapping.value =
-          Mathf.Clamp01(linearMapping.value + (mappingChangeRate * Time.deltaTime));
+        linearMapping.value = Mathf.Clamp01(linearMapping.value + (mappingChangeRate * Time.deltaTime));
 
         if (repositionGameObject) {
-          transform.position = Vector3.Lerp(startPosition.position, endPosition.position,
-            linearMapping.value);
+          transform.position = Vector3.Lerp(startPosition.position, endPosition.position, linearMapping.value);
         }
       }
     }

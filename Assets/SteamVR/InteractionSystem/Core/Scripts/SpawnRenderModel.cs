@@ -4,33 +4,31 @@
 //
 //=============================================================================
 
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class SpawnRenderModel : MonoBehaviour {
-    public Material[] materials;
-
-    private SteamVR_RenderModel[] renderModels;
-    private Hand hand;
-    private List<MeshRenderer> renderers = new List<MeshRenderer>();
-
-    private static List<SpawnRenderModel> spawnRenderModels = new List<SpawnRenderModel>();
+    private static readonly List<SpawnRenderModel> spawnRenderModels = new List<SpawnRenderModel>();
     private static int lastFrameUpdated;
     private static int spawnRenderModelUpdateIndex;
+    public Material[] materials;
+    private Hand hand;
+    private readonly List<MeshRenderer> renderers = new List<MeshRenderer>();
 
-    SteamVR_Events.Action renderModelLoadedAction;
+    private SteamVR_Events.Action renderModelLoadedAction;
+
+    private SteamVR_RenderModel[] renderModels;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       renderModels = new SteamVR_RenderModel[materials.Length];
       renderModelLoadedAction = SteamVR_Events.RenderModelLoadedAction(OnRenderModelLoaded);
     }
 
     //-------------------------------------------------
-    void OnEnable() {
+    private void OnEnable() {
       ShowController();
 
       renderModelLoadedAction.enabled = true;
@@ -39,7 +37,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnDisable() {
+    private void OnDisable() {
       HideController();
 
       renderModelLoadedAction.enabled = false;
@@ -60,7 +58,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       // Only update one per frame
       if (lastFrameUpdated == Time.renderedFrameCount) {
         return;
@@ -74,8 +72,7 @@ namespace Valve.VR.InteractionSystem {
 
       // Perform update
       if (spawnRenderModelUpdateIndex < spawnRenderModels.Count) {
-        SteamVR_RenderModel renderModel =
-          spawnRenderModels[spawnRenderModelUpdateIndex].renderModels[0];
+        SteamVR_RenderModel renderModel = spawnRenderModels[spawnRenderModelUpdateIndex].renderModels[0];
         if (renderModel != null) {
           renderModel.UpdateComponents(OpenVR.RenderModels);
         }
@@ -92,8 +89,7 @@ namespace Valve.VR.InteractionSystem {
 
       for (int i = 0; i < renderModels.Length; i++) {
         if (renderModels[i] == null) {
-          renderModels[i] =
-            new GameObject("SteamVR_RenderModel").AddComponent<SteamVR_RenderModel>();
+          renderModels[i] = new GameObject("SteamVR_RenderModel").AddComponent<SteamVR_RenderModel>();
           renderModels[i].updateDynamically = false; // Update one per frame (see Update() method)
           renderModels[i].transform.parent = transform;
           Util.ResetTransform(renderModels[i].transform);
@@ -119,7 +115,7 @@ namespace Valve.VR.InteractionSystem {
         if (renderModel == renderModels[i]) {
           if (materials[i] != null) {
             renderers.Clear();
-            renderModels[i].GetComponentsInChildren<MeshRenderer>(renderers);
+            renderModels[i].GetComponentsInChildren(renderers);
             for (int j = 0; j < renderers.Count; j++) {
               Texture mainTexture = renderers[j].material.mainTexture;
               renderers[j].sharedMaterial = materials[i];

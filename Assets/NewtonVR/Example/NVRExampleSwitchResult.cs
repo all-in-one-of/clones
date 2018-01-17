@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace NewtonVR.Example {
   public class NVRExampleSwitchResult : MonoBehaviour {
@@ -8,7 +7,7 @@ namespace NewtonVR.Example {
     private Light SpotLight;
 
     private void Awake() {
-      SpotLight = this.GetComponent<Light>();
+      SpotLight = GetComponent<Light>();
     }
 
     private void Update() {

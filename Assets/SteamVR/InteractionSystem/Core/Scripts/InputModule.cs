@@ -5,21 +5,18 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 using UnityEngine.EventSystems;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class InputModule : BaseInputModule {
-    private GameObject submitObject;
-
     //-------------------------------------------------
     private static InputModule _instance;
+    private GameObject submitObject;
 
     public static InputModule instance {
       get {
-        if (_instance == null)
-          _instance = GameObject.FindObjectOfType<InputModule>();
+        if (_instance == null) _instance = FindObjectOfType<InputModule>();
 
         return _instance;
       }
@@ -27,8 +24,7 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     public override bool ShouldActivateModule() {
-      if (!base.ShouldActivateModule())
-        return false;
+      if (!base.ShouldActivateModule()) return false;
 
       return submitObject != null;
     }

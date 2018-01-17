@@ -13,16 +13,15 @@ using UnityEditor;
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class TeleportArea : TeleportMarkerBase {
-    //Public properties
-    public Bounds meshBounds { get; private set; }
-
     //Private data
     private MeshRenderer areaMesh;
-    private int tintColorId = 0;
-    private Color visibleTintColor = Color.clear;
+    private bool highlighted;
     private Color highlightedTintColor = Color.clear;
     private Color lockedTintColor = Color.clear;
-    private bool highlighted = false;
+    private int tintColorId;
+    private Color visibleTintColor = Color.clear;
+    //Public properties
+    public Bounds meshBounds { get; private set; }
 
     //-------------------------------------------------
     public void Awake() {
@@ -110,13 +109,11 @@ namespace Valve.VR.InteractionSystem {
     private Color GetTintColor() {
       if (locked) {
         return lockedTintColor;
-      } else {
-        if (highlighted) {
-          return highlightedTintColor;
-        } else {
-          return visibleTintColor;
-        }
       }
+      if (highlighted) {
+        return highlightedTintColor;
+      }
+      return visibleTintColor;
     }
   }
 
@@ -125,7 +122,7 @@ namespace Valve.VR.InteractionSystem {
   [CustomEditor(typeof(TeleportArea))]
   public class TeleportAreaEditor : Editor {
     //-------------------------------------------------
-    void OnEnable() {
+    private void OnEnable() {
       if (Selection.activeTransform != null) {
         TeleportArea teleportArea = Selection.activeTransform.GetComponent<TeleportArea>();
         if (teleportArea != null) {

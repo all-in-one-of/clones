@@ -5,7 +5,6 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -16,7 +15,7 @@ namespace Valve.VR.InteractionSystem {
     private Vector3 initialPosition;
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       initialPosition = transform.localPosition;
 
       if (linearMapping == null) {
@@ -25,7 +24,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       if (linearMapping) {
         transform.localPosition = initialPosition + linearMapping.value * displacement;
       }

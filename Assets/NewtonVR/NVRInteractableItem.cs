@@ -15,28 +15,27 @@ namespace NewtonVR {
       "If you have a specific point you'd like the object held at, create a transform there and set it to this variable"
     )] public Transform InteractionPoint;
 
-    public UnityEvent OnUseButtonDown;
-    public UnityEvent OnUseButtonUp;
-
-    public UnityEvent OnHovering;
-
     public UnityEvent OnBeginInteraction;
     public UnityEvent OnEndInteraction;
 
-    protected Transform PickupTransform;
+    public UnityEvent OnHovering;
 
-    protected Vector3 ExternalVelocity;
-    protected Vector3 ExternalAngularVelocity;
-
-    protected Vector3?[] VelocityHistory;
+    public UnityEvent OnUseButtonDown;
+    public UnityEvent OnUseButtonUp;
     protected Vector3?[] AngularVelocityHistory;
     protected int CurrentVelocityHistoryStep;
+    protected Vector3 ExternalAngularVelocity;
 
-    protected float StartingDrag = -1;
+    protected Vector3 ExternalVelocity;
+
+    protected Dictionary<Collider, PhysicMaterial> MaterialCache = new Dictionary<Collider, PhysicMaterial>();
+
+    protected Transform PickupTransform;
     protected float StartingAngularDrag = -1;
 
-    protected Dictionary<Collider, PhysicMaterial> MaterialCache =
-      new Dictionary<Collider, PhysicMaterial>();
+    protected float StartingDrag = -1;
+
+    protected Vector3?[] VelocityHistory;
 
     protected override void Awake() {
       base.Awake();
@@ -58,8 +57,7 @@ namespace NewtonVR {
 
     protected virtual void UpdateVelocities() {
       float velocityMagic = VelocityMagic / (Time.deltaTime / NVRPlayer.NewtonVRExpectedDeltaTime);
-      float angularVelocityMagic = AngularVelocityMagic /
-                                   (Time.deltaTime / NVRPlayer.NewtonVRExpectedDeltaTime);
+      float angularVelocityMagic = AngularVelocityMagic / (Time.deltaTime / NVRPlayer.NewtonVRExpectedDeltaTime);
 
       Quaternion rotationDelta;
       Vector3 positionDelta;
@@ -69,8 +67,7 @@ namespace NewtonVR {
 
       if (InteractionPoint != null || PickupTransform == null) //PickupTransform should only be null
       {
-        rotationDelta = AttachedHand.transform.rotation *
-                        Quaternion.Inverse(InteractionPoint.rotation);
+        rotationDelta = AttachedHand.transform.rotation * Quaternion.Inverse(InteractionPoint.rotation);
         positionDelta = (AttachedHand.transform.position - InteractionPoint.position);
       } else {
         rotationDelta = PickupTransform.rotation * Quaternion.Inverse(transform.rotation);
@@ -79,8 +76,7 @@ namespace NewtonVR {
 
       rotationDelta.ToAngleAxis(out angle, out axis);
 
-      if (angle > 180)
-        angle -= 360;
+      if (angle > 180) angle -= 360;
 
       if (angle != 0) {
         Vector3 angularTarget = angle * axis;
@@ -93,10 +89,8 @@ namespace NewtonVR {
 
       Vector3 velocityTarget = (positionDelta * velocityMagic) * Time.deltaTime;
       if (float.IsNaN(velocityTarget.x) == false) {
-        Rigidbody.velocity = Vector3.MoveTowards(Rigidbody.velocity, velocityTarget,
-          MaxVelocityChange);
+        Rigidbody.velocity = Vector3.MoveTowards(Rigidbody.velocity, velocityTarget, MaxVelocityChange);
       }
-
 
       if (VelocityHistory != null) {
         CurrentVelocityHistoryStep++;
@@ -116,8 +110,7 @@ namespace NewtonVR {
       }
 
       if (ExternalAngularVelocity != Vector3.zero) {
-        Rigidbody.angularVelocity = Vector3.Lerp(Rigidbody.angularVelocity, ExternalAngularVelocity,
-          0.5f);
+        Rigidbody.angularVelocity = Vector3.Lerp(Rigidbody.angularVelocity, ExternalAngularVelocity, 0.5f);
         ExternalAngularVelocity = Vector3.zero;
       }
     }
@@ -150,8 +143,7 @@ namespace NewtonVR {
         DisablePhysicalMaterials();
       }
 
-      PickupTransform =
-        new GameObject(string.Format("[{0}] NVRPickupTransform", gameObject.name)).transform;
+      PickupTransform = new GameObject(string.Format("[{0}] NVRPickupTransform", gameObject.name)).transform;
       PickupTransform.parent = hand.transform;
       PickupTransform.position = transform.position;
       PickupTransform.rotation = transform.rotation;

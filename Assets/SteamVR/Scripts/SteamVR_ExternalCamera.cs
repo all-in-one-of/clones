@@ -4,6 +4,7 @@
 //
 //=============================================================================
 
+using System.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Valve.VR;
@@ -24,13 +25,24 @@ public class SteamVR_ExternalCamera : MonoBehaviour {
   public Config config;
   public string configPath;
 
+  private Camera cam;
+  private Rect[] cameraRects;
+
+  private Camera[] cameras;
+  private Material clipMaterial;
+  private GameObject clipQuad;
+
+  private Material colorMat, alphaMat;
+  private float sceneResolutionScale;
+  private Transform target;
+
   public void ReadConfig() {
     try {
       var mCam = new HmdMatrix34_t();
       var readCamMatrix = false;
 
       object c = config; // box
-      var lines = System.IO.File.ReadAllLines(configPath);
+      var lines = File.ReadAllLines(configPath);
       foreach (var line in lines) {
         var split = line.Split('=');
         if (split.Length == 2) {
@@ -54,12 +66,10 @@ public class SteamVR_ExternalCamera : MonoBehaviour {
             }
           } else if (key == "disableStandardAssets") {
             var field = c.GetType().GetField(key);
-            if (field != null)
-              field.SetValue(c, bool.Parse(split[1]));
+            if (field != null) field.SetValue(c, bool.Parse(split[1]));
           } else {
             var field = c.GetType().GetField(key);
-            if (field != null)
-              field.SetValue(c, float.Parse(split[1]));
+            if (field != null) field.SetValue(c, float.Parse(split[1]));
           }
         }
       }
@@ -80,14 +90,8 @@ public class SteamVR_ExternalCamera : MonoBehaviour {
     }
   }
 
-  Camera cam;
-  Transform target;
-  GameObject clipQuad;
-  Material clipMaterial;
-
   public void AttachToCamera(SteamVR_Camera vrcam) {
-    if (target == vrcam.head)
-      return;
+    if (target == vrcam.head) return;
 
     target = vrcam.head;
 
@@ -122,8 +126,7 @@ public class SteamVR_ExternalCamera : MonoBehaviour {
     offset.localScale = Vector3.one;
 
     // Strip children of cloned object (AudioListener in particular).
-    while (offset.childCount > 0)
-      DestroyImmediate(offset.GetChild(0).gameObject);
+    while (offset.childCount > 0) DestroyImmediate(offset.GetChild(0).gameObject);
 
     // Setup clipping quad (using camera clip causes problems with shadows).
     clipQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -146,20 +149,16 @@ public class SteamVR_ExternalCamera : MonoBehaviour {
   }
 
   public float GetTargetDistance() {
-    if (target == null)
-      return config.near + 0.01f;
+    if (target == null) return config.near + 0.01f;
 
     var offset = cam.transform;
     var forward = new Vector3(offset.forward.x, 0.0f, offset.forward.z).normalized;
     var targetPos = target.position +
-                    new Vector3(target.forward.x, 0.0f, target.forward.z).normalized *
-                    config.hmdOffset;
+                    new Vector3(target.forward.x, 0.0f, target.forward.z).normalized * config.hmdOffset;
 
     var distance = -(new Plane(forward, targetPos)).GetDistanceToPoint(offset.position);
     return Mathf.Clamp(distance, config.near + 0.01f, config.far - 0.01f);
   }
-
-  Material colorMat, alphaMat;
 
   public void RenderNear() {
     var w = Screen.width / 2;
@@ -167,9 +166,7 @@ public class SteamVR_ExternalCamera : MonoBehaviour {
 
     if (cam.targetTexture == null || cam.targetTexture.width != w || cam.targetTexture.height != h) {
       cam.targetTexture = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
-      cam.targetTexture.antiAliasing = QualitySettings.antiAliasing == 0
-        ? 1
-        : QualitySettings.antiAliasing;
+      cam.targetTexture.antiAliasing = QualitySettings.antiAliasing == 0 ? 1 : QualitySettings.antiAliasing;
     }
 
     cam.nearClipPlane = config.near;
@@ -228,17 +225,13 @@ public class SteamVR_ExternalCamera : MonoBehaviour {
     Graphics.DrawTexture(new Rect(0, h, w, h), cam.targetTexture, colorMat);
   }
 
-  void OnGUI() {
+  private void OnGUI() {
     // Necessary for Graphics.DrawTexture to work even though we don't do anything here.
   }
 
-  Camera[] cameras;
-  Rect[] cameraRects;
-  float sceneResolutionScale;
-
-  void OnEnable() {
+  private void OnEnable() {
     // Move game view cameras to lower-right quadrant.
-    cameras = FindObjectsOfType<Camera>() as Camera[];
+    cameras = FindObjectsOfType<Camera>();
     if (cameras != null) {
       var numCameras = cameras.Length;
       cameraRects = new Rect[numCameras];
@@ -246,14 +239,11 @@ public class SteamVR_ExternalCamera : MonoBehaviour {
         var cam = cameras[i];
         cameraRects[i] = cam.rect;
 
-        if (cam == this.cam)
-          continue;
+        if (cam == this.cam) continue;
 
-        if (cam.targetTexture != null)
-          continue;
+        if (cam.targetTexture != null) continue;
 
-        if (cam.GetComponent<SteamVR_Camera>() != null)
-          continue;
+        if (cam.GetComponent<SteamVR_Camera>() != null) continue;
 
         cam.rect = new Rect(0.5f, 0.0f, 0.5f, 0.5f);
       }
@@ -265,14 +255,13 @@ public class SteamVR_ExternalCamera : MonoBehaviour {
     }
   }
 
-  void OnDisable() {
+  private void OnDisable() {
     // Restore game view cameras.
     if (cameras != null) {
       var numCameras = cameras.Length;
       for (int i = 0; i < numCameras; i++) {
         var cam = cameras[i];
-        if (cam != null)
-          cam.rect = cameraRects[i];
+        if (cam != null) cam.rect = cameraRects[i];
       }
       cameras = null;
       cameraRects = null;

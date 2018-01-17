@@ -7,18 +7,16 @@
 using UnityEngine;
 
 public class SteamVR_IK : MonoBehaviour {
-  public Transform target;
-  public Transform start, joint, end;
-  public Transform poleVector, upVector;
-
   public float blendPct = 1.0f;
+  public Transform poleVector, upVector;
+  public Transform start, joint, end;
 
   [HideInInspector] public Transform startXform, jointXform, endXform;
+  public Transform target;
 
-  void LateUpdate() {
+  private void LateUpdate() {
     const float epsilon = 0.001f;
-    if (blendPct < epsilon)
-      return;
+    if (blendPct < epsilon) return;
 
     var preUp = upVector
       ? upVector.up
@@ -28,13 +26,10 @@ public class SteamVR_IK : MonoBehaviour {
     var targetRotation = target.rotation;
 
     Vector3 forward, up, result = joint.position;
-    Solve(start.position, targetPosition, poleVector.position,
-      (joint.position - start.position).magnitude,
-      (end.position - joint.position).magnitude,
-      ref result, out forward, out up);
+    Solve(start.position, targetPosition, poleVector.position, (joint.position - start.position).magnitude,
+      (end.position - joint.position).magnitude, ref result, out forward, out up);
 
-    if (up == Vector3.zero)
-      return;
+    if (up == Vector3.zero) return;
 
     var startPosition = start.position;
     var jointPosition = joint.position;
@@ -101,14 +96,13 @@ public class SteamVR_IK : MonoBehaviour {
     end.localScale = endScale;
   }
 
-  public static bool Solve(
-    Vector3 start, // shoulder / hip
-    Vector3 end, // desired hand / foot position
-    Vector3 poleVector, // point to aim elbow / knee toward
-    float jointDist, // distance from start to elbow / knee
-    float targetDist, // distance from joint to hand / ankle
-    ref Vector3 result, // original and output elbow / knee position
-    out Vector3 forward, out Vector3 up) // plane formed by root, joint and target
+  public static bool Solve(Vector3 start, // shoulder / hip
+                           Vector3 end, // desired hand / foot position
+                           Vector3 poleVector, // point to aim elbow / knee toward
+                           float jointDist, // distance from start to elbow / knee
+                           float targetDist, // distance from joint to hand / ankle
+                           ref Vector3 result, // original and output elbow / knee position
+                           out Vector3 forward, out Vector3 up) // plane formed by root, joint and target
   {
     var totalDist = jointDist + targetDist;
     var start2end = end - start;
@@ -140,10 +134,9 @@ public class SteamVR_IK : MonoBehaviour {
 
           result += (forward * dist) + (right * height);
           return true; // in range
-        } else {
-          // move jointDist toward jointTarget
-          result += poleVectorDir * jointDist;
         }
+        // move jointDist toward jointTarget
+        result += poleVectorDir * jointDist;
       } else {
         // move elboDist toward target
         result += forward * jointDist;

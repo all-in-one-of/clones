@@ -5,7 +5,6 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -17,7 +16,7 @@ namespace Valve.VR.InteractionSystem {
     private Rigidbody rb;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       rb = GetComponent<Rigidbody>();
 
       colliderLocalPositions = new Vector3[colliders.Length];
@@ -32,7 +31,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnEnable() {
+    private void OnEnable() {
       for (int i = 0; i < colliders.Length; ++i) {
         colliders[i].transform.SetParent(transform);
 
@@ -53,7 +52,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnDisable() {
+    private void OnDisable() {
       for (int i = 0; i < colliders.Length; ++i) {
         if (colliders[i] != null) {
           Destroy(colliders[i].GetComponent<FixedJoint>());
@@ -64,7 +63,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnDestroy() {
+    private void OnDestroy() {
       for (int i = 0; i < colliders.Length; ++i) {
         Destroy(colliders[i]);
       }

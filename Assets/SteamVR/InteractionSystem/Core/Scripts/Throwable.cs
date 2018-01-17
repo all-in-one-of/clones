@@ -4,9 +4,9 @@
 //
 //=============================================================================
 
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -14,40 +14,37 @@ namespace Valve.VR.InteractionSystem {
   [RequireComponent(typeof(Rigidbody))]
   [RequireComponent(typeof(VelocityEstimator))]
   public class Throwable : MonoBehaviour {
-    [EnumFlags] [Tooltip("The flags used to attach this object to the hand.")] public
-      Hand.AttachmentFlags attachmentFlags = Hand.AttachmentFlags.ParentToHand |
-                                             Hand.AttachmentFlags.DetachFromOtherHand;
-
-    [Tooltip(
-      "Name of the attachment transform under in the hand's hierarchy which the object should should snap to."
-    )] public string attachmentPoint;
-
-    [Tooltip(
-      "How fast must this object be moving to attach due to a trigger hold instead of a trigger press?"
-    )] public float catchSpeedThreshold = 0.0f;
-
-    [Tooltip("When detaching the object, should it return to its original parent?")] public bool
-      restoreOriginalParent = false;
-
     public bool attachEaseIn = false;
-    public AnimationCurve snapAttachEaseInCurve = AnimationCurve.EaseInOut(0.0f, 0.0f, 1.0f, 1.0f);
-    public float snapAttachEaseInTime = 0.15f;
     public string[] attachEaseInAttachmentNames;
 
-    private VelocityEstimator velocityEstimator;
-    private bool attached = false;
-    private float attachTime;
-    private Vector3 attachPosition;
-    private Quaternion attachRotation;
-    private Transform attachEaseInTransform;
+    [EnumFlags] [Tooltip("The flags used to attach this object to the hand.")] public Hand.AttachmentFlags
+      attachmentFlags = Hand.AttachmentFlags.ParentToHand | Hand.AttachmentFlags.DetachFromOtherHand;
 
-    public UnityEvent onPickUp;
+    [Tooltip("Name of the attachment transform under in the hand's hierarchy which the object should should snap to.")] public string attachmentPoint;
+
+    [Tooltip("How fast must this object be moving to attach due to a trigger hold instead of a trigger press?")] public
+      float catchSpeedThreshold = 0.0f;
+
     public UnityEvent onDetachFromHand;
 
-    public bool snapAttachEaseInCompleted = false;
+    public UnityEvent onPickUp;
+
+    [Tooltip("When detaching the object, should it return to its original parent?")] public bool restoreOriginalParent =
+      false;
+
+    public bool snapAttachEaseInCompleted;
+    public AnimationCurve snapAttachEaseInCurve = AnimationCurve.EaseInOut(0.0f, 0.0f, 1.0f, 1.0f);
+    public float snapAttachEaseInTime = 0.15f;
+    private Transform attachEaseInTransform;
+    private bool attached;
+    private Vector3 attachPosition;
+    private Quaternion attachRotation;
+    private float attachTime;
+
+    private VelocityEstimator velocityEstimator;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       velocityEstimator = GetComponent<VelocityEstimator>();
 
       if (attachEaseIn) {
@@ -76,13 +73,13 @@ namespace Valve.VR.InteractionSystem {
       }
 
       if (showHint) {
-        ControllerButtonHints.ShowButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+        ControllerButtonHints.ShowButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
       }
     }
 
     //-------------------------------------------------
     private void OnHandHoverEnd(Hand hand) {
-      ControllerButtonHints.HideButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+      ControllerButtonHints.HideButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
     }
 
     //-------------------------------------------------
@@ -90,7 +87,7 @@ namespace Valve.VR.InteractionSystem {
       //Trigger got pressed
       if (hand.GetStandardInteractionButtonDown()) {
         hand.AttachObject(gameObject, attachmentFlags, attachmentPoint);
-        ControllerButtonHints.HideButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+        ControllerButtonHints.HideButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
       }
     }
 
@@ -154,8 +151,7 @@ namespace Valve.VR.InteractionSystem {
         position = velocityEstimator.transform.position;
       } else {
         velocity = Player.instance.trackingOriginTransform.TransformVector(hand.controller.velocity);
-        angularVelocity =
-          Player.instance.trackingOriginTransform.TransformVector(hand.controller.angularVelocity);
+        angularVelocity = Player.instance.trackingOriginTransform.TransformVector(hand.controller.angularVelocity);
         position = hand.transform.position;
       }
 
@@ -187,15 +183,13 @@ namespace Valve.VR.InteractionSystem {
       }
 
       if (attachEaseIn) {
-        float t = Util.RemapNumberClamped(Time.time, attachTime, attachTime + snapAttachEaseInTime,
-          0.0f, 1.0f);
+        float t = Util.RemapNumberClamped(Time.time, attachTime, attachTime + snapAttachEaseInTime, 0.0f, 1.0f);
         if (t < 1.0f) {
           t = snapAttachEaseInCurve.Evaluate(t);
           transform.position = Vector3.Lerp(attachPosition, attachEaseInTransform.position, t);
           transform.rotation = Quaternion.Lerp(attachRotation, attachEaseInTransform.rotation, t);
         } else if (!snapAttachEaseInCompleted) {
-          gameObject.SendMessage("OnThrowableAttachEaseInCompleted", hand,
-            SendMessageOptions.DontRequireReceiver);
+          gameObject.SendMessage("OnThrowableAttachEaseInCompleted", hand, SendMessageOptions.DontRequireReceiver);
           snapAttachEaseInCompleted = true;
         }
       }

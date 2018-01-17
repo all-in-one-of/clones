@@ -5,20 +5,19 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class SoundBowClick : MonoBehaviour {
     public AudioClip bowClick;
-    public AnimationCurve pitchTensionCurve;
-    public float minPitch;
     public float maxPitch;
+    public float minPitch;
+    public AnimationCurve pitchTensionCurve;
 
-    AudioSource thisAudioSource;
+    private AudioSource thisAudioSource;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       thisAudioSource = GetComponent<AudioSource>();
     }
 

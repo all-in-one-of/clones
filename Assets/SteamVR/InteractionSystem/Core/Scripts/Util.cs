@@ -4,12 +4,15 @@
 //
 //=============================================================================
 
-using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.AI;
+using Random = UnityEngine.Random;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -33,22 +36,17 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    public static float RemapNumberClamped(float num, float low1, float high1, float low2,
-                                           float high2) {
-      return Mathf.Clamp(RemapNumber(num, low1, high1, low2, high2), Mathf.Min(low2, high2),
-        Mathf.Max(low2, high2));
+    public static float RemapNumberClamped(float num, float low1, float high1, float low2, float high2) {
+      return Mathf.Clamp(RemapNumber(num, low1, high1, low2, high2), Mathf.Min(low2, high2), Mathf.Max(low2, high2));
     }
 
     //-------------------------------------------------
     public static float Approach(float target, float value, float speed) {
       float delta = target - value;
 
-      if (delta > speed)
-        value += speed;
-      else if (delta < -speed)
-        value -= speed;
-      else
-        value = target;
+      if (delta > speed) value += speed;
+      else if (delta < -speed) value -= speed;
+      else value = target;
 
       return value;
     }
@@ -132,9 +130,8 @@ namespace Valve.VR.InteractionSystem {
 
       if (v.y >= 0.0f) {
         return Mathf.Acos(v.x / fDist);
-      } else {
-        return Mathf.Acos(-v.x / fDist) + Mathf.PI;
       }
+      return Mathf.Acos(-v.x / fDist) + Mathf.PI;
     }
 
     //-------------------------------------------------
@@ -143,9 +140,8 @@ namespace Valve.VR.InteractionSystem {
 
       if (v.z >= 0.0f) {
         return Mathf.Acos(v.x / fDist);
-      } else {
-        return Mathf.Acos(-v.x / fDist) + Mathf.PI;
       }
+      return Mathf.Acos(-v.x / fDist) + Mathf.PI;
     }
 
     //-------------------------------------------------
@@ -158,7 +154,7 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     public static void Shuffle<T>(T[] array) {
       for (int i = array.Length - 1; i > 0; i--) {
-        int r = UnityEngine.Random.Range(0, i);
+        int r = Random.Range(0, i);
         Swap(ref array[i], ref array[r]);
       }
     }
@@ -166,7 +162,7 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     public static void Shuffle<T>(List<T> list) {
       for (int i = list.Count - 1; i > 0; i--) {
-        int r = UnityEngine.Random.Range(0, i);
+        int r = Random.Range(0, i);
         T temp = list[i];
         list[i] = list[r];
         list[r] = temp;
@@ -175,7 +171,7 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     public static int RandomWithLookback(int min, int max, List<int> history, int historyCount) {
-      int index = UnityEngine.Random.Range(min, max - history.Count);
+      int index = Random.Range(min, max - history.Count);
 
       for (int i = 0; i < history.Count; i++) {
         if (index >= history[i]) {
@@ -194,13 +190,11 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     public static Transform FindChild(Transform parent, string name) {
-      if (parent.name == name)
-        return parent;
+      if (parent.name == name) return parent;
 
       foreach (Transform child in parent) {
         var found = FindChild(child, name);
-        if (found != null)
-          return found;
+        if (found != null) return found;
       }
 
       return null;
@@ -208,27 +202,23 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     public static bool IsNullOrEmpty<T>(T[] array) {
-      if (array == null)
-        return true;
+      if (array == null) return true;
 
-      if (array.Length == 0)
-        return true;
+      if (array.Length == 0) return true;
 
       return false;
     }
 
     //-------------------------------------------------
     public static bool IsValidIndex<T>(T[] array, int i) {
-      if (array == null)
-        return false;
+      if (array == null) return false;
 
       return (i >= 0) && (i < array.Length);
     }
 
     //-------------------------------------------------
     public static bool IsValidIndex<T>(List<T> list, int i) {
-      if (list == null || list.Count == 0)
-        return false;
+      if (list == null || list.Count == 0) return false;
 
       return (i >= 0) && (i < list.Count);
     }
@@ -246,7 +236,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    public static List<T> FindAndRemove<T>(List<T> list, System.Predicate<T> match) {
+    public static List<T> FindAndRemove<T>(List<T> list, Predicate<T> match) {
       List<T> retVal = list.FindAll(match);
       list.RemoveAll(match);
       return retVal;
@@ -255,8 +245,7 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     public static T FindOrAddComponent<T>(GameObject gameObject) where T : Component {
       T component = gameObject.GetComponent<T>();
-      if (component)
-        return component;
+      if (component) return component;
 
       return gameObject.AddComponent<T>();
     }
@@ -268,17 +257,14 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    public static void ReplaceGameObject<T, U>(T replace, U replaceWith)
-      where T : MonoBehaviour
-      where U : MonoBehaviour {
+    public static void ReplaceGameObject<T, U>(T replace, U replaceWith) where T : MonoBehaviour where U : MonoBehaviour {
       replace.gameObject.SetActive(false);
       replaceWith.gameObject.SetActive(true);
     }
 
     //-------------------------------------------------
     public static void SwitchLayerRecursively(Transform transform, int fromLayer, int toLayer) {
-      if (transform.gameObject.layer == fromLayer)
-        transform.gameObject.layer = toLayer;
+      if (transform.gameObject.layer == fromLayer) transform.gameObject.layer = toLayer;
 
       int childCount = transform.childCount;
       for (int i = 0; i < childCount; i++) {
@@ -321,11 +307,9 @@ namespace Valve.VR.InteractionSystem {
       var d = Vector3.Distance(vA, vB);
       var t = Vector3.Dot(vVector2, vVector1);
 
-      if (t <= 0)
-        return vA;
+      if (t <= 0) return vA;
 
-      if (t >= d)
-        return vB;
+      if (t >= d) return vB;
 
       var vVector3 = vVector2 * t;
 
@@ -335,15 +319,13 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    public static void AfterTimer(GameObject go, float _time, System.Action callback,
-                                  bool trigger_if_destroyed_early = false) {
+    public static void AfterTimer(GameObject go, float _time, Action callback, bool trigger_if_destroyed_early = false) {
       AfterTimer_Component afterTimer_component = go.AddComponent<AfterTimer_Component>();
       afterTimer_component.Init(_time, callback, trigger_if_destroyed_early);
     }
 
     //-------------------------------------------------
-    public static void SendPhysicsMessage(Collider collider, string message,
-                                          SendMessageOptions sendMessageOptions) {
+    public static void SendPhysicsMessage(Collider collider, string message, SendMessageOptions sendMessageOptions) {
       Rigidbody rb = collider.attachedRigidbody;
       if (rb && rb.gameObject != collider.gameObject) {
         rb.SendMessage(message, sendMessageOptions);
@@ -382,7 +364,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    public static IEnumerator WrapCoroutine(IEnumerator coroutine, System.Action onCoroutineFinished) {
+    public static IEnumerator WrapCoroutine(IEnumerator coroutine, Action onCoroutineFinished) {
       while (coroutine.MoveNext()) {
         yield return coroutine.Current;
       }
@@ -401,7 +383,7 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     public static void Quit() {
 #if UNITY_EDITOR
-      UnityEditor.EditorApplication.isPlaying = false;
+      EditorApplication.isPlaying = false;
 #else
 // NOTE: The recommended call for exiting a Unity app is UnityEngine.Application.Quit(), but as
 // of 5.1.0f3 this was causing the application to crash. The following works without crashing:
@@ -466,11 +448,10 @@ namespace Valve.VR.InteractionSystem {
 #if ( UNITY_5_4 )
 		public static float PathLength( NavMeshPath path )
 #else
-    public static float PathLength(UnityEngine.AI.NavMeshPath path)
+    public static float PathLength(NavMeshPath path)
 #endif
     {
-      if (path.corners.Length < 2)
-        return 0;
+      if (path.corners.Length < 2) return 0;
 
       Vector3 previousCorner = path.corners[0];
       float lengthSoFar = 0.0f;
@@ -486,7 +467,7 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     public static bool HasCommandLineArgument(string argumentName) {
-      string[] args = System.Environment.GetCommandLineArgs();
+      string[] args = Environment.GetCommandLineArgs();
       for (int i = 0; i < args.Length; i++) {
         if (args[i].Equals(argumentName)) {
           return true;
@@ -498,7 +479,7 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     public static int GetCommandLineArgValue(string argumentName, int nDefaultValue) {
-      string[] args = System.Environment.GetCommandLineArgs();
+      string[] args = Environment.GetCommandLineArgs();
       for (int i = 0; i < args.Length; i++) {
         if (args[i].Equals(argumentName)) {
           if (i == (args.Length - 1)) // Last arg, return default
@@ -506,7 +487,7 @@ namespace Valve.VR.InteractionSystem {
             return nDefaultValue;
           }
 
-          return System.Int32.Parse(args[i + 1]);
+          return int.Parse(args[i + 1]);
         }
       }
 
@@ -515,7 +496,7 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     public static float GetCommandLineArgValue(string argumentName, float flDefaultValue) {
-      string[] args = System.Environment.GetCommandLineArgs();
+      string[] args = Environment.GetCommandLineArgs();
       for (int i = 0; i < args.Length; i++) {
         if (args[i].Equals(argumentName)) {
           if (i == (args.Length - 1)) // Last arg, return default
@@ -523,7 +504,7 @@ namespace Valve.VR.InteractionSystem {
             return flDefaultValue;
           }
 
-          return (float) Double.Parse(args[i + 1]);
+          return (float) double.Parse(args[i + 1]);
         }
       }
 
@@ -545,29 +526,28 @@ namespace Valve.VR.InteractionSystem {
     public static string CombinePaths(params string[] paths) {
       if (paths.Length == 0) {
         return "";
-      } else {
-        string combinedPath = paths[0];
-        for (int i = 1; i < paths.Length; i++) {
-          combinedPath = Path.Combine(combinedPath, paths[i]);
-        }
-
-        return combinedPath;
       }
+      string combinedPath = paths[0];
+      for (int i = 1; i < paths.Length; i++) {
+        combinedPath = Path.Combine(combinedPath, paths[i]);
+      }
+
+      return combinedPath;
     }
   }
 
   //-------------------------------------------------------------------------
   //Component used by the static AfterTimer function
   //-------------------------------------------------------------------------
-  [System.Serializable]
+  [Serializable]
   public class AfterTimer_Component : MonoBehaviour {
-    private System.Action callback;
+    private Action callback;
+    private bool timerActive;
+    private bool triggerOnEarlyDestroy;
     private float triggerTime;
-    private bool timerActive = false;
-    private bool triggerOnEarlyDestroy = false;
 
     //-------------------------------------------------
-    public void Init(float _time, System.Action _callback, bool earlydestroy) {
+    public void Init(float _time, Action _callback, bool earlydestroy) {
       triggerTime = _time;
       callback = _callback;
       triggerOnEarlyDestroy = earlydestroy;
@@ -584,7 +564,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnDestroy() {
+    private void OnDestroy() {
       if (timerActive) {
         //If the component or its GameObject get destroyed before the timer is complete, clean up
         StopCoroutine(Wait());

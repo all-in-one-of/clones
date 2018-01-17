@@ -5,40 +5,39 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class ControllerHoverHighlight : MonoBehaviour {
-    public Material highLightMaterial;
     public bool fireHapticsOnHightlight = true;
-
-    private Hand hand;
+    public Material highLightMaterial;
 
     private MeshRenderer bodyMeshRenderer;
-    private MeshRenderer trackingHatMeshRenderer;
-    private SteamVR_RenderModel renderModel;
-    private bool renderModelLoaded = false;
 
-    SteamVR_Events.Action renderModelLoadedAction;
+    private Hand hand;
+    private SteamVR_RenderModel renderModel;
+    private bool renderModelLoaded;
+
+    private SteamVR_Events.Action renderModelLoadedAction;
+    private MeshRenderer trackingHatMeshRenderer;
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       hand = GetComponentInParent<Hand>();
     }
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       renderModelLoadedAction = SteamVR_Events.RenderModelLoadedAction(OnRenderModelLoaded);
     }
 
     //-------------------------------------------------
-    void OnEnable() {
+    private void OnEnable() {
       renderModelLoadedAction.enabled = true;
     }
 
     //-------------------------------------------------
-    void OnDisable() {
+    private void OnDisable() {
       renderModelLoadedAction.enabled = false;
     }
 
@@ -80,7 +79,7 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     private void OnParentHandHoverBegin(Interactable other) {
-      if (!this.isActiveAndEnabled) {
+      if (!isActiveAndEnabled) {
         return;
       }
 
@@ -96,12 +95,11 @@ namespace Valve.VR.InteractionSystem {
 
     //-------------------------------------------------
     private void OnParentHandInputFocusAcquired() {
-      if (!this.isActiveAndEnabled) {
+      if (!isActiveAndEnabled) {
         return;
       }
 
-      if (hand.hoveringInteractable &&
-          hand.hoveringInteractable.transform.parent != transform.parent) {
+      if (hand.hoveringInteractable && hand.hoveringInteractable.transform.parent != transform.parent) {
         ShowHighlight();
       }
     }

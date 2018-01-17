@@ -7,11 +7,11 @@
 using UnityEngine;
 using Valve.VR;
 
-[ExecuteInEditMode, RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
+[ExecuteInEditMode]
+[RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
 public class SteamVR_Frustum : MonoBehaviour {
-  public SteamVR_TrackedObject.EIndex index;
-
   public float fovLeft = 45, fovRight = 45, fovTop = 45, fovBottom = 45, nearZ = 0.5f, farZ = 2.5f;
+  public SteamVR_TrackedObject.EIndex index;
 
   public void UpdateModel() {
     fovLeft = Mathf.Clamp(fovLeft, 1, 89);
@@ -31,7 +31,7 @@ public class SteamVR_Frustum : MonoBehaviour {
     var tcos = Mathf.Cos(fovTop * Mathf.Deg2Rad);
     var bcos = Mathf.Cos(-fovBottom * Mathf.Deg2Rad);
 
-    var corners = new Vector3[] {
+    var corners = new[] {
       new Vector3(lsin * nearZ / lcos, tsin * nearZ / tcos, nearZ), //tln
       new Vector3(rsin * nearZ / rcos, tsin * nearZ / tcos, nearZ), //trn
       new Vector3(rsin * nearZ / rcos, bsin * nearZ / bcos, nearZ), //brn
@@ -42,8 +42,7 @@ public class SteamVR_Frustum : MonoBehaviour {
       new Vector3(lsin * farZ / lcos, bsin * farZ / bcos, farZ), //blf
     };
 
-    var triangles = new int[] {
-      //	0, 1, 2, 0, 2, 3, // near
+    var triangles = new[] { //	0, 1, 2, 0, 2, 3, // near
       //	0, 2, 1, 0, 3, 2, // near
       //	4, 5, 6, 4, 6, 7, // far
       //	4, 6, 5, 4, 7, 6, // far
@@ -85,65 +84,56 @@ public class SteamVR_Frustum : MonoBehaviour {
   }
 
   private void OnDeviceConnected(int i, bool connected) {
-    if (i != (int) index)
-      return;
+    if (i != (int) index) return;
 
     GetComponent<MeshFilter>().mesh = null;
 
     if (connected) {
       var system = OpenVR.System;
-      if (system != null &&
-          system.GetTrackedDeviceClass((uint) i) == ETrackedDeviceClass.TrackingReference) {
+      if (system != null && system.GetTrackedDeviceClass((uint) i) == ETrackedDeviceClass.TrackingReference) {
         var error = ETrackedPropertyError.TrackedProp_Success;
         var result = system.GetFloatTrackedDeviceProperty((uint) i,
           ETrackedDeviceProperty.Prop_FieldOfViewLeftDegrees_Float, ref error);
-        if (error == ETrackedPropertyError.TrackedProp_Success)
-          fovLeft = result;
+        if (error == ETrackedPropertyError.TrackedProp_Success) fovLeft = result;
 
         result = system.GetFloatTrackedDeviceProperty((uint) i,
           ETrackedDeviceProperty.Prop_FieldOfViewRightDegrees_Float, ref error);
-        if (error == ETrackedPropertyError.TrackedProp_Success)
-          fovRight = result;
+        if (error == ETrackedPropertyError.TrackedProp_Success) fovRight = result;
 
-        result = system.GetFloatTrackedDeviceProperty((uint) i,
-          ETrackedDeviceProperty.Prop_FieldOfViewTopDegrees_Float, ref error);
-        if (error == ETrackedPropertyError.TrackedProp_Success)
-          fovTop = result;
+        result = system.GetFloatTrackedDeviceProperty((uint) i, ETrackedDeviceProperty.Prop_FieldOfViewTopDegrees_Float,
+          ref error);
+        if (error == ETrackedPropertyError.TrackedProp_Success) fovTop = result;
 
         result = system.GetFloatTrackedDeviceProperty((uint) i,
           ETrackedDeviceProperty.Prop_FieldOfViewBottomDegrees_Float, ref error);
-        if (error == ETrackedPropertyError.TrackedProp_Success)
-          fovBottom = result;
+        if (error == ETrackedPropertyError.TrackedProp_Success) fovBottom = result;
 
         result = system.GetFloatTrackedDeviceProperty((uint) i,
           ETrackedDeviceProperty.Prop_TrackingRangeMinimumMeters_Float, ref error);
-        if (error == ETrackedPropertyError.TrackedProp_Success)
-          nearZ = result;
+        if (error == ETrackedPropertyError.TrackedProp_Success) nearZ = result;
 
         result = system.GetFloatTrackedDeviceProperty((uint) i,
           ETrackedDeviceProperty.Prop_TrackingRangeMaximumMeters_Float, ref error);
-        if (error == ETrackedPropertyError.TrackedProp_Success)
-          farZ = result;
+        if (error == ETrackedPropertyError.TrackedProp_Success) farZ = result;
 
         UpdateModel();
       }
     }
   }
 
-  void OnEnable() {
+  private void OnEnable() {
     GetComponent<MeshFilter>().mesh = null;
     SteamVR_Events.DeviceConnected.Listen(OnDeviceConnected);
   }
 
-  void OnDisable() {
+  private void OnDisable() {
     SteamVR_Events.DeviceConnected.Remove(OnDeviceConnected);
     GetComponent<MeshFilter>().mesh = null;
   }
 
 #if UNITY_EDITOR
-  void Update() {
-    if (!Application.isPlaying)
-      UpdateModel();
+  private void Update() {
+    if (!Application.isPlaying) UpdateModel();
   }
 #endif
 }

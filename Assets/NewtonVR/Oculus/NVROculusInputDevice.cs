@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Optional;
 using UnityEngine;
 
@@ -353,8 +349,7 @@ namespace NewtonVR {
       throw new NotImplementedException();
     }
 
-    public override void TriggerHapticPulse(ushort durationMicroSec = 500,
-                                            NVRButtons button = NVRButtons.Touchpad) {
+    public override void TriggerHapticPulse(ushort durationMicroSec = 500, NVRButtons button = NVRButtons.Touchpad) {
       throw new NotImplementedException();
     }
   }

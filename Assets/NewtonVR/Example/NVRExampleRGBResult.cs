@@ -1,17 +1,14 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace NewtonVR.Example {
   public class NVRExampleRGBResult : MonoBehaviour {
-    public NVRSlider SliderRed;
-    public NVRSlider SliderGreen;
-    public NVRSlider SliderBlue;
-
     public Renderer Result;
+    public NVRSlider SliderBlue;
+    public NVRSlider SliderGreen;
+    public NVRSlider SliderRed;
 
     private void Update() {
-      Result.material.color = new Color(SliderRed.CurrentValue, SliderGreen.CurrentValue,
-        SliderBlue.CurrentValue);
+      Result.material.color = new Color(SliderRed.CurrentValue, SliderGreen.CurrentValue, SliderBlue.CurrentValue);
     }
   }
 }

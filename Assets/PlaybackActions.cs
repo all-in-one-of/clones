@@ -1,19 +1,20 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions;
-using Utilities;
-using Debug = System.Diagnostics.Debug;
 
 public class PlaybackActions : MonoBehaviour {
   public static double sequence_period = 5.0;
 
   /// <summary>
-  /// The method to use to get the global sequence timer.
+  ///   The method to use to get the global sequence timer.
   /// </summary>
   public static Func<double> sequence_time = () => Time.realtimeSinceStartup;
+
+  public LineRenderer line_renderer;
+
+  public RecordActions.Snapshot? playback_cursor;
+  private List<RecordActions.Snapshot> recording;
 
   public List<RecordActions.Snapshot> Recording {
     get { return recording; }
@@ -23,12 +24,8 @@ public class PlaybackActions : MonoBehaviour {
     }
   }
 
-  public RecordActions.Snapshot? playback_cursor;
-  public LineRenderer line_renderer;
-  private List<RecordActions.Snapshot> recording;
-
   /// <summary>
-  /// Runs before the first Update() call.
+  ///   Runs before the first Update() call.
   /// </summary>
   public void Start() {
     // Create a line renderer for this object if we don't have one.
@@ -47,7 +44,7 @@ public class PlaybackActions : MonoBehaviour {
   // Set the path for the line
   private void UpdateLineRenderer() {
     if (line_renderer != null) {
-      line_renderer.numPositions = recording.Count;
+      line_renderer.positionCount = recording.Count;
       line_renderer.SetPositions(recording.Select(s => s.position).ToArray());
     }
   }

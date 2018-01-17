@@ -4,6 +4,7 @@
 //
 //=============================================================================
 
+using System;
 using UnityEngine;
 using Valve.VR;
 
@@ -29,24 +30,22 @@ public class SteamVR_TrackedObject : MonoBehaviour {
   }
 
   public EIndex index;
+  public bool isValid;
   public Transform origin; // if not set, relative to parent
-  public bool isValid = false;
+
+  private SteamVR_Events.Action newPosesAction;
 
   private void OnNewPoses(TrackedDevicePose_t[] poses) {
-    if (index == EIndex.None)
-      return;
+    if (index == EIndex.None) return;
 
     var i = (int) index;
 
     isValid = false;
-    if (poses.Length <= i)
-      return;
+    if (poses.Length <= i) return;
 
-    if (!poses[i].bDeviceIsConnected)
-      return;
+    if (!poses[i].bDeviceIsConnected) return;
 
-    if (!poses[i].bPoseIsValid)
-      return;
+    if (!poses[i].bPoseIsValid) return;
 
     isValid = true;
 
@@ -61,13 +60,11 @@ public class SteamVR_TrackedObject : MonoBehaviour {
     }
   }
 
-  SteamVR_Events.Action newPosesAction;
-
-  void Awake() {
+  private void Awake() {
     newPosesAction = SteamVR_Events.NewPosesAction(OnNewPoses);
   }
 
-  void OnEnable() {
+  private void OnEnable() {
     var render = SteamVR_Render.instance;
     if (render == null) {
       enabled = false;
@@ -77,13 +74,12 @@ public class SteamVR_TrackedObject : MonoBehaviour {
     newPosesAction.enabled = true;
   }
 
-  void OnDisable() {
+  private void OnDisable() {
     newPosesAction.enabled = false;
     isValid = false;
   }
 
   public void SetDeviceIndex(int index) {
-    if (System.Enum.IsDefined(typeof(EIndex), index))
-      this.index = (EIndex) index;
+    if (Enum.IsDefined(typeof(EIndex), index)) this.index = (EIndex) index;
   }
 }

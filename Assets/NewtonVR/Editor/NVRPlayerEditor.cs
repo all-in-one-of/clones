@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections;
 using System.Linq;
-using System.Text;
-using UnityEngine;
+using System.Net;
+using System.Threading;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using NewtonVR;
-using System.Net;
-using System.Net.Security;
-using System.IO;
-using System.ComponentModel;
-using System.Threading;
-using System.Security.Cryptography.X509Certificates;
-using UnityEditor.AnimatedValues;
 using UnityEditor.SceneManagement;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random;
 
 namespace NewtonVR {
   [CustomEditor(typeof(NVRPlayer))]
@@ -23,18 +16,18 @@ namespace NewtonVR {
     private const string SteamVRDefine = "NVR_SteamVR";
     private const string OculusDefine = "NVR_Oculus";
 
-    private static bool hasReloaded = false;
-    private static bool waitingForReload = false;
+    private static bool hasReloaded;
+    private static bool waitingForReload;
     private static DateTime startedWaitingForReload;
 
-    private static bool hasOculusSDK = false;
-    private static bool hasSteamVR = false;
-    private static bool hasOculusSDKDefine = false;
-    private static bool hasSteamVRDefine = false;
+    private static bool hasOculusSDK;
+    private static bool hasSteamVR;
+    private static bool hasOculusSDKDefine;
+    private static bool hasSteamVRDefine;
 
-    private static string progressBarMessage = null;
+    private static string progressBarMessage;
 
-    private static string CheckForUpdatesKey = "NewtonVRCheckForUpdates";
+    private static readonly string CheckForUpdatesKey = "NewtonVRCheckForUpdates";
 
     [DidReloadScripts]
     private static void DidReloadScripts() {
@@ -44,8 +37,7 @@ namespace NewtonVR {
 
       hasSteamVR = DoesTypeExist("SteamVR");
 
-      string scriptingDefine =
-        PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
+      string scriptingDefine = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
       string[] scriptingDefines = scriptingDefine.Split(';');
       hasOculusSDKDefine = scriptingDefines.Contains(OculusDefine);
       hasSteamVRDefine = scriptingDefines.Contains(SteamVRDefine);
@@ -53,9 +45,8 @@ namespace NewtonVR {
       waitingForReload = false;
       ClearProgressBar();
 
-      if (PlayerPrefs.HasKey(CheckForUpdatesKey) == false ||
-          PlayerPrefs.GetInt(CheckForUpdatesKey) == 1) {
-        Thread thread = new Thread(new ThreadStart(CheckForUpdate));
+      if (PlayerPrefs.HasKey(CheckForUpdatesKey) == false || PlayerPrefs.GetInt(CheckForUpdatesKey) == 1) {
+        Thread thread = new Thread(CheckForUpdate);
         thread.Start();
       }
     }
@@ -65,15 +56,13 @@ namespace NewtonVR {
     {
       try {
         using (WebClient wc = new WebClient()) {
-          string version =
-            wc.DownloadString("http://www.newtonvr.com/version.php?ver=" + NVRPlayer.NewtonVRVersion);
-          string[] split = version.Split(new char[] {'='});
+          string version = wc.DownloadString("http://www.newtonvr.com/version.php?ver=" + NVRPlayer.NewtonVRVersion);
+          string[] split = version.Split('=');
           version = split[1]; //
           decimal versionResult;
           decimal.TryParse(version, out versionResult);
           if (NVRPlayer.NewtonVRVersion < versionResult) {
-            Debug.Log("[NewtonVR] The version of newtonvr you are using (" +
-                      NVRPlayer.NewtonVRVersion +
+            Debug.Log("[NewtonVR] The version of newtonvr you are using (" + NVRPlayer.NewtonVRVersion +
                       ") is out of date. Check the github for the most recent version (" + version +
                       ")! Disable this check in the NVRPlayer inspector under NotifyOnVersionUpdate.");
           }
@@ -96,8 +85,7 @@ namespace NewtonVR {
       waitingForReload = true;
       startedWaitingForReload = DateTime.Now;
 
-      string scriptingDefine =
-        PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
+      string scriptingDefine = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
       string[] scriptingDefines = scriptingDefine.Split(';');
       List<string> listDefines = scriptingDefines.ToList();
       listDefines.Remove(define);
@@ -111,8 +99,7 @@ namespace NewtonVR {
       waitingForReload = true;
       startedWaitingForReload = DateTime.Now;
 
-      string scriptingDefine =
-        PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
+      string scriptingDefine = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
       string[] scriptingDefines = scriptingDefine.Split(';');
       List<string> listDefines = scriptingDefines.ToList();
       listDefines.Add(define);
@@ -130,8 +117,8 @@ namespace NewtonVR {
         progressBarMessage = newMessage;
       }
 
-      EditorUtility.DisplayProgressBar("NewtonVR", progressBarMessage, UnityEngine.Random.value);
-        // :D
+      EditorUtility.DisplayProgressBar("NewtonVR", progressBarMessage, Random.value);
+      // :D
     }
 
     private static void ClearProgressBar() {
@@ -153,17 +140,13 @@ namespace NewtonVR {
     public override void OnInspectorGUI() {
       NVRPlayer player = (NVRPlayer) target;
       if (PlayerPrefs.HasKey(CheckForUpdatesKey) == false ||
-          PlayerPrefs.GetInt(CheckForUpdatesKey) !=
-          System.Convert.ToInt32(player.NotifyOnVersionUpdate)) {
-        PlayerPrefs.SetInt("NewtonVRCheckForUpdates",
-          System.Convert.ToInt32(player.NotifyOnVersionUpdate));
+          PlayerPrefs.GetInt(CheckForUpdatesKey) != Convert.ToInt32(player.NotifyOnVersionUpdate)) {
+        PlayerPrefs.SetInt("NewtonVRCheckForUpdates", Convert.ToInt32(player.NotifyOnVersionUpdate));
       }
 
-      if (hasReloaded == false)
-        DidReloadScripts();
+      if (hasReloaded == false) DidReloadScripts();
 
-      if (waitingForReload)
-        HasWaitedLongEnough();
+      if (waitingForReload) HasWaitedLongEnough();
 
       player.OculusSDKEnabled = hasOculusSDKDefine;
       player.SteamVREnabled = hasSteamVRDefine;
@@ -195,39 +178,33 @@ namespace NewtonVR {
       }
       EditorGUILayout.EndHorizontal();
 
-
       GUILayout.Space(10);
 
       GUILayout.Label("Model override for all SDKs");
-      bool modelOverrideAll = EditorGUILayout.Toggle("Override hand models for all SDKs",
-        player.OverrideAll);
+      bool modelOverrideAll = EditorGUILayout.Toggle("Override hand models for all SDKs", player.OverrideAll);
       EditorGUILayout.BeginFadeGroup(1);
       using (new EditorGUI.DisabledScope(modelOverrideAll == false)) {
         player.OverrideAllLeftHand =
-          (GameObject)
-          EditorGUILayout.ObjectField("Left Hand", player.OverrideAllLeftHand, typeof(GameObject),
-            false);
+          (GameObject) EditorGUILayout.ObjectField("Left Hand", player.OverrideAllLeftHand, typeof(GameObject), false);
         GUILayout.BeginHorizontal();
         GUILayout.Space(20);
         player.OverrideAllLeftHandPhysicalColliders =
           (GameObject)
-          EditorGUILayout.ObjectField("Left Hand Physical Colliders",
-            player.OverrideAllLeftHandPhysicalColliders, typeof(GameObject), false);
+          EditorGUILayout.ObjectField("Left Hand Physical Colliders", player.OverrideAllLeftHandPhysicalColliders,
+            typeof(GameObject), false);
         GUILayout.EndHorizontal();
         player.OverrideAllRightHand =
-          (GameObject)
-          EditorGUILayout.ObjectField("Right Hand", player.OverrideAllRightHand, typeof(GameObject),
-            false);
+          (GameObject) EditorGUILayout.ObjectField("Right Hand", player.OverrideAllRightHand, typeof(GameObject), false);
         GUILayout.BeginHorizontal();
         GUILayout.Space(20);
         player.OverrideAllRightHandPhysicalColliders =
           (GameObject)
-          EditorGUILayout.ObjectField("Right Hand Physical Colliders",
-            player.OverrideAllRightHandPhysicalColliders, typeof(GameObject), false);
+          EditorGUILayout.ObjectField("Right Hand Physical Colliders", player.OverrideAllRightHandPhysicalColliders,
+            typeof(GameObject), false);
         GUILayout.EndHorizontal();
       }
       EditorGUILayout.EndFadeGroup();
-      if (modelOverrideAll == true) {
+      if (modelOverrideAll) {
         player.OverrideOculus = false;
         player.OverrideSteamVR = false;
       }
@@ -238,28 +215,25 @@ namespace NewtonVR {
 
       GUILayout.Space(10);
 
-      if (player.OculusSDKEnabled == true) {
+      if (player.OculusSDKEnabled) {
         GUILayout.Label("Model override for Oculus SDK");
         using (new EditorGUI.DisabledScope(hasOculusSDK == false)) {
-          bool modelOverrideOculus = EditorGUILayout.Toggle("Override hand models for Oculus SDK",
-            player.OverrideOculus);
+          bool modelOverrideOculus = EditorGUILayout.Toggle("Override hand models for Oculus SDK", player.OverrideOculus);
           EditorGUILayout.BeginFadeGroup(Convert.ToSingle(modelOverrideOculus));
           using (new EditorGUI.DisabledScope(modelOverrideOculus == false)) {
             player.OverrideOculusLeftHand =
               (GameObject)
-              EditorGUILayout.ObjectField("Left Hand", player.OverrideOculusLeftHand,
-                typeof(GameObject), false);
+              EditorGUILayout.ObjectField("Left Hand", player.OverrideOculusLeftHand, typeof(GameObject), false);
             GUILayout.BeginHorizontal();
             GUILayout.Space(20);
             player.OverrideOculusLeftHandPhysicalColliders =
               (GameObject)
-              EditorGUILayout.ObjectField("Left Hand Physical Colliders",
-                player.OverrideOculusLeftHandPhysicalColliders, typeof(GameObject), false);
+              EditorGUILayout.ObjectField("Left Hand Physical Colliders", player.OverrideOculusLeftHandPhysicalColliders,
+                typeof(GameObject), false);
             GUILayout.EndHorizontal();
             player.OverrideOculusRightHand =
               (GameObject)
-              EditorGUILayout.ObjectField("Right Hand", player.OverrideOculusRightHand,
-                typeof(GameObject), false);
+              EditorGUILayout.ObjectField("Right Hand", player.OverrideOculusRightHand, typeof(GameObject), false);
             GUILayout.BeginHorizontal();
             GUILayout.Space(20);
             player.OverrideOculusRightHandPhysicalColliders =
@@ -270,7 +244,7 @@ namespace NewtonVR {
           }
           EditorGUILayout.EndFadeGroup();
 
-          if (modelOverrideOculus == true) {
+          if (modelOverrideOculus) {
             player.OverrideAll = false;
           }
           if (player.OverrideOculus != modelOverrideOculus) {
@@ -280,17 +254,15 @@ namespace NewtonVR {
         }
       }
 
-      if (player.SteamVREnabled == true) {
+      if (player.SteamVREnabled) {
         GUILayout.Label("Model override for SteamVR");
         using (new EditorGUI.DisabledScope(hasSteamVR == false)) {
-          bool modelOverrideSteamVR = EditorGUILayout.Toggle("Override hand models for SteamVR",
-            player.OverrideSteamVR);
+          bool modelOverrideSteamVR = EditorGUILayout.Toggle("Override hand models for SteamVR", player.OverrideSteamVR);
           EditorGUILayout.BeginFadeGroup(Convert.ToSingle(modelOverrideSteamVR));
           using (new EditorGUI.DisabledScope(modelOverrideSteamVR == false)) {
             player.OverrideSteamVRLeftHand =
               (GameObject)
-              EditorGUILayout.ObjectField("Left Hand", player.OverrideSteamVRLeftHand,
-                typeof(GameObject), false);
+              EditorGUILayout.ObjectField("Left Hand", player.OverrideSteamVRLeftHand, typeof(GameObject), false);
             GUILayout.BeginHorizontal();
             GUILayout.Space(20);
             player.OverrideSteamVRLeftHandPhysicalColliders =
@@ -300,8 +272,7 @@ namespace NewtonVR {
             GUILayout.EndHorizontal();
             player.OverrideSteamVRRightHand =
               (GameObject)
-              EditorGUILayout.ObjectField("Right Hand", player.OverrideSteamVRRightHand,
-                typeof(GameObject), false);
+              EditorGUILayout.ObjectField("Right Hand", player.OverrideSteamVRRightHand, typeof(GameObject), false);
             GUILayout.BeginHorizontal();
             GUILayout.Space(20);
             player.OverrideSteamVRRightHandPhysicalColliders =
@@ -312,7 +283,7 @@ namespace NewtonVR {
           }
           EditorGUILayout.EndFadeGroup();
 
-          if (modelOverrideSteamVR == true) {
+          if (modelOverrideSteamVR) {
             player.OverrideAll = false;
           }
           if (player.OverrideSteamVR != modelOverrideSteamVR) {
@@ -324,35 +295,31 @@ namespace NewtonVR {
         GUILayout.Space(10);
       }
 
-
       GUILayout.Space(10);
 
-
-      if (enableSteamVR == false && player.SteamVREnabled == true) {
+      if (enableSteamVR == false && player.SteamVREnabled) {
         RemoveDefine(SteamVRDefine);
-      } else if (enableSteamVR == true && player.SteamVREnabled == false) {
+      } else if (enableSteamVR && player.SteamVREnabled == false) {
         AddDefine(SteamVRDefine);
       }
 
-
-      if (enableOculusSDK == false && player.OculusSDKEnabled == true) {
+      if (enableOculusSDK == false && player.OculusSDKEnabled) {
         RemoveDefine(OculusDefine);
-      } else if (enableOculusSDK == true && player.OculusSDKEnabled == false) {
+      } else if (enableOculusSDK && player.OculusSDKEnabled == false) {
         AddDefine(OculusDefine);
       }
 
-      if (installOculusSDK == true) {
-        Application.OpenURL(
-          "https://developer3.oculus.com/downloads/game-engines/1.10.0/Oculus_Utilities_for_Unity_5/");
+      if (installOculusSDK) {
+        Application.OpenURL("https://developer3.oculus.com/downloads/game-engines/1.10.0/Oculus_Utilities_for_Unity_5/");
       }
 
-      if (installSteamVR == true) {
+      if (installSteamVR) {
         Application.OpenURL("com.unity3d.kharma:content/32647");
       }
 
       DrawDefaultInspector();
 
-      if (waitingForReload == true || string.IsNullOrEmpty(progressBarMessage) == false) {
+      if (waitingForReload || string.IsNullOrEmpty(progressBarMessage) == false) {
         DisplayProgressBar();
       }
       if (GUI.changed) {

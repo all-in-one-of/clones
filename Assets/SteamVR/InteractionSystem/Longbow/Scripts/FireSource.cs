@@ -5,38 +5,36 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class FireSource : MonoBehaviour {
-    public GameObject fireParticlePrefab;
-    public bool startActive;
-    private GameObject fireObject;
-
-    public ParticleSystem customParticles;
-
-    public bool isBurning;
-
     public float burnTime;
-    public float ignitionDelay = 0;
-    private float ignitionTime;
-
-    private Hand hand;
-
-    public AudioSource ignitionSound;
 
     public bool canSpreadFromThisSource = true;
 
+    public ParticleSystem customParticles;
+    public GameObject fireParticlePrefab;
+    public float ignitionDelay = 0;
+
+    public AudioSource ignitionSound;
+
+    public bool isBurning;
+    public bool startActive;
+    private GameObject fireObject;
+
+    private Hand hand;
+    private float ignitionTime;
+
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       if (startActive) {
         StartBurning();
       }
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       if ((burnTime != 0) && (Time.time > (ignitionTime + burnTime)) && isBurning) {
         isBurning = false;
         if (customParticles != null) {
@@ -48,7 +46,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnTriggerEnter(Collider other) {
+    private void OnTriggerEnter(Collider other) {
       if (isBurning && canSpreadFromThisSource) {
         other.SendMessageUpwards("FireExposure", SendMessageOptions.DontRequireReceiver);
       }
@@ -79,8 +77,7 @@ namespace Valve.VR.InteractionSystem {
         customParticles.Play();
       } else {
         if (fireParticlePrefab != null) {
-          fireObject =
-            Instantiate(fireParticlePrefab, transform.position, transform.rotation) as GameObject;
+          fireObject = Instantiate(fireParticlePrefab, transform.position, transform.rotation);
           fireObject.transform.parent = transform;
         }
       }

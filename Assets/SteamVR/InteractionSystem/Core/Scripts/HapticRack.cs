@@ -6,7 +6,6 @@
 
 using UnityEngine;
 using UnityEngine.Events;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -14,20 +13,19 @@ namespace Valve.VR.InteractionSystem {
   public class HapticRack : MonoBehaviour {
     [Tooltip("The linear mapping driving the haptic rack")] public LinearMapping linearMapping;
 
-    [Tooltip("The number of haptic pulses evenly distributed along the mapping")] public int
-      teethCount = 128;
+    [Tooltip("Maximum duration of the haptic pulse")] public int maximumPulseDuration = 900;
 
     [Tooltip("Minimum duration of the haptic pulse")] public int minimumPulseDuration = 500;
 
-    [Tooltip("Maximum duration of the haptic pulse")] public int maximumPulseDuration = 900;
-
     [Tooltip("This event is triggered every time a haptic pulse is made")] public UnityEvent onPulse;
+
+    [Tooltip("The number of haptic pulses evenly distributed along the mapping")] public int teethCount = 128;
 
     private Hand hand;
     private int previousToothIndex = -1;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       if (linearMapping == null) {
         linearMapping = GetComponent<LinearMapping>();
       }
@@ -44,7 +42,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       int currentToothIndex = Mathf.RoundToInt(linearMapping.value * teethCount - 0.5f);
       if (currentToothIndex != previousToothIndex) {
         Pulse();

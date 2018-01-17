@@ -1,14 +1,13 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace NewtonVR {
   public class NVRInteractables : MonoBehaviour {
     private static Dictionary<Collider, NVRInteractable> ColliderMapping;
     private static Dictionary<NVRInteractable, Collider[]> NVRInteractableMapping;
 
-    private static bool Initialized = false;
+    private static bool Initialized;
 
     public static void Initialize() {
       ColliderMapping = new Dictionary<Collider, NVRInteractable>();

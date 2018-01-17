@@ -1,15 +1,58 @@
-using UnityEngine;
-using UnityEngine.Events;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Optional;
-using Optional.Unsafe;
+using UnityEngine;
+using UnityEngine.Events;
 
 namespace NewtonVR {
   public class NVRHand : MonoBehaviour {
+    [Serializable]
+    public class NVRInteractableEvent : UnityEvent<NVRInteractable> {
+    }
+
+    [HideInInspector] public HandState CurrentHandState = HandState.Uninitialized;
+
+    [HideInInspector] public InterationStyle CurrentInteractionStyle;
+
+    public NVRInteractable CurrentlyInteracting;
+
+    [HideInInspector] public GameObject CustomModel;
+    [HideInInspector] public GameObject CustomPhysicalColliders;
     public NVRButtons HoldButton = NVRButtons.Grip;
+
+    public Dictionary<NVRButtons, NVRButtonInputs> Inputs;
+    [HideInInspector] public bool IsLeft;
+
+    [HideInInspector] public bool IsRight;
+
+    public NVRInteractableEvent OnBeginInteraction = new NVRInteractableEvent();
+    public NVRInteractableEvent OnEndInteraction = new NVRInteractableEvent();
+
+    [HideInInspector] public NVRPhysicalController PhysicalController;
+    [HideInInspector] public NVRPlayer Player;
+
+    public GameObject RenderModel;
+
+    public Rigidbody Rigidbody;
+
+    public NVRButtons UseButton = NVRButtons.Trigger;
+
+    private Dictionary<NVRInteractable, Dictionary<Collider, float>> CurrentlyHoveringOver;
+
+    private VisibilityLevel CurrentVisibility = VisibilityLevel.Visible;
+
+    private int EstimationSampleIndex;
+    private readonly int EstimationSamples = 5;
+
+    private Collider[] GhostColliders;
+    private Renderer[] GhostRenderers;
+
+    private NVRInputDevice InputDevice;
+    private float[] LastDeltas;
+    private Vector3[] LastPositions;
+    private Quaternion[] LastRotations;
+    private bool VisibilityLocked;
 
     public bool HoldButtonDown {
       get { return Inputs[HoldButton].PressDown; }
@@ -27,8 +70,6 @@ namespace NewtonVR {
       get { return Inputs[HoldButton].SingleAxis; }
     }
 
-    public NVRButtons UseButton = NVRButtons.Trigger;
-
     public bool UseButtonDown {
       get { return Inputs[UseButton].PressDown; }
     }
@@ -44,50 +85,6 @@ namespace NewtonVR {
     public float UseButtonAxis {
       get { return Inputs[UseButton].SingleAxis; }
     }
-
-    [HideInInspector] public bool IsRight;
-    [HideInInspector] public bool IsLeft;
-    [HideInInspector] public NVRPlayer Player;
-
-    public Dictionary<NVRButtons, NVRButtonInputs> Inputs;
-
-    [HideInInspector] public InterationStyle CurrentInteractionStyle;
-
-    public Rigidbody Rigidbody;
-
-    [HideInInspector] public GameObject CustomModel;
-    [HideInInspector] public GameObject CustomPhysicalColliders;
-
-    private VisibilityLevel CurrentVisibility = VisibilityLevel.Visible;
-    private bool VisibilityLocked = false;
-
-    [HideInInspector] public HandState CurrentHandState = HandState.Uninitialized;
-
-    private Dictionary<NVRInteractable, Dictionary<Collider, float>> CurrentlyHoveringOver;
-
-    public NVRInteractable CurrentlyInteracting;
-
-    [Serializable]
-    public class NVRInteractableEvent : UnityEvent<NVRInteractable> {
-    }
-
-    public NVRInteractableEvent OnBeginInteraction = new NVRInteractableEvent();
-    public NVRInteractableEvent OnEndInteraction = new NVRInteractableEvent();
-
-    private int EstimationSampleIndex;
-    private Vector3[] LastPositions;
-    private Quaternion[] LastRotations;
-    private float[] LastDeltas;
-    private int EstimationSamples = 5;
-
-    [HideInInspector] public NVRPhysicalController PhysicalController;
-
-    private Collider[] GhostColliders;
-    private Renderer[] GhostRenderers;
-
-    private NVRInputDevice InputDevice;
-
-    public GameObject RenderModel;
 
     public bool IsHovering {
       get { return CurrentlyHoveringOver.Any(kvp => kvp.Value.Count > 0); }
@@ -113,26 +110,24 @@ namespace NewtonVR {
 
     public Vector3 CurrentForward {
       get {
-        if (PhysicalController != null && PhysicalController.State == true) {
+        if (PhysicalController != null && PhysicalController.State) {
           return PhysicalController.PhysicalController.transform.forward;
-        } else {
-          return this.transform.forward;
         }
+        return transform.forward;
       }
     }
 
     public Vector3 CurrentPosition {
       get {
-        if (PhysicalController != null && PhysicalController.State == true) {
+        if (PhysicalController != null && PhysicalController.State) {
           return PhysicalController.PhysicalController.transform.position;
-        } else {
-          return this.transform.position;
         }
+        return transform.position;
       }
     }
 
     /// <summary>
-    /// Adds the input device components to this hand to enable tracking for the given integration type.
+    ///   Adds the input device components to this hand to enable tracking for the given integration type.
     /// </summary>
     public void SetupInputDevice(NVRInputDevice input_device) {
       InputDevice = input_device;
@@ -141,8 +136,7 @@ namespace NewtonVR {
       Inputs = new Dictionary<NVRButtons, NVRButtonInputs>(new NVRButtonsComparer());
       foreach (NVRButtons button in NVRButtonsHelper.Array) {
         if (Inputs.ContainsKey(button)) {
-          throw new ApplicationException(
-            "Button already exists in Input dictionary. Duplicate button in helper array.");
+          throw new ApplicationException("Button already exists in Input dictionary. Duplicate button in helper array.");
         }
         Inputs.Add(button, new NVRButtonInputs(InputDevice, button));
       }
@@ -204,7 +198,6 @@ namespace NewtonVR {
           CustomPhysicalColliders = Player.OverrideAllRightHandPhysicalColliders;
         } else {
           Debug.LogError("[NewtonVR] Error: Unknown hand for SteamVR model override.");
-          return;
         }
       }
     }
@@ -213,10 +206,9 @@ namespace NewtonVR {
       if (CurrentHandState == HandState.Uninitialized) {
         if (InputDevice == null || InputDevice.ReadyToInitialize() == false) {
           return;
-        } else {
-          Initialize();
-          return;
         }
+        Initialize();
+        return;
       }
 
       UpdateButtonStates();
@@ -235,10 +227,7 @@ namespace NewtonVR {
           var hoveringOver = hoveringEnumerator.Current;
           if (hoveringOver.Value.Count > 0) {
             hoveringOver.Key.HoveringUpdate(this,
-              Time.time -
-              hoveringOver.Value.OrderBy(colliderTime => colliderTime.Value)
-                          .First()
-                          .Value);
+              Time.time - hoveringOver.Value.OrderBy(colliderTime => colliderTime.Value).First().Value);
           }
         }
       }
@@ -252,19 +241,19 @@ namespace NewtonVR {
 
     protected void UpdateInteractions() {
       if (CurrentInteractionStyle == InterationStyle.Hold) {
-        if (HoldButtonUp == true) {
+        if (HoldButtonUp) {
           VisibilityLocked = false;
         }
 
-        if (HoldButtonDown == true) {
+        if (HoldButtonDown) {
           if (CurrentlyInteracting == null) {
             PickupClosest();
           }
-        } else if (HoldButtonUp == true && CurrentlyInteracting != null) {
+        } else if (HoldButtonUp && CurrentlyInteracting != null) {
           EndInteraction(null);
         }
       } else if (CurrentInteractionStyle == InterationStyle.Toggle) {
-        if (HoldButtonDown == true) {
+        if (HoldButtonDown) {
           if (CurrentHandState == HandState.Idle) {
             PickupClosest();
             if (IsInteracting) {
@@ -291,18 +280,18 @@ namespace NewtonVR {
     }
 
     private void UpdateVisibilityAndColliders() {
-      if (Player.PhysicalHands == true) {
+      if (Player.PhysicalHands) {
         if (CurrentInteractionStyle == InterationStyle.Hold) {
-          if (HoldButtonPressed == true && IsInteracting == false) {
+          if (HoldButtonPressed && IsInteracting == false) {
             if (CurrentHandState != HandState.GripDownNotInteracting && VisibilityLocked == false) {
               VisibilityLocked = true;
               SetVisibility(VisibilityLevel.Visible);
               CurrentHandState = HandState.GripDownNotInteracting;
             }
-          } else if (HoldButtonDown == true && IsInteracting == true) {
+          } else if (HoldButtonDown && IsInteracting) {
             if (CurrentHandState != HandState.GripDownInteracting && VisibilityLocked == false) {
               VisibilityLocked = true;
-              if (Player.MakeControllerInvisibleOnInteraction == true) {
+              if (Player.MakeControllerInvisibleOnInteraction) {
                 SetVisibility(VisibilityLevel.Invisible);
               } else {
                 SetVisibility(VisibilityLevel.Ghost);
@@ -334,8 +323,8 @@ namespace NewtonVR {
             }
           }
         }
-      } else if (Player.PhysicalHands == false && Player.MakeControllerInvisibleOnInteraction == true) {
-        if (IsInteracting == true) {
+      } else if (Player.PhysicalHands == false && Player.MakeControllerInvisibleOnInteraction) {
+        if (IsInteracting) {
           SetVisibility(VisibilityLevel.Invisible);
         } else if (IsInteracting == false) {
           SetVisibility(VisibilityLevel.Ghost);
@@ -343,8 +332,7 @@ namespace NewtonVR {
       }
     }
 
-    public void TriggerHapticPulse(ushort durationMicroSec = 500,
-                                   NVRButtons button = NVRButtons.Grip) {
+    public void TriggerHapticPulse(ushort durationMicroSec = 500, NVRButtons button = NVRButtons.Grip) {
       if (InputDevice != null) {
         if (durationMicroSec < 3000) {
           InputDevice.TriggerHapticPulse(durationMicroSec, button);
@@ -386,8 +374,7 @@ namespace NewtonVR {
       Vector3 unitAxis = Vector3.zero;
       Quaternion rotation = Quaternion.identity;
 
-      rotation = LastRotations[LastRotations.Length - 1] *
-                 Quaternion.Inverse(LastRotations[LastRotations.Length - 2]);
+      rotation = LastRotations[LastRotations.Length - 1] * Quaternion.Inverse(LastRotations[LastRotations.Length - 2]);
 
       //Error: the incorrect rotation is sometimes returned
       rotation.ToAngleAxis(out angleDegrees, out unitAxis);
@@ -398,10 +385,8 @@ namespace NewtonVR {
       int last = EstimationSampleIndex - 1;
       int secondToLast = EstimationSampleIndex - 2;
 
-      if (last < 0)
-        last += EstimationSamples;
-      if (secondToLast < 0)
-        secondToLast += EstimationSamples;
+      if (last < 0) last += EstimationSamples;
+      if (secondToLast < 0) secondToLast += EstimationSamples;
 
       return LastPositions[last] - LastPositions[secondToLast];
     }
@@ -410,10 +395,8 @@ namespace NewtonVR {
       int last = EstimationSampleIndex - 1;
       int secondToLast = EstimationSampleIndex - 2;
 
-      if (last < 0)
-        last += EstimationSamples;
-      if (secondToLast < 0)
-        secondToLast += EstimationSamples;
+      if (last < 0) last += EstimationSamples;
+      if (secondToLast < 0) secondToLast += EstimationSamples;
 
       return LastRotations[last] * Quaternion.Inverse(LastRotations[secondToLast]);
     }
@@ -423,23 +406,22 @@ namespace NewtonVR {
         return;
       }
 
-      LastPositions[EstimationSampleIndex] = this.transform.position;
-      LastRotations[EstimationSampleIndex] = this.transform.rotation;
+      LastPositions[EstimationSampleIndex] = transform.position;
+      LastRotations[EstimationSampleIndex] = transform.rotation;
       LastDeltas[EstimationSampleIndex] = Time.deltaTime;
       EstimationSampleIndex++;
 
-      if (EstimationSampleIndex >= LastPositions.Length)
-        EstimationSampleIndex = 0;
+      if (EstimationSampleIndex >= LastPositions.Length) EstimationSampleIndex = 0;
 
-      if (InputDevice != null && IsInteracting == false && IsHovering == true) {
-        if (Player.VibrateOnHover == true) {
+      if (InputDevice != null && IsInteracting == false && IsHovering) {
+        if (Player.VibrateOnHover) {
           InputDevice.TriggerHapticPulse(100);
         }
       }
     }
 
     public virtual void BeginInteraction(NVRInteractable interactable) {
-      if (interactable.CanAttach == true) {
+      if (interactable.CanAttach) {
         if (interactable.AttachedHand != null) {
           interactable.AttachedHand.EndInteraction(null);
         }
@@ -454,8 +436,7 @@ namespace NewtonVR {
     }
 
     public virtual void EndInteraction(NVRInteractable item) {
-      if (item != null && CurrentlyHoveringOver.ContainsKey(item) == true)
-        CurrentlyHoveringOver.Remove(item);
+      if (item != null && CurrentlyHoveringOver.ContainsKey(item)) CurrentlyHoveringOver.Remove(item);
 
       if (CurrentlyInteracting != null) {
         CurrentlyInteracting.EndInteraction();
@@ -477,10 +458,9 @@ namespace NewtonVR {
       float closestDistance = float.MaxValue;
 
       foreach (var hovering in CurrentlyHoveringOver) {
-        if (hovering.Key == null)
-          continue;
+        if (hovering.Key == null) continue;
 
-        float distance = Vector3.Distance(this.transform.position, hovering.Key.transform.position);
+        float distance = Vector3.Distance(transform.position, hovering.Key.transform.position);
         if (distance < closestDistance) {
           closestDistance = distance;
           closest = hovering.Key;
@@ -490,44 +470,34 @@ namespace NewtonVR {
       if (closest != null) {
         BeginInteraction(closest);
         return true;
-      } else {
-        return false;
       }
+      return false;
     }
 
     protected virtual void OnTriggerEnter(Collider collider) {
       NVRInteractable interactable = NVRInteractables.GetInteractable(collider);
-      if (interactable == null || interactable.enabled == false ||
-          collider.tag.Equals("Ungrabbable"))
-        return;
+      if (interactable == null || interactable.enabled == false || collider.tag.Equals("Ungrabbable")) return;
 
-      if (CurrentlyHoveringOver.ContainsKey(interactable) == false)
-        CurrentlyHoveringOver[interactable] = new Dictionary<Collider, float>();
+      if (CurrentlyHoveringOver.ContainsKey(interactable) == false) CurrentlyHoveringOver[interactable] = new Dictionary<Collider, float>();
 
-      if (CurrentlyHoveringOver[interactable].ContainsKey(collider) == false)
-        CurrentlyHoveringOver[interactable][collider] = Time.time;
+      if (CurrentlyHoveringOver[interactable].ContainsKey(collider) == false) CurrentlyHoveringOver[interactable][collider] = Time.time;
     }
 
     protected virtual void OnTriggerStay(Collider collider) {
       NVRInteractable interactable = NVRInteractables.GetInteractable(collider);
-      if (interactable == null || interactable.enabled == false ||
-          collider.tag.Equals("Ungrabbable"))
-        return;
+      if (interactable == null || interactable.enabled == false || collider.tag.Equals("Ungrabbable")) return;
 
-      if (CurrentlyHoveringOver.ContainsKey(interactable) == false)
-        CurrentlyHoveringOver[interactable] = new Dictionary<Collider, float>();
+      if (CurrentlyHoveringOver.ContainsKey(interactable) == false) CurrentlyHoveringOver[interactable] = new Dictionary<Collider, float>();
 
-      if (CurrentlyHoveringOver[interactable].ContainsKey(collider) == false)
-        CurrentlyHoveringOver[interactable][collider] = Time.time;
+      if (CurrentlyHoveringOver[interactable].ContainsKey(collider) == false) CurrentlyHoveringOver[interactable][collider] = Time.time;
     }
 
     protected virtual void OnTriggerExit(Collider collider) {
       NVRInteractable interactable = NVRInteractables.GetInteractable(collider);
-      if (interactable == null || collider.tag.Equals("Ungrabbable"))
-        return;
+      if (interactable == null || collider.tag.Equals("Ungrabbable")) return;
 
-      if (CurrentlyHoveringOver.ContainsKey(interactable) == true) {
-        if (CurrentlyHoveringOver[interactable].ContainsKey(collider) == true) {
+      if (CurrentlyHoveringOver.ContainsKey(interactable)) {
+        if (CurrentlyHoveringOver[interactable].ContainsKey(collider)) {
           CurrentlyHoveringOver[interactable].Remove(collider);
           if (CurrentlyHoveringOver[interactable].Count == 0) {
             CurrentlyHoveringOver.Remove(interactable);
@@ -537,10 +507,8 @@ namespace NewtonVR {
     }
 
     public string GetDeviceName() {
-      if (InputDevice != null)
-        return InputDevice.GetDeviceName();
-      else
-        return null;
+      if (InputDevice != null) return InputDevice.GetDeviceName();
+      return null;
     }
 
     public Collider[] SetupDefaultPhysicalColliders(Transform ModelParent) {
@@ -548,11 +516,9 @@ namespace NewtonVR {
     }
 
     public void DeregisterInteractable(NVRInteractable interactable) {
-      if (CurrentlyInteracting == interactable)
-        CurrentlyInteracting = null;
+      if (CurrentlyInteracting == interactable) CurrentlyInteracting = null;
 
-      if (CurrentlyHoveringOver != null && CurrentlyHoveringOver.ContainsKey(interactable))
-        CurrentlyHoveringOver.Remove(interactable);
+      if (CurrentlyHoveringOver != null && CurrentlyHoveringOver.ContainsKey(interactable)) CurrentlyHoveringOver.Remove(interactable);
     }
 
     private void SetVisibility(VisibilityLevel visibility) {
@@ -562,7 +528,7 @@ namespace NewtonVR {
             PhysicalController.Off();
           }
 
-          if (Player.AutomaticallySetControllerTransparency == true) {
+          if (Player.AutomaticallySetControllerTransparency) {
             for (int index = 0; index < GhostRenderers.Length; index++) {
               GhostRenderers[index].enabled = false;
             }
@@ -578,7 +544,7 @@ namespace NewtonVR {
             PhysicalController.Off();
           }
 
-          if (Player.AutomaticallySetControllerTransparency == true) {
+          if (Player.AutomaticallySetControllerTransparency) {
             for (int index = 0; index < GhostRenderers.Length; index++) {
               GhostRenderers[index].enabled = true;
             }
@@ -594,7 +560,7 @@ namespace NewtonVR {
             PhysicalController.On();
           }
 
-          if (Player.AutomaticallySetControllerTransparency == true) {
+          if (Player.AutomaticallySetControllerTransparency) {
             for (int index = 0; index < GhostRenderers.Length; index++) {
               GhostRenderers[index].enabled = false;
             }
@@ -615,7 +581,7 @@ namespace NewtonVR {
       } else {
         GameObject RenderModel = Instantiate(CustomModel);
 
-        RenderModel.transform.parent = this.transform;
+        RenderModel.transform.parent = transform;
         RenderModel.transform.localScale = RenderModel.transform.localScale;
         RenderModel.transform.localPosition = Vector3.zero;
         RenderModel.transform.localRotation = Quaternion.identity;
@@ -623,9 +589,8 @@ namespace NewtonVR {
     }
 
     public void Initialize() {
-      Rigidbody = this.GetComponent<Rigidbody>();
-      if (Rigidbody == null)
-        Rigidbody = this.gameObject.AddComponent<Rigidbody>();
+      Rigidbody = GetComponent<Rigidbody>();
+      if (Rigidbody == null) Rigidbody = gameObject.AddComponent<Rigidbody>();
       Rigidbody.isKinematic = true;
       Rigidbody.maxAngularVelocity = float.MaxValue;
       Rigidbody.useGravity = false;
@@ -644,19 +609,19 @@ namespace NewtonVR {
 
       Player.RegisterHand(this);
 
-      if (Player.PhysicalHands == true) {
+      if (Player.PhysicalHands) {
         if (PhysicalController != null) {
           PhysicalController.Kill();
         }
 
-        PhysicalController = this.gameObject.AddComponent<NVRPhysicalController>();
+        PhysicalController = gameObject.AddComponent<NVRPhysicalController>();
         PhysicalController.Initialize(this, false);
 
-        if (Player.AutomaticallySetControllerTransparency == true) {
+        if (Player.AutomaticallySetControllerTransparency) {
           Color transparentcolor = Color.white;
           transparentcolor.a = (float) VisibilityLevel.Ghost / 100f;
 
-          GhostRenderers = this.GetComponentsInChildren<Renderer>();
+          GhostRenderers = GetComponentsInChildren<Renderer>();
           for (int rendererIndex = 0; rendererIndex < GhostRenderers.Length; rendererIndex++) {
             NVRHelpers.SetTransparent(GhostRenderers[rendererIndex].material, transparentcolor);
           }
@@ -668,11 +633,11 @@ namespace NewtonVR {
 
         CurrentVisibility = VisibilityLevel.Ghost;
       } else {
-        if (Player.AutomaticallySetControllerTransparency == true) {
+        if (Player.AutomaticallySetControllerTransparency) {
           Color transparentcolor = Color.white;
           transparentcolor.a = (float) VisibilityLevel.Ghost / 100f;
 
-          GhostRenderers = this.GetComponentsInChildren<Renderer>();
+          GhostRenderers = GetComponentsInChildren<Renderer>();
           for (int rendererIndex = 0; rendererIndex < GhostRenderers.Length; rendererIndex++) {
             NVRHelpers.SetTransparent(GhostRenderers[rendererIndex].material, transparentcolor);
           }
@@ -703,7 +668,7 @@ namespace NewtonVR {
   public enum VisibilityLevel {
     Invisible = 0,
     Ghost = 70,
-    Visible = 100,
+    Visible = 100
   }
 
   public enum HandState {
@@ -719,6 +684,6 @@ namespace NewtonVR {
   public enum InterationStyle {
     Hold,
     Toggle,
-    ByScript,
+    ByScript
   }
 }

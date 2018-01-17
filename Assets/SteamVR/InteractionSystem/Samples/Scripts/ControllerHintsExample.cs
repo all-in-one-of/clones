@@ -4,9 +4,8 @@
 //
 //=============================================================================
 
-using UnityEngine;
 using System.Collections;
-using Valve.VR;
+using UnityEngine;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -78,8 +77,7 @@ namespace Valve.VR.InteractionSystem {
       ControllerButtonHints.HideAllTextHints(hand);
 
       while (true) {
-        ControllerButtonHints.ShowTextHint(hand, EVRButtonId.k_EButton_ApplicationMenu,
-          "Application");
+        ControllerButtonHints.ShowTextHint(hand, EVRButtonId.k_EButton_ApplicationMenu, "Application");
         yield return new WaitForSeconds(3.0f);
         ControllerButtonHints.ShowTextHint(hand, EVRButtonId.k_EButton_System, "System");
         yield return new WaitForSeconds(3.0f);

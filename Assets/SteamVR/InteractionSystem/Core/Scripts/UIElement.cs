@@ -4,10 +4,9 @@
 //
 //=============================================================================
 
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
-using System;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -18,7 +17,7 @@ namespace Valve.VR.InteractionSystem {
     private Hand currentHand;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       Button button = GetComponent<Button>();
       if (button) {
         button.onClick.AddListener(OnButtonClick);
@@ -29,13 +28,13 @@ namespace Valve.VR.InteractionSystem {
     private void OnHandHoverBegin(Hand hand) {
       currentHand = hand;
       InputModule.instance.HoverBegin(gameObject);
-      ControllerButtonHints.ShowButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+      ControllerButtonHints.ShowButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
     }
 
     //-------------------------------------------------
     private void OnHandHoverEnd(Hand hand) {
       InputModule.instance.HoverEnd(gameObject);
-      ControllerButtonHints.HideButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+      ControllerButtonHints.HideButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
       currentHand = null;
     }
 
@@ -43,7 +42,7 @@ namespace Valve.VR.InteractionSystem {
     private void HandHoverUpdate(Hand hand) {
       if (hand.GetStandardInteractionButtonDown()) {
         InputModule.instance.Submit(gameObject);
-        ControllerButtonHints.HideButtonHint(hand, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+        ControllerButtonHints.HideButtonHint(hand, EVRButtonId.k_EButton_SteamVR_Trigger);
       }
     }
 
@@ -55,8 +54,8 @@ namespace Valve.VR.InteractionSystem {
 
 #if UNITY_EDITOR
   //-------------------------------------------------------------------------
-  [UnityEditor.CustomEditor(typeof(UIElement))]
-  public class UIElementEditor : UnityEditor.Editor {
+  [CustomEditor(typeof(UIElement))]
+  public class UIElementEditor : Editor {
     //-------------------------------------------------
     // Custom Inspector GUI allows us to click from within the UI
     //-------------------------------------------------

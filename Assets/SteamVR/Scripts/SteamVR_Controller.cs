@@ -10,6 +10,7 @@
 //
 //=============================================================================
 
+using System.Runtime.InteropServices;
 using UnityEngine;
 using Valve.VR;
 
@@ -28,6 +29,16 @@ public class SteamVR_Controller {
   }
 
   public class Device {
+    public float hairTriggerDelta = 0.1f;
+    // amount trigger must be pulled or released to change state
+
+    private float hairTriggerLimit;
+    private bool hairTriggerState, hairTriggerPrevState;
+    private TrackedDevicePose_t pose;
+    private int prevFrameCount = -1;
+
+    private VRControllerState_t state, prevState;
+
     public Device(uint i) {
       index = i;
     }
@@ -92,8 +103,7 @@ public class SteamVR_Controller {
     public Vector3 angularVelocity {
       get {
         Update();
-        return new Vector3(-pose.vAngularVelocity.v0, -pose.vAngularVelocity.v1,
-          pose.vAngularVelocity.v2);
+        return new Vector3(-pose.vAngularVelocity.v0, -pose.vAngularVelocity.v1, pose.vAngularVelocity.v2);
       }
     }
 
@@ -112,10 +122,6 @@ public class SteamVR_Controller {
       return pose;
     }
 
-    VRControllerState_t state, prevState;
-    TrackedDevicePose_t pose;
-    int prevFrameCount = -1;
-
     public void Update() {
       if (Time.frameCount != prevFrameCount) {
         prevFrameCount = Time.frameCount;
@@ -123,10 +129,8 @@ public class SteamVR_Controller {
 
         var system = OpenVR.System;
         if (system != null) {
-          valid = system.GetControllerStateWithPose(SteamVR_Render.instance.trackingSpace, index,
-            ref state,
-            (uint) System.Runtime.InteropServices.Marshal.SizeOf(typeof(VRControllerState_t)),
-            ref pose);
+          valid = system.GetControllerStateWithPose(SteamVR_Render.instance.trackingSpace, index, ref state,
+            (uint) Marshal.SizeOf(typeof(VRControllerState_t)), ref pose);
           UpdateHairTrigger();
         }
       }
@@ -139,14 +143,12 @@ public class SteamVR_Controller {
 
     public bool GetPressDown(ulong buttonMask) {
       Update();
-      return (state.ulButtonPressed & buttonMask) != 0 &&
-             (prevState.ulButtonPressed & buttonMask) == 0;
+      return (state.ulButtonPressed & buttonMask) != 0 && (prevState.ulButtonPressed & buttonMask) == 0;
     }
 
     public bool GetPressUp(ulong buttonMask) {
       Update();
-      return (state.ulButtonPressed & buttonMask) == 0 &&
-             (prevState.ulButtonPressed & buttonMask) != 0;
+      return (state.ulButtonPressed & buttonMask) == 0 && (prevState.ulButtonPressed & buttonMask) != 0;
     }
 
     public bool GetPress(EVRButtonId buttonId) {
@@ -168,14 +170,12 @@ public class SteamVR_Controller {
 
     public bool GetTouchDown(ulong buttonMask) {
       Update();
-      return (state.ulButtonTouched & buttonMask) != 0 &&
-             (prevState.ulButtonTouched & buttonMask) == 0;
+      return (state.ulButtonTouched & buttonMask) != 0 && (prevState.ulButtonTouched & buttonMask) == 0;
     }
 
     public bool GetTouchUp(ulong buttonMask) {
       Update();
-      return (state.ulButtonTouched & buttonMask) == 0 &&
-             (prevState.ulButtonTouched & buttonMask) != 0;
+      return (state.ulButtonTouched & buttonMask) == 0 && (prevState.ulButtonTouched & buttonMask) != 0;
     }
 
     public bool GetTouch(EVRButtonId buttonId) {
@@ -217,25 +217,15 @@ public class SteamVR_Controller {
       }
     }
 
-    public float hairTriggerDelta = 0.1f;
-      // amount trigger must be pulled or released to change state
-
-    float hairTriggerLimit;
-    bool hairTriggerState, hairTriggerPrevState;
-
-    void UpdateHairTrigger() {
+    private void UpdateHairTrigger() {
       hairTriggerPrevState = hairTriggerState;
       var value = state.rAxis1.x; // trigger
       if (hairTriggerState) {
-        if (value < hairTriggerLimit - hairTriggerDelta || value <= 0.0f)
-          hairTriggerState = false;
+        if (value < hairTriggerLimit - hairTriggerDelta || value <= 0.0f) hairTriggerState = false;
       } else {
-        if (value > hairTriggerLimit + hairTriggerDelta || value >= 1.0f)
-          hairTriggerState = true;
+        if (value > hairTriggerLimit + hairTriggerDelta || value >= 1.0f) hairTriggerState = true;
       }
-      hairTriggerLimit = hairTriggerState
-        ? Mathf.Max(hairTriggerLimit, value)
-        : Mathf.Min(hairTriggerLimit, value);
+      hairTriggerLimit = hairTriggerState ? Mathf.Max(hairTriggerLimit, value) : Mathf.Min(hairTriggerLimit, value);
     }
 
     public bool GetHairTrigger() {
@@ -254,23 +244,6 @@ public class SteamVR_Controller {
     }
   }
 
-  private static Device[] devices;
-
-  public static Device Input(int deviceIndex) {
-    if (devices == null) {
-      devices = new Device[OpenVR.k_unMaxTrackedDeviceCount];
-      for (uint i = 0; i < devices.Length; i++)
-        devices[i] = new Device(i);
-    }
-
-    return devices[deviceIndex];
-  }
-
-  public static void Update() {
-    for (int i = 0; i < OpenVR.k_unMaxTrackedDeviceCount; i++)
-      Input(i).Update();
-  }
-
   // This helper can be used in a variety of ways.  Beware that indices may change
   // as new devices are dynamically added or removed, controllers are physically
   // swapped between hands, arms crossed, etc.
@@ -281,7 +254,22 @@ public class SteamVR_Controller {
     Rightmost,
     // distance - also see vr.hmd.GetSortedTrackedDeviceIndicesOfClass
     FarthestLeft,
-    FarthestRight,
+    FarthestRight
+  }
+
+  private static Device[] devices;
+
+  public static Device Input(int deviceIndex) {
+    if (devices == null) {
+      devices = new Device[OpenVR.k_unMaxTrackedDeviceCount];
+      for (uint i = 0; i < devices.Length; i++) devices[i] = new Device(i);
+    }
+
+    return devices[deviceIndex];
+  }
+
+  public static void Update() {
+    for (int i = 0; i < OpenVR.k_unMaxTrackedDeviceCount; i++) Input(i).Update();
   }
 
   public static int GetDeviceIndex(DeviceRelation relation,
@@ -296,20 +284,16 @@ public class SteamVR_Controller {
       : SteamVR_Utils.RigidTransform.identity;
 
     var system = OpenVR.System;
-    if (system == null)
-      return result;
+    if (system == null) return result;
 
     var best = -float.MaxValue;
     for (int i = 0; i < OpenVR.k_unMaxTrackedDeviceCount; i++) {
-      if (i == relativeTo || system.GetTrackedDeviceClass((uint) i) != deviceClass)
-        continue;
+      if (i == relativeTo || system.GetTrackedDeviceClass((uint) i) != deviceClass) continue;
 
       var device = Input(i);
-      if (!device.connected)
-        continue;
+      if (!device.connected) continue;
 
-      if (relation == DeviceRelation.First)
-        return i;
+      if (relation == DeviceRelation.First) return i;
 
       float score;
 

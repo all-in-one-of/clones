@@ -5,36 +5,34 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   public class BalloonSpawner : MonoBehaviour {
-    public float minSpawnTime = 5f;
-    public float maxSpawnTime = 15f;
-    private float nextSpawnTime;
-    public GameObject balloonPrefab;
+    public bool attachBalloon = false;
 
     public bool autoSpawn = true;
-    public bool spawnAtStartup = true;
+    public GameObject balloonPrefab;
+
+    public Balloon.BalloonColor color = Balloon.BalloonColor.Random;
+    public SoundPlayOneshot inflateSound;
+    public float maxSpawnTime = 15f;
+    public float minSpawnTime = 5f;
 
     public bool playSounds = true;
-    public SoundPlayOneshot inflateSound;
-    public SoundPlayOneshot stretchSound;
-
-    public bool sendSpawnMessageToParent = false;
 
     public float scale = 1f;
 
+    public bool sendSpawnMessageToParent = false;
+    public bool spawnAtStartup = true;
+
     public Transform spawnDirectionTransform;
     public float spawnForce;
-
-    public bool attachBalloon = false;
-
-    public Balloon.BalloonColor color = Balloon.BalloonColor.Random;
+    public SoundPlayOneshot stretchSound;
+    private float nextSpawnTime;
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       if (balloonPrefab == null) {
         return;
       }
@@ -46,7 +44,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       if (balloonPrefab == null) {
         return;
       }
@@ -62,8 +60,7 @@ namespace Valve.VR.InteractionSystem {
       if (balloonPrefab == null) {
         return null;
       }
-      GameObject balloon =
-        Instantiate(balloonPrefab, transform.position, transform.rotation) as GameObject;
+      GameObject balloon = Instantiate(balloonPrefab, transform.position, transform.rotation);
       balloon.transform.localScale = new Vector3(scale, scale, scale);
       if (attachBalloon) {
         balloon.transform.parent = transform;
@@ -71,8 +68,7 @@ namespace Valve.VR.InteractionSystem {
 
       if (sendSpawnMessageToParent) {
         if (transform.parent != null) {
-          transform.parent.SendMessage("OnBalloonSpawned", balloon,
-            SendMessageOptions.DontRequireReceiver);
+          transform.parent.SendMessage("OnBalloonSpawned", balloon, SendMessageOptions.DontRequireReceiver);
         }
       }
 
@@ -86,8 +82,7 @@ namespace Valve.VR.InteractionSystem {
       }
       balloon.GetComponentInChildren<Balloon>().SetColor(color);
       if (spawnDirectionTransform != null) {
-        balloon.GetComponentInChildren<Rigidbody>()
-               .AddForce(spawnDirectionTransform.forward * spawnForce);
+        balloon.GetComponentInChildren<Rigidbody>().AddForce(spawnDirectionTransform.forward * spawnForce);
       }
 
       return balloon;

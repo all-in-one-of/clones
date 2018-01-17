@@ -1,13 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class BoxGoal : MonoBehaviour {
-  private int total = 0;
-  private double last_tick = 0;
+  private double last_tick;
+  private int total;
 
   // Update is called once per frame
-  void Update() {
+  private void Update() {
     if (Time.time - last_tick > 1.0 && total < 4) {
       total = Mathf.Max(0, total - 1);
       last_tick = Time.time;

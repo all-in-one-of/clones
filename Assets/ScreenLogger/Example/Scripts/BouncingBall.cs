@@ -1,18 +1,17 @@
-﻿using UnityEngine;
-using System.Collections;
-using AClockworkBerry;
+﻿using AClockworkBerry;
+using UnityEngine;
 
 public class BouncingBall : MonoBehaviour {
   public float Acceleration = -1;
   public float HorizVelocity = 1;
-  public float Wall = 5;
   public float Radius = 1;
   public float RotationSpeed = 1;
-
-  private Vector3 Velocity;
+  public float Wall = 5;
   private float MaxVelocity;
 
-  void Start() {
+  private Vector3 Velocity;
+
+  private void Start() {
     Velocity = new Vector3(HorizVelocity, 0, 0);
 
     MaxVelocity = Mathf.Sqrt(2 * -Acceleration * (transform.position.y - Radius));
@@ -21,9 +20,8 @@ public class BouncingBall : MonoBehaviour {
     Debug.LogWarning("Start...");
   }
 
-  void Update() {
-    if (Input.GetButtonDown("Fire1"))
-      ScreenLogger.Instance.ShowLog = !ScreenLogger.Instance.ShowLog;
+  private void Update() {
+    if (Input.GetButtonDown("Fire1")) ScreenLogger.Instance.ShowLog = !ScreenLogger.Instance.ShowLog;
 
     Velocity.y += Acceleration * Time.deltaTime;
     transform.position += Velocity * Time.deltaTime;
@@ -36,9 +34,7 @@ public class BouncingBall : MonoBehaviour {
     }
 
     if (Mathf.Abs(transform.position.x) + Radius > Wall) {
-      transform.position = new Vector3(
-        transform.position.x > 0 ? Wall - Radius : -Wall + Radius,
-        transform.position.y,
+      transform.position = new Vector3(transform.position.x > 0 ? Wall - Radius : -Wall + Radius, transform.position.y,
         0);
 
       Velocity.x *= -1;

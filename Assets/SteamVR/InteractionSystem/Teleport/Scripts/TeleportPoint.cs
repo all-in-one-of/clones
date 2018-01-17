@@ -17,38 +17,38 @@ namespace Valve.VR.InteractionSystem {
     public enum TeleportPointType {
       MoveToLocation,
       SwitchToNewScene
-    };
-
-    //Public variables
-    public TeleportPointType teleportType = TeleportPointType.MoveToLocation;
-    public string title;
-    public string switchToScene;
-    public Color titleVisibleColor;
-    public Color titleHighlightedColor;
-    public Color titleLockedColor;
-    public bool playerSpawnPoint = false;
-
-    //Private data
-    private bool gotReleventComponents = false;
-    private MeshRenderer markerMesh;
-    private MeshRenderer switchSceneIcon;
-    private MeshRenderer moveLocationIcon;
-    private MeshRenderer lockedIcon;
-    private MeshRenderer pointIcon;
-    private Transform lookAtJointTransform;
-    private new Animation animation;
-    private Text titleText;
-    private Player player;
-    private Vector3 lookAtPosition = Vector3.zero;
-    private int tintColorID = 0;
-    private Color tintColor = Color.clear;
-    private Color titleColor = Color.clear;
-    private float fullTitleAlpha = 0.0f;
+    }
 
     //Constants
     private const string switchSceneAnimation = "switch_scenes_idle";
     private const string moveLocationAnimation = "move_location_idle";
     private const string lockedAnimation = "locked_idle";
+    public bool playerSpawnPoint = false;
+    public string switchToScene;
+
+    //Public variables
+    public TeleportPointType teleportType = TeleportPointType.MoveToLocation;
+    public string title;
+    public Color titleHighlightedColor;
+    public Color titleLockedColor;
+    public Color titleVisibleColor;
+    private new Animation animation;
+    private float fullTitleAlpha;
+
+    //Private data
+    private bool gotReleventComponents;
+    private MeshRenderer lockedIcon;
+    private Transform lookAtJointTransform;
+    private Vector3 lookAtPosition = Vector3.zero;
+    private MeshRenderer markerMesh;
+    private MeshRenderer moveLocationIcon;
+    private Player player;
+    private MeshRenderer pointIcon;
+    private MeshRenderer switchSceneIcon;
+    private Color tintColor = Color.clear;
+    private int tintColorID;
+    private Color titleColor = Color.clear;
+    private Text titleText;
 
     //-------------------------------------------------
     public override bool showReticle {
@@ -56,7 +56,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       GetRelevantComponents();
 
       animation = GetComponent<Animation>();
@@ -71,12 +71,12 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Start() {
+    private void Start() {
       player = Player.instance;
     }
 
     //-------------------------------------------------
-    void Update() {
+    private void Update() {
       if (Application.isPlaying) {
         lookAtPosition.x = player.hmdTransform.position.x;
         lookAtPosition.y = lookAtJointTransform.position.y;
@@ -178,8 +178,7 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     public void TeleportToScene() {
       if (!string.IsNullOrEmpty(switchToScene)) {
-        Debug.Log("TeleportPoint: Hook up your level loading logic to switch to new scene: " +
-                  switchToScene);
+        Debug.Log("TeleportPoint: Hook up your level loading logic to switch to new scene: " + switchToScene);
       } else {
         Debug.LogError("TeleportPoint: Invalid scene name to switch to: " + switchToScene);
       }
@@ -195,13 +194,11 @@ namespace Valve.VR.InteractionSystem {
         transform.Find("teleport_marker_lookat_joint/teleport_marker_icons/move_location_icon")
                  .GetComponent<MeshRenderer>();
       lockedIcon =
-        transform.Find("teleport_marker_lookat_joint/teleport_marker_icons/locked_icon")
-                 .GetComponent<MeshRenderer>();
+        transform.Find("teleport_marker_lookat_joint/teleport_marker_icons/locked_icon").GetComponent<MeshRenderer>();
       lookAtJointTransform = transform.Find("teleport_marker_lookat_joint");
 
       titleText =
-        transform.Find(
-                   "teleport_marker_lookat_joint/teleport_marker_canvas/teleport_marker_canvas_text")
+        transform.Find("teleport_marker_lookat_joint/teleport_marker_canvas/teleport_marker_canvas_text")
                  .GetComponent<Text>();
 
       gotReleventComponents = true;
@@ -268,7 +265,7 @@ namespace Valve.VR.InteractionSystem {
   [CustomEditor(typeof(TeleportPoint))]
   public class TeleportPointEditor : Editor {
     //-------------------------------------------------
-    void OnEnable() {
+    private void OnEnable() {
       if (Selection.activeTransform) {
         TeleportPoint teleportPoint = Selection.activeTransform.GetComponent<TeleportPoint>();
         teleportPoint.UpdateVisualsInEditor();

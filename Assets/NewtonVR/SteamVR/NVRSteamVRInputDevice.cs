@@ -10,14 +10,20 @@ using Valve.VR;
 
 namespace NewtonVR {
   public class NVRSteamVRInputDevice : NVRInputDevice {
+    protected static Vector3 SteamVROculusControllerPositionAddition = new Vector3(0.001f, -0.0086f, -0.0197f);
+
+    private readonly Dictionary<NVRButtons, EVRButtonId> ButtonMapping =
+      new Dictionary<NVRButtons, EVRButtonId>(new NVRButtonsComparer());
+
     private SteamVR_Controller.Device Controller;
 
     private int DeviceIndex = -1;
 
-    private bool RenderModelInitialized = false;
+    private bool RenderModelInitialized;
 
-    private Dictionary<NVRButtons, EVRButtonId> ButtonMapping =
-      new Dictionary<NVRButtons, EVRButtonId>(new NVRButtonsComparer());
+    public override bool IsCurrentlyTracked {
+      get { return DeviceIndex != -1; }
+    }
 
     public override void Initialize(NVRHand hand) {
       SetupButtonMapping();
@@ -49,7 +55,6 @@ namespace NewtonVR {
       ButtonMapping.Add(NVRButtons.Touchpad, EVRButtonId.k_EButton_SteamVR_Touchpad);
       ButtonMapping.Add(NVRButtons.Trigger, EVRButtonId.k_EButton_SteamVR_Trigger);
 
-
       ButtonMapping.Add(NVRButtons.B, EVRButtonId.k_EButton_A);
       ButtonMapping.Add(NVRButtons.X, EVRButtonId.k_EButton_A);
       ButtonMapping.Add(NVRButtons.Y, EVRButtonId.k_EButton_A);
@@ -64,57 +69,49 @@ namespace NewtonVR {
     }
 
     public override float GetAxis1D(NVRButtons button) {
-      if (Controller != null)
-        return Controller.GetAxis(GetButton(button)).x;
+      if (Controller != null) return Controller.GetAxis(GetButton(button)).x;
 
       return 0;
     }
 
     public override Vector2 GetAxis2D(NVRButtons button) {
-      if (Controller != null)
-        return Controller.GetAxis(GetButton(button));
+      if (Controller != null) return Controller.GetAxis(GetButton(button));
 
       return Vector2.zero;
     }
 
     public override bool GetPressDown(NVRButtons button) {
-      if (Controller != null)
-        return Controller.GetPressDown(GetButton(button));
+      if (Controller != null) return Controller.GetPressDown(GetButton(button));
 
       return false;
     }
 
     public override bool GetPressUp(NVRButtons button) {
-      if (Controller != null)
-        return Controller.GetPressUp(GetButton(button));
+      if (Controller != null) return Controller.GetPressUp(GetButton(button));
 
       return false;
     }
 
     public override bool GetPress(NVRButtons button) {
-      if (Controller != null)
-        return Controller.GetPress(GetButton(button));
+      if (Controller != null) return Controller.GetPress(GetButton(button));
 
       return false;
     }
 
     public override bool GetTouchDown(NVRButtons button) {
-      if (Controller != null)
-        return Controller.GetTouchDown(GetButton(button));
+      if (Controller != null) return Controller.GetTouchDown(GetButton(button));
 
       return false;
     }
 
     public override bool GetTouchUp(NVRButtons button) {
-      if (Controller != null)
-        return Controller.GetTouchUp(GetButton(button));
+      if (Controller != null) return Controller.GetTouchUp(GetButton(button));
 
       return false;
     }
 
     public override bool GetTouch(NVRButtons button) {
-      if (Controller != null)
-        return Controller.GetTouch(GetButton(button));
+      if (Controller != null) return Controller.GetTouch(GetButton(button));
 
       return false;
     }
@@ -131,17 +128,12 @@ namespace NewtonVR {
       return false;
     }
 
-    public override void TriggerHapticPulse(ushort durationMicroSec = 500,
-                                            NVRButtons button = NVRButtons.Touchpad) {
+    public override void TriggerHapticPulse(ushort durationMicroSec = 500, NVRButtons button = NVRButtons.Touchpad) {
       if (Controller != null) {
         if (durationMicroSec < 3000) {
           Controller.TriggerHapticPulse(durationMicroSec, ButtonMapping[button]);
         }
       }
-    }
-
-    public override bool IsCurrentlyTracked {
-      get { return DeviceIndex != -1; }
     }
 
     public override Option<GameObject> SetupDefaultRenderModel() {
@@ -161,8 +153,7 @@ namespace NewtonVR {
     }
 
     private void RenderModelLoaded(SteamVR_RenderModel renderModel, bool success) {
-      if ((int) renderModel.index == DeviceIndex)
-        RenderModelInitialized = success;
+      if ((int) renderModel.index == DeviceIndex) RenderModelInitialized = success;
 
       if (Hand != null && Hand.CurrentHandState != HandState.Uninitialized) {
         Hand.Initialize();
@@ -175,11 +166,10 @@ namespace NewtonVR {
     }
 
     public override string GetDeviceName() {
-      if (Hand.HasCustomModel == true) {
+      if (Hand.HasCustomModel) {
         return "Custom";
-      } else {
-        return this.GetComponentInChildren<SteamVR_RenderModel>(true).renderModelName;
       }
+      return GetComponentInChildren<SteamVR_RenderModel>(true).renderModelName;
     }
 
     public override Collider[] SetupDefaultPhysicalColliders(Transform ModelParent) {
@@ -190,23 +180,19 @@ namespace NewtonVR {
         case "vr_controller_05_wireless_b":
           Transform dk1Trackhat = ModelParent.transform.Find("trackhat");
           Collider dk1TrackhatCollider = dk1Trackhat.gameObject.GetComponent<BoxCollider>();
-          if (dk1TrackhatCollider == null)
-            dk1TrackhatCollider = dk1Trackhat.gameObject.AddComponent<BoxCollider>();
+          if (dk1TrackhatCollider == null) dk1TrackhatCollider = dk1Trackhat.gameObject.AddComponent<BoxCollider>();
 
           Transform dk1Body = ModelParent.transform.Find("body");
           Collider dk1BodyCollider = dk1Body.gameObject.GetComponent<BoxCollider>();
-          if (dk1BodyCollider == null)
-            dk1BodyCollider = dk1Body.gameObject.AddComponent<BoxCollider>();
+          if (dk1BodyCollider == null) dk1BodyCollider = dk1Body.gameObject.AddComponent<BoxCollider>();
 
-          colliders = new Collider[] {dk1TrackhatCollider, dk1BodyCollider};
+          colliders = new[] {dk1TrackhatCollider, dk1BodyCollider};
           break;
 
         case "vr_controller_vive_1_5":
-          Transform dk2TrackhatColliders = ModelParent.transform.FindChild("ViveColliders");
+          Transform dk2TrackhatColliders = ModelParent.transform.Find("ViveColliders");
           if (dk2TrackhatColliders == null) {
-            dk2TrackhatColliders =
-              GameObject.Instantiate(Resources.Load<GameObject>("ViveControllers/ViveColliders"))
-                        .transform;
+            dk2TrackhatColliders = Instantiate(Resources.Load<GameObject>("ViveControllers/ViveColliders")).transform;
             dk2TrackhatColliders.parent = ModelParent.transform;
             dk2TrackhatColliders.localPosition = Vector3.zero;
             dk2TrackhatColliders.localRotation = Quaternion.identity;
@@ -242,7 +228,7 @@ namespace NewtonVR {
       Collider[] colliders = null;
 
       string controllerModel = GetDeviceName();
-      SteamVR_RenderModel renderModel = this.GetComponentInChildren<SteamVR_RenderModel>();
+      SteamVR_RenderModel renderModel = GetComponentInChildren<SteamVR_RenderModel>();
 
       switch (controllerModel) {
         case "vr_controller_05_wireless_b":
@@ -263,10 +249,10 @@ namespace NewtonVR {
           break;
 
         case "vr_controller_vive_1_5":
-          Transform dk2Trackhat = renderModel.transform.FindChild("trackhat");
+          Transform dk2Trackhat = renderModel.transform.Find("trackhat");
           if (dk2Trackhat == null) {
             dk2Trackhat = new GameObject("trackhat").transform;
-            dk2Trackhat.gameObject.layer = this.gameObject.layer;
+            dk2Trackhat.gameObject.layer = gameObject.layer;
             dk2Trackhat.parent = renderModel.transform;
             dk2Trackhat.localPosition = new Vector3(0, -0.033f, 0.014f);
             dk2Trackhat.localScale = Vector3.one * 0.1f;
@@ -282,7 +268,7 @@ namespace NewtonVR {
             dk2TrackhatCollider.isTrigger = true;
           }
 
-          colliders = new Collider[] {dk2TrackhatCollider};
+          colliders = new[] {dk2TrackhatCollider};
           break;
 
         case "external_controllers":
@@ -310,11 +296,7 @@ namespace NewtonVR {
       return colliders;
     }
 
-    protected static Vector3 SteamVROculusControllerPositionAddition = new Vector3(0.001f, -0.0086f,
-      -0.0197f);
-
-    protected Collider[] AddOculusTouchPhysicalColliders(Transform ModelParent,
-                                                         string controllerModel) {
+    protected Collider[] AddOculusTouchPhysicalColliders(Transform ModelParent, string controllerModel) {
       Transform tip = ModelParent.GetChild(0);
       if (tip != null) {
         tip = tip.Find("tip");
@@ -328,17 +310,16 @@ namespace NewtonVR {
       }
 
       string name = "oculusTouch";
-      if (Hand.IsLeft == true) {
+      if (Hand.IsLeft) {
         name += "Left";
       } else {
         name += "Right";
       }
       name += "Colliders";
 
-      Transform touchColliders = ModelParent.FindChild(name);
+      Transform touchColliders = ModelParent.Find(name);
       if (touchColliders == null) {
-        touchColliders =
-          GameObject.Instantiate(Resources.Load<GameObject>("TouchControllers/" + name)).transform;
+        touchColliders = Instantiate(Resources.Load<GameObject>("TouchControllers/" + name)).transform;
         touchColliders.parent = tip;
         touchColliders.localPosition = SteamVROculusControllerPositionAddition;
         touchColliders.localRotation = Quaternion.identity;

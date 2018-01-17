@@ -4,9 +4,8 @@
 //
 //=============================================================================
 
-using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
+using UnityEngine;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
@@ -15,70 +14,70 @@ namespace Valve.VR.InteractionSystem {
     public enum Handedness {
       Left,
       Right
-    };
-
-    public Handedness currentHandGuess = Handedness.Left;
-    private float timeOfPossibleHandSwitch = 0f;
-    private float timeBeforeConfirmingHandSwitch = 1.5f;
-    private bool possibleHandSwitch = false;
-
-    public Transform pivotTransform;
-    public Transform handleTransform;
-
-    private Hand hand;
-    private ArrowHand arrowHand;
-
-    public Transform nockTransform;
-    public Transform nockRestTransform;
-
-    public bool autoSpawnArrowHand = true;
-    public ItemPackage arrowHandItemPackage;
-    public GameObject arrowHandPrefab;
-
-    public bool nocked;
-    public bool pulled;
+    }
 
     private const float minPull = 0.05f;
     private const float maxPull = 0.5f;
-    private float nockDistanceTravelled = 0f;
-    private float hapticDistanceThreshold = 0.01f;
-    private float lastTickDistance;
     private const float bowPullPulseStrengthLow = 100;
     private const float bowPullPulseStrengthHigh = 500;
-    private Vector3 bowLeftVector;
+    public ItemPackage arrowHandItemPackage;
+    public GameObject arrowHandPrefab;
+    public float arrowMaxVelocity = 30f;
 
     public float arrowMinVelocity = 3f;
-    public float arrowMaxVelocity = 30f;
-    private float arrowVelocity = 30f;
+    public SoundPlayOneshot arrowSlideSound;
 
-    private float minStrainTickTime = 0.1f;
-    private float maxStrainTickTime = 0.5f;
-    private float nextStrainTick = 0;
-
-    private bool lerpBackToZeroRotation;
-    private float lerpStartTime;
-    private float lerpDuration = 0.15f;
-    private Quaternion lerpStartRotation;
-
-    private float nockLerpStartTime;
-
-    private Quaternion nockLerpStartRotation;
-
-    public float drawOffset = 0.06f;
+    public bool autoSpawnArrowHand = true;
 
     public LinearMapping bowDrawLinearMapping;
 
-    private bool deferNewPoses = false;
+    public Handedness currentHandGuess = Handedness.Left;
+
+    public float drawOffset = 0.06f;
+
+    public SoundBowClick drawSound;
+    public Transform handleTransform;
+
+    public bool nocked;
+    public Transform nockRestTransform;
+    public SoundPlayOneshot nockSound;
+
+    public Transform nockTransform;
+
+    public Transform pivotTransform;
+    public bool pulled;
+    public SoundPlayOneshot releaseSound;
+    private ArrowHand arrowHand;
+    private float arrowVelocity = 30f;
+    private Vector3 bowLeftVector;
+
+    private bool deferNewPoses;
+    private float drawTension;
+
+    private Hand hand;
+    private readonly float hapticDistanceThreshold = 0.01f;
+    private float lastTickDistance;
     private Vector3 lateUpdatePos;
     private Quaternion lateUpdateRot;
 
-    public SoundBowClick drawSound;
-    private float drawTension;
-    public SoundPlayOneshot arrowSlideSound;
-    public SoundPlayOneshot releaseSound;
-    public SoundPlayOneshot nockSound;
+    private bool lerpBackToZeroRotation;
+    private readonly float lerpDuration = 0.15f;
+    private Quaternion lerpStartRotation;
+    private float lerpStartTime;
+    private readonly float maxStrainTickTime = 0.5f;
 
-    SteamVR_Events.Action newPosesAppliedAction;
+    private readonly float minStrainTickTime = 0.1f;
+
+    private SteamVR_Events.Action newPosesAppliedAction;
+    private float nextStrainTick;
+    private float nockDistanceTravelled;
+
+    private Quaternion nockLerpStartRotation;
+
+    private float nockLerpStartTime;
+    private bool possibleHandSwitch;
+    private readonly float timeBeforeConfirmingHandSwitch = 1.5f;
+    private float timeOfPossibleHandSwitch;
 
     //-------------------------------------------------
     private void OnAttachedToHand(Hand attachedHand) {
@@ -86,22 +85,22 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       newPosesAppliedAction = SteamVR_Events.NewPosesAppliedAction(OnNewPosesApplied);
     }
 
     //-------------------------------------------------
-    void OnEnable() {
+    private void OnEnable() {
       newPosesAppliedAction.enabled = true;
     }
 
     //-------------------------------------------------
-    void OnDisable() {
+    private void OnDisable() {
       newPosesAppliedAction.enabled = false;
     }
 
     //-------------------------------------------------
-    void LateUpdate() {
+    private void LateUpdate() {
       if (deferNewPoses) {
         lateUpdatePos = transform.position;
         lateUpdateRot = transform.rotation;
@@ -131,24 +130,22 @@ namespace Valve.VR.InteractionSystem {
       if (nocked) {
         deferNewPoses = true;
 
-        Vector3 nockToarrowHand = (arrowHand.arrowNockTransform.parent.position -
-                                   nockRestTransform.position);
-          // Vector from bow nock transform to arrowhand nock transform - used to align bow when drawing
+        Vector3 nockToarrowHand = (arrowHand.arrowNockTransform.parent.position - nockRestTransform.position);
+        // Vector from bow nock transform to arrowhand nock transform - used to align bow when drawing
 
         // Align bow
         // Time lerp value used for ramping into drawn bow orientation
-        float lerp = Util.RemapNumberClamped(Time.time, nockLerpStartTime,
-          (nockLerpStartTime + lerpDuration), 0f, 1f);
+        float lerp = Util.RemapNumberClamped(Time.time, nockLerpStartTime, (nockLerpStartTime + lerpDuration), 0f, 1f);
 
         float pullLerp = Util.RemapNumberClamped(nockToarrowHand.magnitude, minPull, maxPull, 0f, 1f);
-          // Normalized current state of bow draw 0 - 1
+        // Normalized current state of bow draw 0 - 1
 
         Vector3 arrowNockTransformToHeadset =
         ((Player.instance.hmdTransform.position + (Vector3.down * 0.05f)) -
          arrowHand.arrowNockTransform.parent.position).normalized;
         Vector3 arrowHandPosition = (arrowHand.arrowNockTransform.parent.position +
                                      ((arrowNockTransformToHeadset * drawOffset) * pullLerp));
-          // Use this line to lerp arrowHand nock position
+        // Use this line to lerp arrowHand nock position
         //Vector3 arrowHandPosition = arrowHand.arrowNockTransform.position; // Use this line if we don't want to lerp arrowHand nock position
 
         Vector3 pivotToString = (arrowHandPosition - pivotTransform.position).normalized;
@@ -161,18 +158,16 @@ namespace Valve.VR.InteractionSystem {
         if (Vector3.Dot(nockToarrowHand, -nockTransform.forward) > 0) {
           float distanceToarrowHand = nockToarrowHand.magnitude * lerp;
 
-          nockTransform.localPosition = new Vector3(0f, 0f,
-            Mathf.Clamp(-distanceToarrowHand, -maxPull, 0f));
+          nockTransform.localPosition = new Vector3(0f, 0f, Mathf.Clamp(-distanceToarrowHand, -maxPull, 0f));
 
           nockDistanceTravelled = -nockTransform.localPosition.z;
 
-          arrowVelocity = Util.RemapNumber(nockDistanceTravelled, minPull, maxPull, arrowMinVelocity,
-            arrowMaxVelocity);
+          arrowVelocity = Util.RemapNumber(nockDistanceTravelled, minPull, maxPull, arrowMinVelocity, arrowMaxVelocity);
 
           drawTension = Util.RemapNumberClamped(nockDistanceTravelled, 0, maxPull, 0f, 1f);
 
-          this.bowDrawLinearMapping.value = drawTension;
-            // Send drawTension value to LinearMapping script, which drives the bow draw animation
+          bowDrawLinearMapping.value = drawTension;
+          // Send drawTension value to LinearMapping script, which drives the bow draw animation
 
           if (nockDistanceTravelled > minPull) {
             pulled = true;
@@ -184,8 +179,7 @@ namespace Valve.VR.InteractionSystem {
               nockDistanceTravelled < (lastTickDistance - hapticDistanceThreshold)) {
             ushort hapticStrength =
               (ushort)
-              Util.RemapNumber(nockDistanceTravelled, 0, maxPull, bowPullPulseStrengthLow,
-                bowPullPulseStrengthHigh);
+              Util.RemapNumber(nockDistanceTravelled, 0, maxPull, bowPullPulseStrengthLow, bowPullPulseStrengthHigh);
             hand.controller.TriggerHapticPulse(hapticStrength);
             hand.otherHand.controller.TriggerHapticPulse(hapticStrength);
 
@@ -207,14 +201,13 @@ namespace Valve.VR.InteractionSystem {
         } else {
           nockTransform.localPosition = new Vector3(0f, 0f, 0f);
 
-          this.bowDrawLinearMapping.value = 0f;
+          bowDrawLinearMapping.value = 0f;
         }
       } else {
         if (lerpBackToZeroRotation) {
           float lerp = Util.RemapNumber(Time.time, lerpStartTime, lerpStartTime + lerpDuration, 0, 1);
 
-          pivotTransform.localRotation = Quaternion.Lerp(lerpStartRotation, Quaternion.identity,
-            lerp);
+          pivotTransform.localRotation = Quaternion.Lerp(lerpStartRotation, Quaternion.identity, lerp);
 
           if (lerp >= 1) {
             lerpBackToZeroRotation = false;
@@ -233,7 +226,7 @@ namespace Valve.VR.InteractionSystem {
         releaseSound.Play();
       }
 
-      this.StartCoroutine(this.ResetDrawAnim());
+      StartCoroutine(ResetDrawAnim());
     }
 
     //-------------------------------------------------
@@ -243,13 +236,11 @@ namespace Valve.VR.InteractionSystem {
 
       while (Time.time < (startTime + 0.02f)) {
         float lerp = Util.RemapNumberClamped(Time.time, startTime, startTime + 0.02f, startLerp, 0f);
-        this.bowDrawLinearMapping.value = lerp;
+        bowDrawLinearMapping.value = lerp;
         yield return null;
       }
 
-      this.bowDrawLinearMapping.value = 0;
-
-      yield break;
+      bowDrawLinearMapping.value = 0;
     }
 
     //-------------------------------------------------
@@ -299,8 +290,7 @@ namespace Valve.VR.InteractionSystem {
         }
 
         // If we are considering a handedness switch, and it's been this way long enough, switch
-        if (possibleHandSwitch &&
-            Time.time > (timeOfPossibleHandSwitch + timeBeforeConfirmingHandSwitch)) {
+        if (possibleHandSwitch && Time.time > (timeOfPossibleHandSwitch + timeBeforeConfirmingHandSwitch)) {
           currentHandGuess = Handedness.Left;
           possibleHandSwitch = false;
         }
@@ -318,8 +308,7 @@ namespace Valve.VR.InteractionSystem {
         }
 
         // If we are considering a handedness switch, and it's been this way long enough, switch
-        if (possibleHandSwitch &&
-            Time.time > (timeOfPossibleHandSwitch + timeBeforeConfirmingHandSwitch)) {
+        if (possibleHandSwitch && Time.time > (timeOfPossibleHandSwitch + timeBeforeConfirmingHandSwitch)) {
           currentHandGuess = Handedness.Right;
           possibleHandSwitch = false;
         }
@@ -350,16 +339,15 @@ namespace Valve.VR.InteractionSystem {
       // ArrowHand tells us to do this when we release the buttons when bow is nocked but not drawn far enough
       nocked = false;
       hand.HoverUnlock(GetComponent<Interactable>());
-      this.StartCoroutine(this.ResetDrawAnim());
+      StartCoroutine(ResetDrawAnim());
     }
 
     //-------------------------------------------------
     private void ShutDown() {
       if (hand != null && hand.otherHand.currentAttachedObject != null) {
         if (hand.otherHand.currentAttachedObject.GetComponent<ItemPackageReference>() != null) {
-          if (
-            hand.otherHand.currentAttachedObject.GetComponent<ItemPackageReference>().itemPackage ==
-            arrowHandItemPackage) {
+          if (hand.otherHand.currentAttachedObject.GetComponent<ItemPackageReference>().itemPackage ==
+              arrowHandItemPackage) {
             hand.otherHand.DetachObject(hand.otherHand.currentAttachedObject);
           }
         }
@@ -383,7 +371,7 @@ namespace Valve.VR.InteractionSystem {
     }
 
     //-------------------------------------------------
-    void OnDestroy() {
+    private void OnDestroy() {
       ShutDown();
     }
   }

@@ -5,24 +5,22 @@
 //=============================================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace Valve.VR.InteractionSystem {
   //-------------------------------------------------------------------------
   [RequireComponent(typeof(Interactable))]
   public class InteractableExample : MonoBehaviour {
-    private TextMesh textMesh;
-    private Vector3 oldPosition;
-    private Quaternion oldRotation;
+    private readonly Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags &
+                                                            (~Hand.AttachmentFlags.SnapOnAttach) &
+                                                            (~Hand.AttachmentFlags.DetachOthers);
 
     private float attachTime;
-
-    private Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags &
-                                                   (~Hand.AttachmentFlags.SnapOnAttach) &
-                                                   (~Hand.AttachmentFlags.DetachOthers);
+    private Vector3 oldPosition;
+    private Quaternion oldRotation;
+    private TextMesh textMesh;
 
     //-------------------------------------------------
-    void Awake() {
+    private void Awake() {
       textMesh = GetComponentInChildren<TextMesh>();
       textMesh.text = "No Hand Hovering";
     }
@@ -46,8 +44,7 @@ namespace Valve.VR.InteractionSystem {
     //-------------------------------------------------
     private void HandHoverUpdate(Hand hand) {
       if (hand.GetStandardInteractionButtonDown() ||
-          ((hand.controller != null) &&
-           hand.controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_Grip))) {
+          ((hand.controller != null) && hand.controller.GetPressDown(EVRButtonId.k_EButton_Grip))) {
         if (hand.currentAttachedObject != gameObject) {
           // Save our position/rotation so that we can restore it when we detach
           oldPosition = transform.position;
@@ -92,8 +89,7 @@ namespace Valve.VR.InteractionSystem {
     // Called every Update() while this GameObject is attached to the hand
     //-------------------------------------------------
     private void HandAttachedUpdate(Hand hand) {
-      textMesh.text = "Attached to hand: " + hand.name + "\nAttached time: " +
-                      (Time.time - attachTime).ToString("F2");
+      textMesh.text = "Attached to hand: " + hand.name + "\nAttached time: " + (Time.time - attachTime).ToString("F2");
     }
 
     //-------------------------------------------------

@@ -1,17 +1,16 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace NewtonVR {
   public class NVRCollisionSoundProviderUnity : NVRCollisionSoundProvider {
-    private static string AudioSourcePrefabPath = "CollisionSoundPrefab";
-    private static string CollisionSoundsPath = "CollisionSounds";
-    private GameObject AudioSourcePrefab;
+    private static readonly string AudioSourcePrefabPath = "CollisionSoundPrefab";
+    private static readonly string CollisionSoundsPath = "CollisionSounds";
 
     private AudioSource[] AudioPool;
-    private int CurrentPoolIndex;
+    private GameObject AudioSourcePrefab;
 
     private Dictionary<NVRCollisionSoundMaterials, List<AudioClip>> Clips;
+    private int CurrentPoolIndex;
 
     public override void Awake() {
       AudioPool = new AudioSource[NVRCollisionSoundController.Instance.SoundPoolSize];
@@ -19,9 +18,8 @@ namespace NewtonVR {
       AudioSourcePrefab = Resources.Load<GameObject>(AudioSourcePrefabPath);
 
       for (int index = 0; index < AudioPool.Length; index++) {
-        AudioPool[index] =
-          GameObject.Instantiate<GameObject>(AudioSourcePrefab).GetComponent<AudioSource>();
-        AudioPool[index].transform.parent = this.transform;
+        AudioPool[index] = Instantiate(AudioSourcePrefab).GetComponent<AudioSource>();
+        AudioPool[index].transform.parent = transform;
       }
 
       AudioClip[] clips = Resources.LoadAll<AudioClip>(CollisionSoundsPath);
@@ -29,13 +27,11 @@ namespace NewtonVR {
       for (int index = 0; index < clips.Length; index++) {
         string name = clips[index].name;
         int dividerIndex = name.IndexOf("__");
-        if (dividerIndex >= 0)
-          name = name.Substring(0, dividerIndex);
+        if (dividerIndex >= 0) name = name.Substring(0, dividerIndex);
 
         NVRCollisionSoundMaterials? material = NVRCollisionSoundMaterialsList.Parse(name);
         if (material != null) {
-          if (Clips.ContainsKey(material.Value) == false || Clips[material.Value] == null)
-            Clips[material.Value] = new List<AudioClip>();
+          if (Clips.ContainsKey(material.Value) == false || Clips[material.Value] == null) Clips[material.Value] = new List<AudioClip>();
           Clips[material.Value].Add(clips[index]);
         } else {
           Debug.LogWarning(
@@ -45,15 +41,12 @@ namespace NewtonVR {
       }
     }
 
-    public override void Play(NVRCollisionSoundMaterials material, Vector3 position,
-                              float impactVolume) {
-      if (material == NVRCollisionSoundMaterials.none)
-        return;
+    public override void Play(NVRCollisionSoundMaterials material, Vector3 position, float impactVolume) {
+      if (material == NVRCollisionSoundMaterials.none) return;
 
-      if (NVRCollisionSoundController.Instance.PitchModulationEnabled == true) {
-        AudioPool[CurrentPoolIndex].pitch =
-          Random.Range(1 - NVRCollisionSoundController.Instance.PitchModulationRange,
-            1 + NVRCollisionSoundController.Instance.PitchModulationRange);
+      if (NVRCollisionSoundController.Instance.PitchModulationEnabled) {
+        AudioPool[CurrentPoolIndex].pitch = Random.Range(1 - NVRCollisionSoundController.Instance.PitchModulationRange,
+          1 + NVRCollisionSoundController.Instance.PitchModulationRange);
       }
 
       AudioPool[CurrentPoolIndex].transform.position = position;
@@ -71,9 +64,8 @@ namespace NewtonVR {
     private AudioClip GetClip(NVRCollisionSoundMaterials material) {
       if (Clips.ContainsKey(material) == false) {
         material = NVRCollisionSoundMaterials._default;
-        Debug.LogError(
-          "[NewtonVR] CollisionSound: Trying to play sound for material without a clip. Need a clip at: " +
-          CollisionSoundsPath + "/" + material.ToString());
+        Debug.LogError("[NewtonVR] CollisionSound: Trying to play sound for material without a clip. Need a clip at: " +
+                       CollisionSoundsPath + "/" + material);
       }
 
       int index = Random.Range(0, Clips[material].Count);
