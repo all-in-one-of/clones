@@ -14,7 +14,7 @@ namespace NewtonVR {
     private Collider[] Colliders;
     private NVRHand Hand;
 
-    private readonly Type[] KeepTypes = {typeof(MeshFilter), typeof(Renderer), typeof(Transform), typeof(Rigidbody)};
+    private readonly Type[] KeepTypes = {typeof(MeshFilter), typeof(Renderer), typeof(Transform), typeof(Rigidbody), typeof(Camera)};
 
     private Rigidbody Rigidbody;
 
@@ -31,7 +31,7 @@ namespace NewtonVR {
       PhysicalController.name = PhysicalController.name.Replace("(Clone)", " [Physical]");
 
       Hand.gameObject.SetActive(true);
-
+            
       Component[] components = PhysicalController.GetComponentsInChildren<Component>(true);
 
       foreach (Component component in components) {
