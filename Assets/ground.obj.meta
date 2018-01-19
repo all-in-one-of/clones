@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 8ede2bfc288fd2844b951fded41f13cc
-timeCreated: 1516226296
+guid: 33ece66f4597da643b613b67a101432a
+timeCreated: 1516242021
 licenseType: Free
 ModelImporter:
   serializedVersion: 22
@@ -10,11 +10,9 @@ ModelImporter:
     400000: default
     400002: //RootNode
     2100000: defaultMat
-    2100002: None
     2300000: default
     3300000: default
     4300000: default
-    6400000: default
   externalObjects: {}
   materials:
     importMaterials: 1
@@ -49,28 +47,28 @@ ModelImporter:
     meshCompression: 0
     addColliders: 0
     importVisibility: 1
-    importBlendShapes: 0
-    importCameras: 0
-    importLights: 0
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
-    optimizeMeshForGPU: 0
+    optimizeMeshForGPU: 1
     keepQuads: 0
-    weldVertices: 0
+    weldVertices: 1
     preserveHierarchy: 0
     indexFormat: 0
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
-    useFileScale: 0
+    useFileScale: 1
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
     normalCalculationMode: 4
-  importAnimation: 0
+  importAnimation: 1
   copyAvatar: 0
   humanDescription:
     serializedVersion: 2

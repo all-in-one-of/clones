@@ -1,20 +1,18 @@
 fileFormatVersion: 2
-guid: 8ede2bfc288fd2844b951fded41f13cc
-timeCreated: 1516226296
+guid: a3e24734b767ed9499c71e77624a3ff0
+timeCreated: 1516313049
 licenseType: Free
 ModelImporter:
   serializedVersion: 22
   fileIDToRecycleName:
-    100000: default
-    100002: //RootNode
-    400000: default
-    400002: //RootNode
-    2100000: defaultMat
-    2100002: None
-    2300000: default
-    3300000: default
-    4300000: default
-    6400000: default
+    100000: //RootNode
+    400000: //RootNode
+    2100000: unnamed
+    2300000: //RootNode
+    3300000: //RootNode
+    4300000: out_002
+    7400000: Default Take
+    9500000: //RootNode
   externalObjects: {}
   materials:
     importMaterials: 1
@@ -49,28 +47,28 @@ ModelImporter:
     meshCompression: 0
     addColliders: 0
     importVisibility: 1
-    importBlendShapes: 0
-    importCameras: 0
-    importLights: 0
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
-    optimizeMeshForGPU: 0
+    optimizeMeshForGPU: 1
     keepQuads: 0
-    weldVertices: 0
+    weldVertices: 1
     preserveHierarchy: 0
     indexFormat: 0
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
-    useFileScale: 0
+    useFileScale: 1
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
     normalCalculationMode: 4
-  importAnimation: 0
+  importAnimation: 1
   copyAvatar: 0
   humanDescription:
     serializedVersion: 2
@@ -89,7 +87,7 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 0
+  animationType: 2
   humanoidOversampling: 1
   additionalBone: 0
   userData: 
