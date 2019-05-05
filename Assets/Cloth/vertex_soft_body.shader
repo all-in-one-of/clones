@@ -3,13 +3,17 @@
 Shader "sidefx/vertex_soft_body_shader" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
+    _ColorMultiplier ("Color Multiplier", Float) = 1.0
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
+		_Metallic ("Metallic (RGB)", 2D) = "white" {}
+		_Roughness ("Roughness (RGB)", 2D) = "white" {}
+		_Normal ("Normal (RGB)", 2D) = "white" {}
 		_boundingMax("Bounding Max", Float) = 1.0
 		_boundingMin("Bounding Min", Float) = 1.0
 		_numOfFrames("Number Of Frames", int) = 240
 		_speed("Speed", Float) = 0.33
+    _framenum("Frame Number", int) = 0
+    _settostart("Set to Initial Frame", int) = 0
 		[MaterialToggle] _pack_normal ("Pack Normal", Float) = 0
 		_posTex ("Position Map (RGB)", 2D) = "white" {}
 		_nTex ("Normal Map (RGB)", 2D) = "grey" {}
@@ -21,25 +25,31 @@ Shader "sidefx/vertex_soft_body_shader" {
 		CGPROGRAM
 		// Physically based Standard lighting model, and enable shadows on all light types
 		#pragma surface surf Standard addshadow vertex:vert
+    #pragma enable_d3d11_debug_symbols
 
 		// Use shader model 3.0 target, to get nicer looking lighting
 		#pragma target 3.0
 
 		sampler2D _MainTex;
+		sampler2D _Roughness;
+    sampler2D _Normal;
+		sampler2D _Metallic;
 		sampler2D _posTex;
 		sampler2D _nTex;
+    uniform float _ColorMultiplier;
 		uniform float _pack_normal;
 		uniform float _boundingMax;
 		uniform float _boundingMin;
 		uniform float _speed;
+    uniform int _settostart;
 		uniform int _numOfFrames;
+    uniform int _framenum;
 
 		struct Input {
 			float2 uv_MainTex;
+      float3 normal;
 		};
 
-		half _Glossiness;
-		half _Metallic;
 		fixed4 _Color;
 
 		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
@@ -50,9 +60,12 @@ Shader "sidefx/vertex_soft_body_shader" {
 		UNITY_INSTANCING_BUFFER_END(Props)
 
 		//vertex function
-		void vert(inout appdata_full v){
+		void vert(inout appdata_full v, out Input o){
+      UNITY_INITIALIZE_OUTPUT(Input,o);
 			//calcualte uv coordinates
 			float timeInFrames = ((ceil(frac(-_Time.y * _speed) * _numOfFrames))/_numOfFrames) + (1.0/_numOfFrames);
+      //float timeInFrames = (float(-_framenum) / _numOfFrames) + (1.0 / _numOfFrames);
+      timeInFrames *= 1-_settostart;
 
 			//get position and normal from textures
 			float4 texturePos = tex2Dlod(_posTex,float4(v.texcoord1.x, (timeInFrames + v.texcoord1.y), 0, 0));
@@ -81,6 +94,7 @@ Shader "sidefx/vertex_soft_body_shader" {
 				f3.xy = sqrt(1 - (f2dot/4.0)) * f2;
 				f3.z = 1 - (f2dot/2.0);
 				f3 = clamp(f3, -1.0, 1.0);
+
 				f3 = f3.xzy;
 				f3.x *= -1;
 				v.normal = f3;
@@ -91,15 +105,20 @@ Shader "sidefx/vertex_soft_body_shader" {
 				textureN.x *= -1; 
 				v.normal = textureN;
 			}
+
+      o.normal = v.normal;
 		}
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {
 			// Albedo comes from a texture tinted by color
-			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
-			o.Albedo = c.rgb;
+			fixed4 c = tex2D (_MainTex, IN.uv_MainTex);// * _Color * _ColorMultiplier;
+			o.Albedo = c;
 			// Metallic and smoothness come from slider variables
-			o.Metallic = _Metallic;
-			o.Smoothness = _Glossiness;
+			o.Metallic = tex2D (_Metallic, IN.uv_MainTex).x;
+			o.Smoothness = 1-tex2D (_Roughness, IN.uv_MainTex).x;
+      
+		  o.Normal = UnpackNormal(tex2D(_Normal, IN.uv_MainTex));
+
 			o.Alpha = c.a;
 		}
 		ENDCG

@@ -12,6 +12,8 @@ ModelImporter:
     3300000: //RootNode
     4300000: uvlayout1
     4300002: OUT_room
+    4300004: OUT_room_final
+    4300006: divide1
   externalObjects: {}
   materials:
     importMaterials: 1
@@ -52,7 +54,7 @@ ModelImporter:
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
-    optimizeMeshForGPU: 1
+    optimizeMeshForGPU: 0
     keepQuads: 0
     weldVertices: 1
     preserveHierarchy: 0

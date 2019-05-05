@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 1e0f5b843e730f54fb289a5ddc46d8e6
-timeCreated: 1517208998
+timeCreated: 1517364889
 licenseType: Free
 SubstanceImporter:
   externalObjects: {}
@@ -10,7 +10,7 @@ SubstanceImporter:
     name: New_Graph
     prototypeName: New_Graph
     shaderName: 
-    shader: {fileID: 4800000, guid: 0f6ce7751699e7046ba35a7e5f903c1d, type: 3}
+    shader: {fileID: 4800000, guid: 9d819772f50f11141a84c2c2155260d4, type: 3}
     shaderKeywords: _PACK_NORMAL_ON
     renderQueue: -1
     lightmapFlags: 4
@@ -34,27 +34,20 @@ SubstanceImporter:
     materialInformation:
       serializedVersion: 5
       offset: {x: 0, y: 0}
-      scale: {x: 1, y: 1}
+      scale: {x: 10, y: 10}
       generateMipmaps: 1
-      generateAllOutputs: 0
+      generateAllOutputs: 1
       animationUpdateRate: 42
     materialProperties:
       serializedVersion: 3
       texEnvs:
       - _MainTex:
-          texture: {instanceID: 0}
-          scale: {x: 1, y: 1}
-          offset: {x: 0, y: 0}
-      - _nTex:
-          texture: {instanceID: 0}
-          scale: {x: 1, y: 1}
-          offset: {x: 0, y: 0}
-      - _posTex:
-          texture: {fileID: 2800000, guid: bcf5939bdf7de5e4c85b7681e76fee45, type: 3}
-          scale: {x: 1, y: 1}
+          texture: {fileID: 2800000, guid: ae1a83243b61c004084c4fd9aef5c37a, type: 3}
+          scale: {x: 10, y: 10}
           offset: {x: 0, y: 0}
       floats:
       - _BumpScale: 1
+      - _ColorMultiplier: 7.78
       - _Cutoff: 0.5
       - _DetailNormalMapScale: 1
       - _DstBlend: 0
@@ -70,13 +63,14 @@ SubstanceImporter:
       - _SrcBlend: 1
       - _UVSec: 0
       - _ZWrite: 1
-      - _boundingMax: 2.636305
-      - _boundingMin: -1.999969
-      - _numOfFrames: 68
+      - _boundingMax: 3.6471
+      - _boundingMin: -1.7499713
+      - _numOfFrames: 137
       - _pack_normal: 1
+      - _settostart: 1
       - _speed: 0.33
       colors:
-      - _Color: {r: 1, g: 0.98275864, b: 0.75, a: 1}
+      - _Color: {r: 0.6544118, g: 0.6544118, b: 0.6544118, a: 1}
       - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     textureParameters:
     - name: New_Graph_basecolor
@@ -99,10 +93,12 @@ SubstanceImporter:
       filterMode: 1
       aniso: 1
       wrapMode: 0
-    textureAssignments:
-    - shaderProp: _MainTex
-      material: {instanceID: 0}
-      baseUID: 679316568
+    - name: New_Graph_roughness
+      alphaSource: 0
+      filterMode: 1
+      aniso: 1
+      wrapMode: 0
+    textureAssignments: []
     buildTargetSettings:
     - serializedVersion: 2
       buildTarget: 

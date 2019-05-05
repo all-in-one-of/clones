@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 499c1c0f180af924c904b8ec1df059b0
-timeCreated: 1517208771
+timeCreated: 1517466687
 licenseType: Free
 SubstanceImporter:
   externalObjects: {}
@@ -11,9 +11,9 @@ SubstanceImporter:
     prototypeName: New_Graph
     shaderName: 
     shader: {fileID: 47, guid: 0000000000000000f000000000000000, type: 0}
-    shaderKeywords: _EMISSION _METALLICGLOSSMAP _NORMALMAP _PARALLAXMAP _SPECGLOSSMAP
+    shaderKeywords: _METALLICGLOSSMAP _NORMALMAP _SPECGLOSSMAP
     renderQueue: -1
-    lightmapFlags: 1
+    lightmapFlags: 4
     inputs:
     - name: $pixelsize
       value:
@@ -42,7 +42,7 @@ SubstanceImporter:
       serializedVersion: 3
       texEnvs:
       - _BumpMap:
-          texture: {instanceID: 0}
+          texture: {fileID: 2800000, guid: 0bee2321ebf50f746971e0e504a9e913, type: 3}
           scale: {x: 10, y: 10}
           offset: {x: 0, y: 0}
       - _DetailAlbedoMap:
@@ -62,11 +62,11 @@ SubstanceImporter:
           scale: {x: 10, y: 10}
           offset: {x: 0, y: 0}
       - _MainTex:
-          texture: {instanceID: 0}
+          texture: {fileID: 2800000, guid: 62bdc265a4702504c849b68074ea3694, type: 3}
           scale: {x: 10, y: 10}
           offset: {x: 0, y: 0}
       - _MetallicGlossMap:
-          texture: {instanceID: 0}
+          texture: {fileID: 2800000, guid: 7acf2ee29de71fe4480d61c7dddc5534, type: 3}
           scale: {x: 10, y: 10}
           offset: {x: 0, y: 0}
       - _OcclusionMap:
@@ -78,7 +78,7 @@ SubstanceImporter:
           scale: {x: 10, y: 10}
           offset: {x: 0, y: 0}
       - _SpecGlossMap:
-          texture: {instanceID: 0}
+          texture: {fileID: 2800000, guid: b1acdafbdd385894b8bd97275da895ea, type: 3}
           scale: {x: 1, y: 1}
           offset: {x: 0, y: 0}
       floats:
@@ -129,21 +129,9 @@ SubstanceImporter:
       aniso: 1
       wrapMode: 0
     textureAssignments:
-    - shaderProp: _MainTex
-      material: {instanceID: 0}
-      baseUID: 679316568
-    - shaderProp: _BumpMap
-      material: {instanceID: 0}
-      baseUID: 679316570
-    - shaderProp: _MetallicGlossMap
-      material: {instanceID: 0}
-      baseUID: 679316574
     - shaderProp: _ParallaxMap
       material: {instanceID: 0}
       baseUID: 739419823
-    - shaderProp: _SpecGlossMap
-      material: {instanceID: 0}
-      baseUID: 679316572
     buildTargetSettings:
     - serializedVersion: 2
       buildTarget: 
